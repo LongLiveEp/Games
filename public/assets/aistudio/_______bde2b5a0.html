@@ -260,27 +260,83 @@
           DAMAGE: 10,
           TELEGRAPH_MS: 400
         },
-        BOSS_ROOSTER: {
-          MAX_STUN: 180,
+          BOSS_ROOSTER: {
+          MAX_STUN: 250,
           STAGES_REQUIRED: 2,      // Must fill stun bar and perform finisher TWICE
-          TELEGRAPH_MS: 540,
-          LUNGE_SPEED: 460,
-          JUMP_VEL_Y: -640,
-          SHOCKWAVE_SPEED: 340,
+          TELEGRAPH_MS: 420,
+          COUNTER_TELEGRAPH_MS: 290,
+          LUNGE_SPEED: 510,
+          PECK_SPEED: 440,
+          STALK_SPEED: 175,
+          JUMP_VEL_Y: -650,
+          SHOCKWAVE_SPEED: 370,
           DAMAGE_LUNGE: 20,
+          DAMAGE_PECK: 18,
           DAMAGE_WAVE: 16,
-          COOLDOWN_MS: 1300
+          COOLDOWN_MS: 860
+        },
+        // ACT II: «ЗЛИЙ ЛІС» — UKRAINIAN FOREST MYTHOLOGY ENEMIES & BOSS
+        SHIELD_GUARDIAN: {
+          PATROL_SPEED: 88,
+          ADVANCE_SPEED: 128,
+          BASH_SPEED: 340,
+          AGGRO_RANGE: 380,
+          TURN_DELAY_MS: 470,      // Deliberate turn delay so player can Roll [Shift] behind his shield!
+          TELEGRAPH_MS: 430,
+          MAX_STUN: 135,
+          DAMAGE_BASH: 20,
+          COOLDOWN_MS: 980
+        },
+        NYAVKA: {
+          FLOAT_SPEED: 145,
+          SWOOP_SPEED: 390,
+          AGGRO_RANGE: 420,
+          TELEGRAPH_MS: 380,
+          MAX_STUN: 95,
+          DAMAGE: 17,
+          WISP_SPEED: 310,
+          COOLDOWN_MS: 1250
+        },
+        BOLOTYANYK: {
+          WALK_SPEED: 75,
+          AGGRO_RANGE: 460,
+          SLAM_RANGE: 135,
+          TELEGRAPH_MS: 460,
+          THROW_SPEED_Y: -330,
+          MAX_STUN: 150,
+          DAMAGE_MIRE: 18,
+          DAMAGE_SLAM: 22,
+          COOLDOWN_MS: 1550
+        },
+        BOSS_LISOVYK: {
+          MAX_STUN: 340,
+          STAGES_REQUIRED: 2,
+          TELEGRAPH_MS: 390,
+          COUNTER_TELEGRAPH_MS: 270,
+          CHARGE_SPEED: 545,
+          CLAW_SPEED: 470,
+          STALK_SPEED: 195,
+          JUMP_VEL_Y: -670,
+          ROOT_WAVE_SPEED: 405,
+          DAMAGE_CHARGE: 24,
+          DAMAGE_CLAW: 21,
+          DAMAGE_WAVE: 19,
+          COOLDOWN_MS: 820
         }
       }
     };
 
     /**
-     * GLOBAL DIFFICULTY STATE
+     * GLOBAL DIFFICULTY & PROGRESSION STATE
      * 'casual'   -> Standard checkpoints, 1x enemy HP & damage
      * 'hardcore' -> One life (no checkpoints), 2x enemy HP & 1.5x enemy damage
      */
     const GAME_STATE = {
       difficulty: 'casual',
+      currentLevel: 1,
+      hasSaber: false,
+      hasSwampFrogs: false,
+      savedCoins: 0,
       isHardcore() {
         return this.difficulty === 'hardcore';
       },
@@ -376,11 +432,16 @@
       ITEM_KISSEL_DESC: "Солодкий та наваристий!\nМиттєво відновлює козацьку силу [A].",
 
       LEVEL_1_TITLE: "Рівень 1: Хутір і ліс",
+      LEVEL_2_TITLE: "Рівень 2: Злий Ліс",
+      LEVEL_2_SUBTITLE: "Гібридні хащі нечисті",
       STAMINA_LABEL: "СИЛА КОЗАКА",
       STUN_LABEL: "Ошелешення",
       STUNNED_PROMPT: "ОГЛУШЕНИЙ! БИЙ (D)!",
       COUNTER_READY: "КОНТРУДАР!",
       COUNTER_HIT: "КОНТРУДАР СКОВОРІДКОЮ!",
+      COUNTER_HIT_SABER: "БЛИСКАВИЧНИЙ КОНТРУДАР ШАБЛЕЮ!",
+      SHIELD_BLOCKED_HINT: "🛡 Дубовий щит! Перекотись за спину [Shift]!",
+      BACKSTAB_HIT: "⚔ УДАР У СПИНУ!",
       FINISHER_BARREL: "У БОЧКУ!",
       FINISHER_POT: "У ГОРЩИК!",
       FINISHER_SKY: "ЗА ХМАРИ!",
@@ -400,44 +461,59 @@
       CONTROLS_LIST: [
         { key: "◄ / ►", desc: "Рух козака ліворуч та праворуч" },
         { key: "▲ / Пробіл", desc: "Стрибок та подвійний стрибок (вистриб з-під землі)" },
-        { key: "Shift", desc: "Перекат (невразливість + заряд контрудару)" },
-        { key: "Shift + ▼", desc: "Пірнути під землю (у підземелля до песиголовців)" },
-        { key: "D", desc: "Удар сковорідкою (комбо x3 та добивання)" },
-        { key: "S", desc: "Кидок задубілої галушки на відстань" },
+        { key: "Shift", desc: "Перекат за спину ворогам зі щитом + контрудар" },
+        { key: "Shift + ▼", desc: "Пірнути під землю (у кореневі катакомби)" },
+        { key: "D", desc: "Удар сковорідкою / козацькою шаблею (комбо x3)" },
+        { key: "S", desc: "Кидок галушки або болотної жаби на відстань" },
         { key: "A", desc: "Випити вишневий кисіль (відновлення сили)" },
         { key: "Esc", desc: "Перепочинок (меню паузи)" }
       ],
 
       CHECKPOINT_WELL: "Чекпоїнт: Старий колодязь (Силу та кисіль відновлено!)",
       CHECKPOINT_PILLAR: "Чекпоїнт: Козацький стовп (Силу та кисіль відновлено!)",
+      CHECKPOINT_SHRINE: "Чекпоїнт: Лісова капличка (Силу та кисіль відновлено!)",
+      CHECKPOINT_OAK: "Чекпоїнт: Дуб-Оберіг (Силу та кисіль відновлено!)",
       CHECKPOINT_DISABLED_HARDCORE: "✖ Хардкорактерник не спиняється на чекпоїнтах!",
       TIRED_MESSAGE: "Ой лишенько! Омелько втратив козацьку силу...",
 
-      DEATH_TITLE_CASUAL: "ОМЕЛЬКО ЗНЕ СИЛИВСЯ!",
-      DEATH_SUB_CASUAL: "Гуси та нечисть добряче пом'яли чуба...\nПерепочинемо біля чекпоїнта чи почнемо спочатку?",
+      DEATH_TITLE_CASUAL: "ОМЕЛЬКО ЗНЕСИЛИВСЯ!",
+      DEATH_SUB_CASUAL: "Нечисть добряче пом'яла козацького чуба...\nПерепочинемо біля чекпоїнта чи почнемо спочатку?",
       DEATH_TITLE_HARDCORE: "ХАРДКОРАКТЕРНИК ПАВ У БОЮ!",
-      DEATH_SUB_HARDCORE: "Без чекпоїнтів та з одним життям шлях суворий!\nСпробуєш пройти хутір і ліс іще раз?",
+      DEATH_SUB_HARDCORE: "Без чекпоїнтів та з одним життям шлях суворий!\nСпробуєш здолати цей шлях іще раз?",
       DEATH_BTN_CHECKPOINT: "Повернутись до чекпоїнта (Enter)",
-      DEATH_BTN_RESTART: "Почати спочатку (R)",
+      DEATH_BTN_RESTART: "Почати рівень спочатку (R)",
       DEATH_BTN_RESTART_HARDCORE: "Почати локацію заново (Enter / R)",
 
       UZVAR_FULL: "Сила вже повна!",
       UZVAR_EMPTY: "Кисіль закінчився!",
       GALUSHKA_EMPTY: "Немає галушок!",
+      FROG_EMPTY: "Немає болотних жаб!",
 
       OMELKO_REMARK_GEESE: "«Ох йо, знову Грицькові гуси розгулялись!»",
       OMELKO_REMARK_MONSTER: "«Ото ще що за чортівня? Песиголовці якісь?»",
       OMELKO_REMARK_BOSS: "«Ого, який здоровецький пернатий гетьман!\nАну, Корнію, гони сіль — бо підеш у недільний холодець!»",
+
+      OMELKO_REMARK_EVIL_FOREST: "«Брр, ну й темінь у цьому Злому Лісі...\nДобре, що кум Грицько дав гостру дамаську шаблю!»",
+      OMELKO_REMARK_SHIELD: "«Ого, моховик із дубовим щитом! Спереду не проб'єш —\nтреба перекотитися за спину [Shift] і врубати шаблею!»",
+      OMELKO_REMARK_NYAVKA: "«Цур тобі, пек! Лісова Нявка та Болотяник із трясовини!»",
+      OMELKO_REMARK_LISOVYK: "«Сам Чорний Лісовик — володар Злого Лісу!\nГеть з дороги, рогатий, бо козацький борщ без солі стигне!»",
 
       BOSS_NAME: "БОС: СКАЖЕНИЙ ПІВЕНЬ КОРНІЙ",
       BOSS_SUBTITLE: "Ошелеш і вгамуй його двічі!",
       BOSS_STAGE_2: "ПІВЕНЬ РОЗЛЮТИВСЯ! (Фаза 2: Новий натиск!)",
       BOSS_SUMMON: "Півень кличе курчат на підмогу!",
 
+      BOSS_LISOVYK_NAME: "БОС: ПРАДАВНІЙ ЛІСОВИК ЧОРНОБОР",
+      BOSS_LISOVYK_STAGE_2: "ЛІСОВИК КЛИЧЕ ТЕМРЯВУ! (Фаза 2: Гнів Пралісу!)",
+      BOSS_LISOVYK_SUMMON: "Чорнобор скликає лісову нечисть із хащів!",
+
       PAUSE_TITLE: "ПЕРЕПОЧИНОК (ПАУЗА)",
       PAUSE_RESUME: "Продовжити гру (Esc)",
       PAUSE_CHECKPOINT: "На чекпоїнт (C)",
-      PAUSE_RESTART: "Спочатку (R)",
+      PAUSE_RESTART: "Спочатку рівень (R)",
+      PAUSE_LEVEL_1: "🌻 У Хутір і ліс (Акт I)",
+      PAUSE_LEVEL_2: "🌲 У Злий Ліс (Акт II)",
+      PAUSE_EVIL_FOREST: "🌲 У Злий Ліс (Акт II)",
       PAUSE_HUT: "Вступ у хаті (H)",
       PAUSE_SOUND_ON: "Звук: УВІМК (M)",
       PAUSE_SOUND_OFF: "Звук: ВИМК (M)",
@@ -448,18 +524,41 @@
       HRYTSKO_LINES: [
         { speaker: "Козак Омелько", text: "Здоров будь, куме Грицьку! Ледве твоїх гусей та півня Корнія вгамував! Позич дрібку солі до борщу!" },
         { speaker: "Кум Грицько", text: "Ох, Омельку, здоров! Та де там сіль — у самого макітра порожня, хоч вовком вий! Чумаки з Криму ще не вернулись!" },
-        { speaker: "Козак Омелько", text: "От халепа... То це мені тепер через густий ліс, Дніпрові пороги та дикий степ за сіллю чимчикувати?" },
-        { speaker: "Кум Грицько", text: "Еге ж! Але не йти ж козакові в степ із бабською пательнею! Тримай мою вірну козацьку шаблю — нею і чуба ворогам начешеш!" },
-        { speaker: "Козак Омелько", text: "Оце діло, дякую, куме! Ну, тримайтеся, лісовики й степові вітри — борщ без солі не залишиться!" }
+        { speaker: "Козак Омелько", text: "От халепа... То це мені тепер через Злий Ліс, Дніпрові пороги та дикий степ за сіллю чимчикувати?" },
+        { speaker: "Кум Грицько", text: "Еге ж! Але у Злому Лісі повно нечисті — моховики зі щитами, нявки й болотяники! Тримай мою козацьку шаблю!" },
+        { speaker: "Козак Омелько", text: "Оце діло, дякую, куме! Ну, тримайтеся, лісовики й чорнолісся — борщ без солі не залишиться!" }
       ],
       ITEM_SABER_TITLE: "Козацька шабля кума Грицька\nіз дамаської сталі",
       ITEM_SABER_BADGE: "Заміна зброї: замість сковорідки",
       ITEM_SABER_DESC: "Гостра, дзвінка й загартована у походах!\nШирокий розмах та блискавичне потрійне комбо [D].",
 
       VICTORY_TITLE: "КІНЕЦЬ ПЕРШОГО АКТУ!",
-      VICTORY_TEXT: "Півня заспокоєно, а в кума Грицька солі теж катма...\nЗ вірною шаблею при боці попереду ліс, Дніпро й степ!",
-      VICTORY_SUBTEXT: "Дякуємо за гру в перший акт! Усіх ворогів добродушно ошелешено.",
-      PLAY_AGAIN: "Грати знову (Enter)",
+      VICTORY_TEXT: "Півня заспокоєно, а в кума Грицька солі теж катма...\nЗ вірною шаблею при боці попереду похмурий Злий Ліс!",
+      VICTORY_SUBTEXT: "Попереду Акт II: «Злий Ліс» — перекочуйся [Shift] за спину щитоносцям!",
+      ENTER_EVIL_FOREST: "🌲 Вперед у Злий Ліс! (Enter)",
+      NEXT_ACT_BTN: "🌲 Вперед у Злий Ліс! (Enter)",
+      PLAY_AGAIN: "Грати знову з початку (Enter)",
+
+      BABA_YAGA_HEADER: "Глибина Злого Лісу — Хатка Баби-Яги на курячих ніжках",
+      BABA_YAGA_SKIP_HINT: "[Пробіл / Enter / Клік] — Далі",
+      BABA_YAGA_LINES: [
+        { speaker: "Козак Омелько", text: "Агов, хатинко на курячих ніжках, стань до лісу задом, а до козака передом! Здорова була, бабусю Яго! Чи нема в тебе дрібки солі до борщу?" },
+        { speaker: "Баба-Яга", text: "Тьху, козаче, налякав стару! Яка там сіль — у самої мухомори в казані прісні киплять! Останню сіль Водяник із болота поцупив!" },
+        { speaker: "Козак Омелько", text: "От тобі й маєш! Я ж поки твого сусіда Лісовика Чорнобора вгамував, усі вчорашні галушки об нечисть потрощив!" },
+        { speaker: "Баба-Яга", text: "Хе-хе, за те що Чорнобора провчив — виручу! Замість твоїх галушок тримай моїх бойових Болотних Жаб! Як жбурнеш — очі слизом заліпить і з ніг зіб'є!" },
+        { speaker: "Козак Омелько", text: "Оце так гостинець! Болотні жаби замість галушок і гостра шабля при боці — ну, тримайся, нечисть, борщ таки буде солоний!" }
+      ],
+      ITEM_FROG_TITLE: "Бойові Болотні Жаби\nвід Баби-Яги",
+      ITEM_FROG_BADGE: "Заміна метальної зброї: замість галушок [S]",
+      ITEM_FROG_DESC: "«Слизькі, стрибучі й оглушливі — збивають пиху з нечисті!»\nПідсилене метання на відстань клавішею [S].",
+
+      VICTORY_ACT2_TITLE: "КІНЕЦЬ ДРУГОГО АКТУ!",
+      VICTORY_ACT2_TEXT: "Злий Ліс та Чорнобора подолано, а в Баби-Яги солі теж катма...\nЗате тепер у торбі квакають бойові болотні жаби замість галушок!",
+      VICTORY_ACT2_SUBTEXT: "Жбурляй болотних жаб [S] та рубай шаблею [D]! Попереду шлях за сіллю крізь болота!",
+      ACT2_VICTORY_TITLE: "КІНЕЦЬ ДРУГОГО АКТУ!",
+      ACT2_VICTORY_TEXT: "Злий Ліс та Чорнобора подолано, а в Баби-Яги солі теж катма...\nЗате тепер у торбі квакають бойові болотні жаби замість галушок!",
+      ACT2_VICTORY_SUBTEXT: "Жбурляй болотних жаб [S] та рубай шаблею [D]! Попереду шлях за сіллю крізь болота!",
+      REPLAY_WITH_FROGS_BTN: "🐸 Випробувати болотних жаб у бою! (Enter)",
 
       TOUCH_JUMP: "СТРИБ",
       TOUCH_HIT: "УДАР",
@@ -538,6 +637,169 @@
 
     /**
      * ============================================================================
+     * 3B. LEVEL 2 («ЗЛИЙ ЛІС») HYBRID CHUNK GENERATOR
+     * Inspired by Sébastien Bénard's "The Level Design of Dead Cells: A Hybrid Approach":
+     *  - Fixed Macro Biome Graph (Entrance Thicket -> Ravine Ambush -> Shrine Checkpoint ->
+     *    Rotting Mire -> Labyrinth of Blud -> Ancient Oak Checkpoint -> Thorn Gauntlet -> Boss Lair)
+     *  - Handcrafted Room Templates with micro-variations per run
+     *  - Tactical enemy pairing on combat floors (Shielded Моховик-Щитоносець paired with
+     *    aerial Лісова Нявка, mire-lobbing Болотяник, and subterranean Песиголовець).
+     * ============================================================================
+     */
+    function buildEvilForestLevelData() {
+      const pickVariant = (arr) => arr[Math.floor(Math.random() * arr.length)];
+
+      // Handcrafted Chunk 1 Variants: Урочище Моховиків (Introduces Shield Guardian + Nyavka)
+      const chunk1 = pickVariant([
+        {
+          platforms: [
+            { x: 350, y: 315, w: 170, tier: 1 },
+            { x: 610, y: 230, w: 210, tier: 2 },
+            { x: 890, y: 315, w: 190, tier: 1 },
+            { x: 1140, y: 155, w: 220, tier: 3 },
+            { x: 1180, y: 315, w: 170, tier: 1 }
+          ],
+          enemies: [
+            // First Shield Guardian on flat ground so player learns to roll [Shift] behind him!
+            { type: 'shield_guardian', x: 470, y: 365, minX: 310, maxX: 650 },
+            { type: 'nyavka', x: 640, y: 185, minX: 500, maxX: 820 },
+            { type: 'leshy', x: 860, y: 370, minX: 700, maxX: 1040 },
+            { type: 'shield_guardian', x: 1090, y: 365, minX: 930, maxX: 1290 },
+            { type: 'nyavka', x: 1160, y: 115, minX: 1010, maxX: 1310 }
+          ]
+        },
+        {
+          platforms: [
+            { x: 370, y: 310, w: 190, tier: 1 },
+            { x: 660, y: 225, w: 190, tier: 2 },
+            { x: 940, y: 150, w: 210, tier: 3 },
+            { x: 960, y: 315, w: 200, tier: 1 },
+            { x: 1210, y: 235, w: 180, tier: 2 }
+          ],
+          enemies: [
+            { type: 'shield_guardian', x: 460, y: 365, minX: 300, maxX: 640 },
+            { type: 'leshy', x: 740, y: 370, minX: 580, maxX: 920 },
+            { type: 'nyavka', x: 940, y: 115, minX: 800, maxX: 1100 },
+            { type: 'shield_guardian', x: 1040, y: 365, minX: 880, maxX: 1260 },
+            { type: 'nyavka', x: 1210, y: 190, minX: 1080, maxX: 1340 }
+          ]
+        }
+      ]);
+
+      // Handcrafted Chunk 2 Variants: Гниле Болото і Трясовина (Introduces Bolotyanyk + Shield synergy)
+      const chunk2 = pickVariant([
+        {
+          platforms: [
+            { x: 1580, y: 315, w: 200, tier: 1 },
+            { x: 1850, y: 230, w: 230, tier: 2 },
+            { x: 2130, y: 150, w: 210, tier: 3 },
+            { x: 2160, y: 315, w: 190, tier: 1 }
+          ],
+          enemies: [
+            { type: 'bolotyanyk', x: 1690, y: 365, minX: 1520, maxX: 1860 },
+            { type: 'shield_guardian', x: 1890, y: 365, minX: 1720, maxX: 2080 },
+            { type: 'nyavka', x: 1860, y: 185, minX: 1720, maxX: 2020 },
+            { type: 'leshy', x: 2090, y: 370, minX: 1920, maxX: 2290 },
+            { type: 'bolotyanyk', x: 2260, y: 365, minX: 2080, maxX: 2390 }
+          ]
+        },
+        {
+          platforms: [
+            { x: 1560, y: 240, w: 190, tier: 2 },
+            { x: 1820, y: 315, w: 220, tier: 1 },
+            { x: 2090, y: 225, w: 220, tier: 2 },
+            { x: 2290, y: 150, w: 180, tier: 3 }
+          ],
+          enemies: [
+            { type: 'shield_guardian', x: 1660, y: 365, minX: 1500, maxX: 1840 },
+            { type: 'bolotyanyk', x: 1880, y: 365, minX: 1720, maxX: 2050 },
+            { type: 'leshy', x: 2040, y: 370, minX: 1880, maxX: 2240 },
+            { type: 'nyavka', x: 2100, y: 180, minX: 1960, maxX: 2260 },
+            { type: 'shield_guardian', x: 2250, y: 365, minX: 2080, maxX: 2390 }
+          ]
+        }
+      ]);
+
+      // Handcrafted Chunk 3 Variants: Нетрі Блуду (High-intensity Dead Cells combat room)
+      const chunk3 = pickVariant([
+        {
+          platforms: [
+            { x: 2480, y: 315, w: 200, tier: 1 },
+            { x: 2740, y: 230, w: 230, tier: 2 },
+            { x: 3000, y: 150, w: 210, tier: 3 },
+            { x: 3020, y: 315, w: 190, tier: 1 }
+          ],
+          enemies: [
+            { type: 'shield_guardian', x: 2540, y: 365, minX: 2400, maxX: 2740 },
+            { type: 'nyavka', x: 2740, y: 180, minX: 2580, maxX: 2900 },
+            { type: 'bolotyanyk', x: 2820, y: 365, minX: 2660, maxX: 3020 },
+            { type: 'leshy', x: 2980, y: 370, minX: 2800, maxX: 3140 },
+            { type: 'shield_guardian', x: 3060, y: 280, minX: 2930, maxX: 3110 }
+          ]
+        },
+        {
+          platforms: [
+            { x: 2460, y: 235, w: 210, tier: 2 },
+            { x: 2720, y: 315, w: 210, tier: 1 },
+            { x: 2960, y: 225, w: 220, tier: 2 },
+            { x: 2980, y: 145, w: 180, tier: 3 }
+          ],
+          enemies: [
+            { type: 'bolotyanyk', x: 2560, y: 365, minX: 2400, maxX: 2740 },
+            { type: 'shield_guardian', x: 2760, y: 365, minX: 2600, maxX: 2940 },
+            { type: 'nyavka', x: 2960, y: 175, minX: 2820, maxX: 3120 },
+            { type: 'shield_guardian', x: 3040, y: 365, minX: 2880, maxX: 3150 }
+          ]
+        }
+      ]);
+
+      // Handcrafted Chunk 4: Переддень Чорнобора (Final gauntlet before the Boss Lair)
+      const chunk4 = {
+        platforms: [
+          { x: 3360, y: 315, w: 190, tier: 1 },
+          { x: 3600, y: 230, w: 210, tier: 2 },
+          { x: 3780, y: 155, w: 170, tier: 3 }
+        ],
+        enemies: [
+          { type: 'shield_guardian', x: 3440, y: 365, minX: 3300, maxX: 3620 },
+          { type: 'bolotyanyk', x: 3640, y: 365, minX: 3480, maxX: 3820 },
+          { type: 'nyavka', x: 3620, y: 180, minX: 3480, maxX: 3780 },
+          { type: 'shield_guardian', x: 3760, y: 365, minX: 3600, maxX: 3850 }
+        ]
+      };
+
+      // Boss Arena Perches (Лігво Прадавнього Лісовика Чорнобора)
+      const bossPerches = [
+        { x: 4060, y: 300, w: 155, tier: 1 },
+        { x: 4540, y: 300, w: 155, tier: 1 },
+        { x: 4300, y: 195, w: 190, tier: 2 }
+      ];
+
+      return {
+        platforms: [
+          ...chunk1.platforms,
+          ...chunk2.platforms,
+          ...chunk3.platforms,
+          ...chunk4.platforms,
+          ...bossPerches
+        ],
+        checkpoints: [
+          { id: 1, type: 'well', x: 1400, y: CONFIG.GROUND_Y, name: STRINGS.CHECKPOINT_SHRINE },
+          { id: 2, type: 'pillar', x: 3180, y: CONFIG.GROUND_Y, name: STRINGS.CHECKPOINT_OAK }
+        ],
+        enemies: [
+          ...chunk1.enemies,
+          ...chunk2.enemies,
+          ...chunk3.enemies,
+          ...chunk4.enemies
+        ],
+        bossArenaStartX: 3880,
+        bossSpawnX: 4460
+      };
+    }
+
+    /**
+     * ============================================================================
      * 4. PROCEDURAL WEBAUDIO SOUND MANAGER
      * ============================================================================
      */
@@ -602,19 +864,45 @@
         this.playTone(160, 75, 0.15, 'triangle', 0.14);
       }
 
-      swing(comboStep = 1) {
-        const base = 180 + comboStep * 55;
-        this.playTone(base, base * 0.45, 0.1, 'sawtooth', 0.11);
+      swing(comboStep = 1, isSaber = false) {
+        if (isSaber) {
+          // Crisp Damascus steel saber whistle-cut
+          const base = 360 + comboStep * 95;
+          this.playTone(base, base * 0.38, 0.09, 'sawtooth', 0.12);
+          setTimeout(() => this.playTone(base * 1.4, base * 0.7, 0.06, 'sine', 0.08), 18);
+        } else {
+          const base = 180 + comboStep * 55;
+          this.playTone(base, base * 0.45, 0.1, 'sawtooth', 0.11);
+        }
       }
 
       panHit(isHeavy = false) {
-        // Metallic frying pan clang!
+        // Metallic frying pan / saber impact!
         if (isHeavy) {
           this.playTone(520, 140, 0.22, 'square', 0.2);
           setTimeout(() => this.playTone(780, 290, 0.18, 'triangle', 0.16), 25);
         } else {
           this.playTone(420, 160, 0.12, 'square', 0.16);
         }
+      }
+
+      shieldBlock() {
+        // Heavy oak & iron shield deflection thud + ring
+        this.playTone(150, 70, 0.14, 'square', 0.2);
+        setTimeout(() => this.playTone(680, 420, 0.1, 'triangle', 0.14), 20);
+      }
+
+      nyavkaWail() {
+        // Eerie forest spirit harmonic shriek
+        this.playTone(580, 920, 0.18, 'sine', 0.12);
+        setTimeout(() => this.playTone(880, 520, 0.22, 'triangle', 0.1), 90);
+      }
+
+      lisovykRoar() {
+        // Deep resonant ancient forest roar
+        [140, 115, 95, 160].forEach((f, i) => {
+          setTimeout(() => this.playTone(f, f * 0.75, 0.2, 'sawtooth', 0.17), i * 85);
+        });
       }
 
       stunFull() {
@@ -688,6 +976,12 @@
         notes.forEach((f, idx) => {
           setTimeout(() => this.playTone(f, f * 0.995, 0.38, 'triangle', 0.14), idx * 55);
         });
+      }
+
+      throwFrog() {
+        // Comical resonant swamp frog "ква-а!" croak when throwing Baba Yaga's frogs
+        this.playTone(185, 290, 0.11, 'sawtooth', 0.14);
+        setTimeout(() => this.playTone(270, 145, 0.13, 'triangle', 0.13), 65);
       }
     }
 
@@ -1040,6 +1334,244 @@
         g.fillStyle(0x4c953e, 1);
         g.fillRoundedRect(0, 0, 64, 8, 4);
         g.generateTexture('platform_tile', 64, 24);
+
+        // 17B. Dark Twisted Forest Platform Tile for Act II («Злий Ліс»)
+        g.clear();
+        g.fillStyle(0x1f161b, 1);
+        g.fillRoundedRect(0, 0, 64, 24, 5);
+        g.fillStyle(0x2d4a43, 1);
+        g.fillRoundedRect(0, 0, 64, 8, 4);
+        g.fillStyle(0x00f5d4, 0.45);
+        g.fillCircle(14, 5, 2.5);
+        g.fillCircle(46, 4, 2);
+        g.generateTexture('platform_tile_dark', 64, 24);
+
+        // 18. Cossack Saber Slash Arc (Gleaming Damascus steel curved blade arc)
+        g.clear();
+        g.fillStyle(0xcbe8ff, 0.88);
+        g.beginPath();
+        g.arc(16, 28, 38, -1.2, 1.2, false);
+        g.lineTo(16, 28);
+        g.closePath();
+        g.fillPath();
+        g.lineStyle(3.5, 0xffffff, 1);
+        g.beginPath();
+        g.arc(16, 28, 37, -1.15, 1.15, false);
+        g.strokePath();
+        // Golden crossguard glint at hilt
+        g.fillStyle(0xffd166, 1);
+        g.fillCircle(20, 28, 5);
+        g.generateTexture('saber_slash', 68, 56);
+
+        // 19. Enemy D (Act II): Моховик-Щитоносець / Дубовий Страж (Oak-Shielded Forest Guardian)
+        // Drawn facing RIGHT (+1): heavy iron-bound oak shield on the right (front), exposed mossy back on the left
+        g.clear();
+        // Exposed mossy back & dark root cloak on left (x: 4..28)
+        g.fillStyle(0x2d3a24, 1);
+        g.fillRoundedRect(6, 14, 26, 40, 6);
+        // Dark bark torso & legs
+        g.fillStyle(0x3a2618, 1);
+        g.fillRect(10, 46, 8, 12);
+        g.fillRect(22, 46, 8, 12);
+        // Gnarled horned head & glowing emerald eyes
+        g.fillStyle(0x281b12, 1);
+        g.fillRoundedRect(10, 4, 22, 16, 5);
+        g.fillTriangle(12, 5, 8, 0, 17, 4);
+        g.fillTriangle(24, 5, 30, 0, 28, 6);
+        g.fillStyle(0x00f5d4, 1);
+        g.fillCircle(26, 11, 2.8);
+        // Vulnerable glowing green moss core on his back (visual cue for backstab!)
+        g.fillStyle(0x52b788, 0.9);
+        g.fillEllipse(10, 30, 8, 18);
+        // Massive Iron-Bound Oak Shield held in front (right side x: 30..48, y: 8..54)
+        g.fillStyle(0x4a2c11, 1);
+        g.fillRoundedRect(29, 8, 17, 46, 5);
+        g.lineStyle(2.5, 0x94a3b8, 1);
+        g.strokeRoundedRect(29, 8, 17, 46, 5);
+        // Iron shield boss & spikes on front
+        g.fillStyle(0xcbd5e1, 1);
+        g.fillCircle(44, 31, 5);
+        g.fillTriangle(46, 17, 52, 20, 46, 23);
+        g.fillTriangle(46, 39, 52, 42, 46, 45);
+        g.generateTexture('enemy_shield_guardian', 54, 58);
+
+        // 20. Enemy E (Act II): Лісова Нявка (Eerie Woodland Spirit / Mavka)
+        g.clear();
+        // Flowing ghostly shroud / dress
+        g.fillStyle(0x1b4332, 0.85);
+        g.fillTriangle(8, 52, 36, 52, 22, 18);
+        g.fillStyle(0x74c69d, 0.75);
+        g.fillRoundedRect(11, 20, 22, 26, 6);
+        // Pale eerie face & long dark-emerald hair
+        g.fillStyle(0x081c15, 1);
+        g.fillEllipse(22, 16, 24, 22);
+        g.fillStyle(0xd8f3dc, 1);
+        g.fillCircle(23, 13, 8);
+        // Withered crimson/amber wildflower wreath (вінок)
+        g.fillStyle(0xd90429, 1);
+        g.fillCircle(17, 6, 3);
+        g.fillStyle(0xffbe0b, 1);
+        g.fillCircle(23, 5, 3);
+        g.fillStyle(0x9b5de5, 1);
+        g.fillCircle(29, 6, 3);
+        // Haunting glowing eyes
+        g.fillStyle(0x00f5d4, 1);
+        g.fillCircle(21, 13, 2.2);
+        g.fillCircle(27, 13, 2.2);
+        g.generateTexture('enemy_nyavka', 44, 54);
+
+        // 21. Enemy F (Act II): Болотяник (Swamp Mire Brute)
+        g.clear();
+        // Hulking dark peat & swamp-moss body
+        g.fillStyle(0x1f2e1c, 1);
+        g.fillEllipse(28, 36, 48, 38);
+        g.fillStyle(0x344e41, 1);
+        g.fillEllipse(28, 26, 38, 28);
+        // Tangled swamp reeds & mushrooms on shoulders
+        g.fillStyle(0x588157, 1);
+        g.fillRoundedRect(8, 12, 40, 12, 5);
+        g.fillStyle(0x9b5de5, 0.9);
+        g.fillCircle(14, 10, 4);
+        g.fillCircle(42, 11, 3.5);
+        // Fierce glowing amber-red bog eyes & wide maw
+        g.fillStyle(0xffbe0b, 1);
+        g.fillCircle(21, 22, 3.5);
+        g.fillCircle(35, 22, 3.5);
+        g.fillStyle(0xd90429, 1);
+        g.fillCircle(21, 22, 1.6);
+        g.fillCircle(35, 22, 1.6);
+        g.fillStyle(0x0b090a, 1);
+        g.fillRoundedRect(18, 29, 20, 6, 3);
+        g.generateTexture('enemy_bolotyanyk', 56, 56);
+
+        // 22. Projectiles for Act II: Swamp Globule ('swamp_glob'), Will-o'-Wisp ('willowisp'), Root Shockwave ('root_wave')
+        g.clear();
+        g.fillStyle(0x2d6a4f, 1);
+        g.fillCircle(9, 9, 8);
+        g.fillStyle(0x80ed99, 0.9);
+        g.fillCircle(7, 7, 4);
+        g.generateTexture('swamp_glob', 18, 18);
+
+        g.clear();
+        g.fillStyle(0x00f5d4, 0.85);
+        g.fillCircle(9, 9, 8);
+        g.fillStyle(0xffffff, 0.95);
+        g.fillCircle(9, 9, 4);
+        g.generateTexture('willowisp', 18, 18);
+
+        g.clear();
+        g.fillStyle(0x3d1e24, 0.95);
+        g.fillTriangle(2, 26, 16, 2, 30, 26);
+        g.fillStyle(0xd90429, 0.9);
+        g.fillTriangle(8, 26, 16, 8, 24, 26);
+        g.fillStyle(0x00f5d4, 0.85);
+        g.fillCircle(16, 20, 3.5);
+        g.generateTexture('root_wave', 32, 26);
+
+        // 23. Boss of Act II: Прадавній Лісовик «Чорнобор» (Ancient Dark Forest Arch-Spirit)
+        g.clear();
+        // Massive gnarled dark-oak cloak & root tendrils
+        g.fillStyle(0x1b110c, 1);
+        g.fillRoundedRect(16, 26, 58, 66, 12);
+        // Mossy bark chest armor
+        g.fillStyle(0x2d4a3e, 1);
+        g.fillRoundedRect(22, 30, 48, 42, 8);
+        // Glowing crimson-emerald heart rune on chest
+        g.fillStyle(0xd90429, 1);
+        g.fillCircle(48, 48, 8);
+        g.fillStyle(0xffbe0b, 1);
+        g.fillCircle(48, 48, 4);
+        // Towering horned skull/bark head & giant stag antlers (роги Пралісу)
+        g.fillStyle(0x2b1d14, 1);
+        g.fillRoundedRect(28, 10, 38, 26, 7);
+        // Antlers
+        g.lineStyle(4.5, 0x4a3222, 1);
+        g.lineBetween(32, 12, 14, 2);
+        g.lineBetween(22, 7, 26, 0);
+        g.lineBetween(62, 12, 80, 2);
+        g.lineBetween(72, 7, 68, 0);
+        // Piercing crimson-gold eyes
+        g.fillStyle(0xff002b, 1);
+        g.fillCircle(40, 22, 4.5);
+        g.fillCircle(56, 22, 4.5);
+        g.fillStyle(0xffea00, 1);
+        g.fillCircle(41, 22, 2);
+        g.fillCircle(57, 22, 2);
+        // Heavy bark-shield / root-claw on front (right side)
+        g.fillStyle(0x3a2314, 1);
+        g.fillRoundedRect(66, 24, 22, 54, 6);
+        g.lineStyle(2.5, 0x52b788, 0.9);
+        g.strokeRoundedRect(66, 24, 22, 54, 6);
+        g.generateTexture('boss_lisovyk', 96, 96);
+
+        // 24. NPC Baba Yaga (Баба-Яга Кістяна Нога біля хатки на курячих ніжках)
+        g.clear();
+        // Dark tattered forest skirt & shawl
+        g.fillStyle(0x2d1e2f, 1);
+        g.fillRoundedRect(10, 28, 32, 32, 7);
+        // Embroidered apron with folkloric herbs
+        g.fillStyle(0x5c3c24, 1);
+        g.fillRoundedRect(14, 34, 22, 24, 4);
+        g.fillStyle(0x52b788, 1);
+        g.fillCircle(20, 44, 3);
+        g.fillCircle(29, 47, 2.5);
+        // Bone leg & boot peeking from under skirt
+        g.fillStyle(0xe5e5e5, 1);
+        g.fillRect(15, 58, 6, 8);
+        g.fillStyle(0x3a2010, 1);
+        g.fillRoundedRect(27, 58, 10, 8, 3);
+        // Hunched shoulders & crimson-spotted kerchief (хустка)
+        g.fillStyle(0x6d2e46, 1);
+        g.fillRoundedRect(8, 16, 34, 18, 8);
+        g.fillStyle(0x9e2a2b, 1);
+        g.fillCircle(26, 14, 12);
+        g.fillStyle(0xffd166, 0.9);
+        g.fillCircle(21, 10, 2);
+        g.fillCircle(30, 11, 2);
+        // Expressive folkloric face with hooked nose, wry grin & gleaming eye
+        g.fillStyle(0xd8b4a0, 1);
+        g.fillCircle(28, 17, 8.5);
+        // Hooked nose
+        g.fillTriangle(34, 15, 44, 19, 33, 21);
+        // Gleaming amber eye
+        g.fillStyle(0x111111, 1);
+        g.fillCircle(31, 15, 2.2);
+        g.fillStyle(0xffea00, 1);
+        g.fillCircle(31.5, 14.8, 1);
+        // Gnarled wooden staff (костур) with glowing swamp lantern
+        g.lineStyle(4, 0x4a3222, 1);
+        g.lineBetween(44, 12, 42, 64);
+        g.fillStyle(0x80ffdb, 0.9);
+        g.fillCircle(44, 10, 4.5);
+        g.generateTexture('npc_baba_yaga', 54, 68);
+
+        // 25. Throwable Swamp Frog ('swamp_frog' — Бойова Болотна Жаба Баби-Яги)
+        g.clear();
+        // Hind legs
+        g.fillStyle(0x2d6a4f, 1);
+        g.fillEllipse(6, 16, 8, 6);
+        g.fillEllipse(20, 16, 8, 6);
+        // Plump frog body
+        g.fillStyle(0x40916c, 1);
+        g.fillEllipse(13, 13, 18, 13);
+        // Lighter belly
+        g.fillStyle(0xb7e4c7, 1);
+        g.fillEllipse(13, 15, 12, 7);
+        // Dark swamp warts/spots on back
+        g.fillStyle(0x1b4332, 1);
+        g.fillCircle(10, 10, 2);
+        g.fillCircle(16, 11, 1.8);
+        // Bulging golden-amber eyes
+        g.fillStyle(0xffea00, 1);
+        g.fillCircle(9, 7, 3.5);
+        g.fillCircle(17, 7, 3.5);
+        g.fillStyle(0x111111, 1);
+        g.fillCircle(9.5, 7, 1.5);
+        g.fillCircle(17.5, 7, 1.5);
+        // Wide grumpy smile
+        g.lineStyle(1.5, 0x1b4332, 1);
+        g.lineBetween(8, 13, 18, 13);
+        g.generateTexture('swamp_frog', 26, 22);
 
         const launchTitle = () => {
           if (this.scene && this.scene.start) {
@@ -2986,36 +3518,37 @@
         this.lastAttackTime = time;
         this.nextAttackAllowedTime = time + CONFIG.PLAYER.ATTACK_COOLDOWN_MS;
 
-        SFX.swing(this.comboStep);
+        const usingSaber = Boolean(GAME_STATE.hasSaber || (this.scene && this.scene.currentLevel === 2));
+        SFX.swing(this.comboStep, usingSaber);
 
-        // Visual Frying Pan Slash Arc
-        const slashX = this.sprite.x + this.facing * 36;
+        // Visual Frying Pan or Damascus Cossack Saber Slash Arc
+        const slashX = this.sprite.x + this.facing * (usingSaber ? 40 : 36);
         const slashY = this.sprite.y - 2;
-        const slash = this.scene.add.image(slashX, slashY, 'pan_slash');
+        const slash = this.scene.add.image(slashX, slashY, usingSaber ? 'saber_slash' : 'pan_slash');
         slash.setFlipX(this.facing < 0);
 
         if (isCounterAttack) {
-          slash.setTint(0xffea00);
-          slash.setScale(1.35);
+          slash.setTint(usingSaber ? 0x00f5d4 : 0xffea00);
+          slash.setScale(1.38);
         } else if (this.comboStep === 3) {
-          slash.setTint(0xff9f1c);
-          slash.setScale(1.28);
+          slash.setTint(usingSaber ? 0xffd166 : 0xff9f1c);
+          slash.setScale(1.3);
         } else if (this.comboStep === 2) {
           slash.setFlipY(true);
-          slash.setScale(1.05);
+          slash.setScale(1.08);
         }
 
         this.scene.tweens.add({
           targets: slash,
           alpha: 0,
-          scaleX: slash.scaleX * 1.2,
-          scaleY: slash.scaleY * 1.2,
-          duration: 140,
+          scaleX: slash.scaleX * 1.22,
+          scaleY: slash.scaleY * 1.22,
+          duration: 145,
           onComplete: () => slash.destroy()
         });
 
         // Slight forward step impulse
-        this.sprite.body.setVelocityX(this.facing * 140);
+        this.sprite.body.setVelocityX(this.facing * 145);
         this.applySquashStretch(1.18, 0.88);
 
         // Delegate hit detection to GameScene if combat exists
@@ -3200,6 +3733,7 @@
         this.barFill.setFillStyle(0x00f5d4);
         this.stunPrompt.setVisible(true);
         this.stars.forEach(s => s.setVisible(true));
+        this.sprite.setAngle(0);
         this.sprite.clearTint();
         SFX.stunFull();
       }
@@ -3210,6 +3744,7 @@
         this.barFill.setFillStyle(0xffbe0b);
         this.stunPrompt.setVisible(false);
         this.stars.forEach(s => s.setVisible(false));
+        this.sprite.setAngle(0);
       }
 
       triggerFinisher(fromX) {
@@ -3581,69 +4116,218 @@
 
         this.stage = 1; // 1 or 2 (2 finishers required)
         this.active = false;
-        this.state = 'IDLE'; // IDLE, TELEGRAPH, LUNGE, JUMP_SLAM, SUMMON, COOLDOWN
+        this.state = 'IDLE'; // IDLE, TELEGRAPH, LUNGE, PECK_FLURRY, JUMP_SLAM, SUMMON, COOLDOWN
         this.nextMove = 'LUNGE';
         this.moveCycle = 0;
         this.stateEndTime = 0;
         this.lungeDir = -1;
         this.waitingForSlamLand = false;
+
+        // Anti-spam 1-2 hit window & aggressive counter-attack tracking
+        this.hitsTakenInWindow = 0;
+        this.allowedWindowHits = 2;
+        this.isCounterTelegraph = false;
+        this.chainedLungeCount = 0;
+        this.peckBurstStep = 0;
+        this.nextPeckBurstTime = 0;
+        this.lastGuardNoticeTime = 0;
       }
 
       activate() {
         if (this.active) return;
         this.active = true;
-        this.state = 'COOLDOWN';
-        this.stateEndTime = this.scene.time.now + 900;
+        this.enterCooldownWindow(this.scene.time.now, 650);
         SFX.roosterCrow();
+      }
+
+      enterCooldownWindow(time, durationMs) {
+        this.state = 'COOLDOWN';
+        this.isTelegraphing = false;
+        this.isCounterTelegraph = false;
+        this.telegraphLabel.setVisible(false);
+        this.sprite.setAngle(0);
+        this.sprite.clearTint();
+        this.stateEndTime = time + durationMs;
+        this.hitsTakenInWindow = 0;
+        // Give the player a balanced window for strictly 1 or 2 hits before the Rooster retaliates!
+        this.allowedWindowHits = (this.stage === 2 && Math.random() < 0.45) ? 1 : Phaser.Math.Between(1, 2);
+      }
+
+      startCounterAttack(time, targetX) {
+        if (this.isStunned || this.isFinished) return;
+
+        this.state = 'TELEGRAPH';
+        this.isTelegraphing = true;
+        this.isCounterTelegraph = true;
+        this.telegraphLabel.setText('⚡!').setVisible(true);
+
+        this.lungeDir = targetX >= this.sprite.x ? 1 : -1;
+        this.sprite.setFlipX(this.lungeDir < 0);
+        this.sprite.setTint(0xff3b00);
+        this.sprite.setScale(1.24, 0.78);
+
+        // Slight furious wing-hop back/up as he prepares to strike back
+        this.sprite.body.setVelocity(-this.lungeDir * 110, -160);
+
+        const dist = Math.abs(targetX - this.sprite.x);
+        if (dist < 175) {
+          this.nextMove = Math.random() < 0.68 ? 'PECK_FLURRY' : 'JUMP_SLAM';
+        } else {
+          this.nextMove = Math.random() < 0.65 ? 'LUNGE' : 'JUMP_SLAM';
+        }
+
+        const counterTelMs = CONFIG.ENEMY.BOSS_ROOSTER.COUNTER_TELEGRAPH_MS * (this.stage === 2 ? 0.85 : 1);
+        this.stateEndTime = time + counterTelMs;
+        SFX.telegraph();
+
+        if (time - this.lastGuardNoticeTime > 650) {
+          this.lastGuardNoticeTime = time;
+          this.scene.showFloatingText(this.sprite.x, this.sprite.y - 68, '⚡ КОНТРАТАКА ПІВНЯ!', '#ffbe0b');
+        }
+      }
+
+      receiveStunHit(stunAmount, fromX, isHeavy = false) {
+        if (this.isFinished) return;
+
+        // If ALREADY stunned, hitting triggers the Comical Non-Lethal Finisher!
+        if (this.isStunned) {
+          this.triggerFinisher(fromX);
+          return;
+        }
+
+        const now = this.scene.time.now;
+        const inOpenWindow = (this.state === 'COOLDOWN') && (this.hitsTakenInWindow < this.allowedWindowHits);
+
+        if (inOpenWindow) {
+          // Clean hit inside the 1-2 hit punish window!
+          this.hitsTakenInWindow++;
+          this.stun = Math.min(this.maxStun, this.stun + stunAmount);
+          SFX.panHit(isHeavy);
+
+          this.scene.triggerHitStop(CONFIG.FEEL.HIT_STOP_MS);
+          this.scene.cameras.main.shake(
+            isHeavy ? CONFIG.FEEL.SHAKE_HEAVY_DURATION : CONFIG.FEEL.SHAKE_LIGHT_DURATION,
+            isHeavy ? CONFIG.FEEL.SHAKE_HEAVY_INTENSITY : CONFIG.FEEL.SHAKE_LIGHT_INTENSITY
+          );
+
+          // Heavy boss poise: slight pushback without launching him high into the air
+          const dir = this.sprite.x >= fromX ? 1 : -1;
+          this.sprite.body.setVelocity(dir * 95, -25);
+          this.sprite.setScale(1.24, 0.82);
+          this.sprite.setTintFill(0xffffff);
+          this.scene.time.delayedCall(80, () => {
+            if (this.sprite && this.sprite.active && !this.isTelegraphing) {
+              this.sprite.clearTint();
+            }
+          });
+
+          this.scene.spawnHitParticles(this.sprite.x, this.sprite.y);
+
+          if (this.stun >= this.maxStun) {
+            this.enterStunState();
+            return;
+          }
+
+          // Once the player lands 1-2 hits, the Rooster immediately retaliates!
+          if (this.hitsTakenInWindow >= this.allowedWindowHits) {
+            this.startCounterAttack(now, fromX);
+          }
+        } else {
+          // Boss is actively attacking/telegraphing or player exceeded the 1-2 hit window:
+          // Wing-Guard deflects 80% of the stun and prevents stun-locking!
+          const reducedStun = Math.max(3, Math.round(stunAmount * 0.2));
+          this.stun = Math.min(this.maxStun, this.stun + reducedStun);
+          SFX.panHit(false);
+          this.scene.spawnHitParticles(this.sprite.x, this.sprite.y, 4);
+          this.sprite.setScale(1.12, 0.9);
+
+          if (now - this.lastGuardNoticeTime > 700) {
+            this.lastGuardNoticeTime = now;
+            this.scene.showFloatingText(this.sprite.x, this.sprite.y - 65, '🛡 Крилатий блок!', '#ff9f1c');
+          }
+
+          if (this.stun >= this.maxStun) {
+            this.enterStunState();
+            return;
+          }
+
+          if (this.state === 'COOLDOWN') {
+            this.startCounterAttack(now, fromX);
+          }
+        }
       }
 
       update(time, player) {
         if (!this.active || !this.updateBase(time)) return;
 
         const onFloor = this.sprite.body.blocked.down || this.sprite.body.touching.down;
+        const distToPlayer = Math.abs(player.sprite.x - this.sprite.x);
+        const dirToPlayer = player.sprite.x >= this.sprite.x ? 1 : -1;
 
         if (this.state === 'COOLDOWN') {
-          this.sprite.body.setVelocityX(0);
+          // Actively stalk toward the player if they try to keep distance, instead of standing still
+          if (distToPlayer > 125) {
+            const stalkSpeed = CONFIG.ENEMY.BOSS_ROOSTER.STALK_SPEED * (this.stage === 2 ? 1.25 : 1);
+            this.sprite.body.setVelocityX(dirToPlayer * stalkSpeed);
+            this.sprite.setFlipX(dirToPlayer < 0);
+          } else {
+            this.sprite.body.setVelocityX(this.sprite.body.velocity.x * 0.8);
+            this.sprite.setFlipX(dirToPlayer < 0);
+          }
+
           if (time >= this.stateEndTime) {
-            // Select next move across 3 phases: 0 = Lunge, 1 = Jump Shockwave, 2 = Summon Chicks
-            const moves = ['LUNGE', 'JUMP_SLAM', 'SUMMON'];
+            // Dynamic move selection based on distance and cycle
+            const moves = distToPlayer < 160
+              ? ['PECK_FLURRY', 'JUMP_SLAM', 'LUNGE', 'SUMMON']
+              : ['LUNGE', 'JUMP_SLAM', 'PECK_FLURRY', 'SUMMON'];
             this.nextMove = moves[this.moveCycle % moves.length];
             this.moveCycle++;
 
             this.state = 'TELEGRAPH';
             this.isTelegraphing = true;
-            this.telegraphLabel.setVisible(true);
-            this.lungeDir = player.sprite.x >= this.sprite.x ? 1 : -1;
+            this.isCounterTelegraph = false;
+            this.telegraphLabel.setText('!').setVisible(true);
+            this.lungeDir = dirToPlayer;
             this.sprite.setFlipX(this.lungeDir < 0);
             this.sprite.setTint(0xffbe0b);
             this.sprite.setScale(1.18, 0.82);
-            this.stateEndTime = time + CONFIG.ENEMY.BOSS_ROOSTER.TELEGRAPH_MS;
+            const telMs = CONFIG.ENEMY.BOSS_ROOSTER.TELEGRAPH_MS * (this.stage === 2 ? 0.82 : 1);
+            this.stateEndTime = time + telMs;
             SFX.telegraph();
           }
         } else if (this.state === 'TELEGRAPH') {
-          this.sprite.body.setVelocityX(0);
+          this.sprite.body.setVelocityX(this.sprite.body.velocity.x * 0.82);
           if (time >= this.stateEndTime) {
             this.isTelegraphing = false;
             this.telegraphLabel.setVisible(false);
             this.sprite.clearTint();
+            this.lungeDir = dirToPlayer;
+            this.sprite.setFlipX(this.lungeDir < 0);
 
             if (this.nextMove === 'LUNGE') {
               this.state = 'LUNGE';
+              this.chainedLungeCount = (this.stage === 2 || this.isCounterTelegraph) ? 1 : 0;
               this.sprite.setTint(0xff4d4d);
-              this.stateEndTime = time + 720;
+              this.stateEndTime = time + 640;
+            } else if (this.nextMove === 'PECK_FLURRY') {
+              this.state = 'PECK_FLURRY';
+              this.peckBurstStep = 0;
+              this.nextPeckBurstTime = time;
+              this.sprite.setTint(0xff2a2a);
+              this.stateEndTime = time + (this.stage === 2 ? 680 : 500);
             } else if (this.nextMove === 'JUMP_SLAM') {
               this.state = 'JUMP_SLAM';
               this.waitingForSlamLand = false;
-              this.sprite.body.setVelocity(this.lungeDir * 210, CONFIG.ENEMY.BOSS_ROOSTER.JUMP_VEL_Y);
-              this.timeOutJump = time + 1600;
-              this.scene.time.delayedCall(150, () => { this.waitingForSlamLand = true; });
+              const horizJumpVel = Phaser.Math.Clamp((player.sprite.x - this.sprite.x) * 1.15, -340, 340);
+              this.sprite.body.setVelocity(horizJumpVel, CONFIG.ENEMY.BOSS_ROOSTER.JUMP_VEL_Y);
+              this.timeOutJump = time + 1500;
+              this.scene.time.delayedCall(140, () => { this.waitingForSlamLand = true; });
             } else if (this.nextMove === 'SUMMON') {
               this.state = 'SUMMON';
               SFX.roosterCrow();
               this.scene.showFloatingText(this.sprite.x, this.sprite.y - 60, STRINGS.BOSS_SUMMON, '#ffd166');
               this.scene.summonBossChicks(this.sprite.x, this.stage);
-              this.state = 'COOLDOWN';
-              this.stateEndTime = time + CONFIG.ENEMY.BOSS_ROOSTER.COOLDOWN_MS;
+              this.enterCooldownWindow(time, CONFIG.ENEMY.BOSS_ROOSTER.COOLDOWN_MS * 0.75);
             }
           }
         } else if (this.state === 'LUNGE') {
@@ -3654,10 +4338,48 @@
             player.takeDamage(CONFIG.ENEMY.BOSS_ROOSTER.DAMAGE_LUNGE, this.sprite.x);
           }
 
-          if (time >= this.stateEndTime || this.sprite.x < LEVEL_1_DATA.bossArenaStartX + 60 || this.sprite.x > CONFIG.WORLD_WIDTH - 60) {
-            this.sprite.clearTint();
-            this.state = 'COOLDOWN';
-            this.stateEndTime = time + CONFIG.ENEMY.BOSS_ROOSTER.COOLDOWN_MS * (this.stage === 2 ? 0.75 : 1);
+          const hitArenaWall = (this.lungeDir < 0 && this.sprite.x < LEVEL_1_DATA.bossArenaStartX + 65) ||
+                               (this.lungeDir > 0 && this.sprite.x > CONFIG.WORLD_WIDTH - 65);
+
+          if (time >= this.stateEndTime || hitArenaWall) {
+            if (this.chainedLungeCount > 0) {
+              // Aggressive turnaround second lunge!
+              this.chainedLungeCount--;
+              this.lungeDir = dirToPlayer;
+              this.sprite.setFlipX(this.lungeDir < 0);
+              this.sprite.setScale(1.22, 0.8);
+              this.stateEndTime = time + 520;
+              SFX.telegraph();
+            } else {
+              const cd = CONFIG.ENEMY.BOSS_ROOSTER.COOLDOWN_MS * (this.stage === 2 ? 0.72 : 1);
+              this.enterCooldownWindow(time, cd);
+            }
+          }
+        } else if (this.state === 'PECK_FLURRY') {
+          // Furious close-range peck & wing-spur combo rush
+          if (time >= this.nextPeckBurstTime) {
+            this.peckBurstStep++;
+            this.nextPeckBurstTime = time + 230;
+            this.lungeDir = dirToPlayer;
+            this.sprite.setFlipX(this.lungeDir < 0);
+            const peckSpeed = CONFIG.ENEMY.BOSS_ROOSTER.PECK_SPEED * (this.stage === 2 ? 1.16 : 1);
+            this.sprite.body.setVelocityX(this.lungeDir * peckSpeed);
+            if (onFloor && this.peckBurstStep === 1) {
+              this.sprite.body.setVelocityY(-230);
+            }
+            this.sprite.setScale(1.28, 0.78);
+            SFX.swing(this.peckBurstStep);
+          }
+
+          this.sprite.setAngle(Math.sin(time * 0.04) * 12 * this.lungeDir);
+
+          if (Phaser.Geom.Intersects.RectangleToRectangle(this.sprite.getBounds(), player.sprite.getBounds())) {
+            player.takeDamage(CONFIG.ENEMY.BOSS_ROOSTER.DAMAGE_PECK, this.sprite.x);
+          }
+
+          if (time >= this.stateEndTime) {
+            const cd = CONFIG.ENEMY.BOSS_ROOSTER.COOLDOWN_MS * (this.stage === 2 ? 0.7 : 0.9);
+            this.enterCooldownWindow(time, cd);
           }
         } else if (this.state === 'JUMP_SLAM') {
           if ((this.waitingForSlamLand && onFloor) || time > this.timeOutJump) {
@@ -3666,8 +4388,8 @@
             this.sprite.setScale(1.32, 0.72);
             this.scene.cameras.main.shake(CONFIG.FEEL.SHAKE_HEAVY_DURATION, CONFIG.FEEL.SHAKE_HEAVY_INTENSITY);
             this.scene.spawnShockwaves(this.sprite.x, CONFIG.GROUND_Y - 14);
-            this.state = 'COOLDOWN';
-            this.stateEndTime = time + CONFIG.ENEMY.BOSS_ROOSTER.COOLDOWN_MS * (this.stage === 2 ? 0.75 : 1);
+            const cd = CONFIG.ENEMY.BOSS_ROOSTER.COOLDOWN_MS * (this.stage === 2 ? 0.72 : 1);
+            this.enterCooldownWindow(time, cd);
           }
         }
       }
@@ -3690,11 +4412,722 @@
           this.scene.spawnLoot(this.sprite.x, this.sprite.y);
           this.scene.showFloatingText(this.sprite.x, this.sprite.y - 65, STRINGS.BOSS_STAGE_2, '#ff4d4d');
 
-          this.sprite.body.setVelocityY(-340);
-          this.state = 'COOLDOWN';
-          this.stateEndTime = this.scene.time.now + 1100;
+          // Immediately leap into Stage 2 Jump Slam so player cannot stand still!
+          this.state = 'JUMP_SLAM';
+          this.waitingForSlamLand = false;
+          this.sprite.body.setVelocity(0, -520);
+          this.timeOutJump = this.scene.time.now + 1400;
+          this.scene.time.delayedCall(140, () => { this.waitingForSlamLand = true; });
         } else {
           // Second Finisher completed -> Boss Pacified in a Giant Barrel & Victory!
+          super.triggerFinisher(fromX);
+          this.scene.time.delayedCall(1200, () => {
+            this.scene.triggerVictory();
+          });
+        }
+      }
+    }
+
+    /**
+     * ============================================================================
+     * 9B. ACT II («ЗЛИЙ ЛІС») UKRAINIAN FOREST MYTHOLOGY ENEMIES & BOSS
+     * ============================================================================
+     */
+
+    /**
+     * SUBCLASS D: Моховик-Щитоносець / Дубовий Страж (Oak-Shielded Forest Guardian)
+     * - Completely INVULNERABLE to frontal melee attacks and frontal Galushkas!
+     * - Can ONLY be damaged/stunned from behind by rolling through him with [Shift]!
+     * - Has a deliberate turnaround delay (TURN_DELAY_MS = 470ms) when Omelko rolls behind him,
+     *   giving a crisp tactical window for backstab combos!
+     */
+    class ShieldGuardianEnemy extends Enemy {
+      constructor(scene, x, y, minX, maxX) {
+        super(scene, x, y, 'enemy_shield_guardian', CONFIG.ENEMY.SHIELD_GUARDIAN.MAX_STUN);
+        this.sprite.body.setSize(38, 52);
+        this.sprite.body.setOffset(8, 6);
+        this.minX = minX !== undefined ? minX : Math.max(100, x - 180);
+        this.maxX = maxX !== undefined ? maxX : Math.min(CONFIG.WORLD_WIDTH - 100, x + 180);
+        this.facing = -1; // 1 = right, -1 = left
+        this.sprite.setFlipX(this.facing < 0);
+
+        this.state = 'PATROL'; // PATROL, ADVANCE, TURN_DELAY, TELEGRAPH, SHIELD_BASH, COOLDOWN
+        this.stateEndTime = 0;
+        this.pendingFacing = -1;
+        this.lastBlockHintTime = 0;
+      }
+
+      receiveStunHit(stunAmount, fromX, isHeavy = false) {
+        if (this.isFinished) return;
+
+        // Once stunned (100% bar), any hit triggers the Comical Finisher!
+        if (this.isStunned) {
+          this.triggerFinisher(fromX);
+          return;
+        }
+
+        // Check if attack came from the FRONT (where the massive oak shield is held)
+        const hitFromRight = fromX >= this.sprite.x;
+        const isFrontalHit = (this.facing > 0 && hitFromRight) || (this.facing < 0 && !hitFromRight);
+
+        if (isFrontalHit) {
+          // 100% INVULNERABLE FROM THE FRONT!
+          SFX.shieldBlock();
+          this.scene.cameras.main.shake(90, 0.004);
+          this.sprite.setScale(1.16, 0.9);
+          this.sprite.setTint(0x94a3b8);
+          this.scene.time.delayedCall(90, () => {
+            if (this.sprite && this.sprite.active && !this.isTelegraphing) this.sprite.clearTint();
+          });
+
+          // Sparks on the front shield
+          this.scene.spawnHitParticles(this.sprite.x + this.facing * 20, this.sprite.y, 5);
+
+          // Push player slightly back when clanging against the oak shield
+          if (this.scene.player && this.scene.player.sprite) {
+            this.scene.player.sprite.body.setVelocityX(this.facing * 190);
+          }
+
+          const now = this.scene.time.now;
+          if (now - this.lastBlockHintTime > 650) {
+            this.lastBlockHintTime = now;
+            this.scene.showFloatingText(this.sprite.x, this.sprite.y - 58, STRINGS.SHIELD_BLOCKED_HINT, '#ffd166');
+          }
+          return;
+        }
+
+        // Hit landed from BEHIND (Omelko rolled behind his shield with [Shift])!
+        const backstabStun = Math.round(stunAmount * 1.35);
+        this.scene.showFloatingText(this.sprite.x, this.sprite.y - 56, STRINGS.BACKSTAB_HIT, '#00f5d4');
+        super.receiveStunHit(backstabStun, fromX, true);
+      }
+
+      update(time, player) {
+        if (!this.updateBase(time)) return;
+
+        const dist = Phaser.Math.Distance.Between(this.sprite.x, this.sprite.y, player.sprite.x, player.sprite.y);
+        const horizDist = Math.abs(player.sprite.x - this.sprite.x);
+        const vertDist = Math.abs(player.sprite.y - this.sprite.y);
+        const dirToPlayer = player.sprite.x >= this.sprite.x ? 1 : -1;
+
+        if (this.state === 'PATROL') {
+          this.sprite.body.setVelocityX(this.facing * CONFIG.ENEMY.SHIELD_GUARDIAN.PATROL_SPEED);
+          this.sprite.setFlipX(this.facing < 0);
+
+          if (this.sprite.x >= this.maxX || this.sprite.body.blocked.right) {
+            this.facing = -1;
+            this.sprite.setFlipX(true);
+          } else if (this.sprite.x <= this.minX || this.sprite.body.blocked.left) {
+            this.facing = 1;
+            this.sprite.setFlipX(false);
+          }
+
+          if (dist < CONFIG.ENEMY.SHIELD_GUARDIAN.AGGRO_RANGE && vertDist < 140) {
+            this.state = 'ADVANCE';
+          }
+        } else if (this.state === 'ADVANCE') {
+          if (dist > CONFIG.ENEMY.SHIELD_GUARDIAN.AGGRO_RANGE * 1.25 || vertDist > 180) {
+            this.state = 'PATROL';
+            return;
+          }
+
+          // If Omelko rolled behind the Shield Guardian, he cannot spin around instantly!
+          // He enters a 470ms TURN_DELAY so the player can punish his exposed back!
+          if (dirToPlayer !== this.facing && horizDist > 10) {
+            this.state = 'TURN_DELAY';
+            this.pendingFacing = dirToPlayer;
+            this.sprite.body.setVelocityX(0);
+            this.telegraphLabel.setText('?').setColor('#ffd166').setVisible(true);
+            this.stateEndTime = time + CONFIG.ENEMY.SHIELD_GUARDIAN.TURN_DELAY_MS;
+            return;
+          }
+
+          // Advance steadily with shield raised
+          this.sprite.body.setVelocityX(this.facing * CONFIG.ENEMY.SHIELD_GUARDIAN.ADVANCE_SPEED);
+          this.sprite.setFlipX(this.facing < 0);
+
+          // Within bash range -> Telegraph heavy Shield Bash!
+          if (horizDist < 125 && vertDist < 75) {
+            this.state = 'TELEGRAPH';
+            this.isTelegraphing = true;
+            this.sprite.body.setVelocityX(0);
+            this.telegraphLabel.setText('!').setColor('#ff002b').setVisible(true);
+            this.sprite.setTint(0xffbe0b);
+            this.sprite.setScale(1.15, 0.85);
+            this.stateEndTime = time + CONFIG.ENEMY.SHIELD_GUARDIAN.TELEGRAPH_MS;
+            SFX.telegraph();
+          }
+        } else if (this.state === 'TURN_DELAY') {
+          this.sprite.body.setVelocityX(0);
+          if (time >= this.stateEndTime) {
+            this.telegraphLabel.setVisible(false);
+            this.facing = this.pendingFacing;
+            this.sprite.setFlipX(this.facing < 0);
+            this.sprite.setScale(1.12, 0.9);
+            // After turning around toward Omelko, if Omelko is still close, immediately telegraph a Shield Bash!
+            if (horizDist < 135 && vertDist < 80) {
+              this.state = 'TELEGRAPH';
+              this.isTelegraphing = true;
+              this.telegraphLabel.setText('!').setColor('#ff002b').setVisible(true);
+              this.sprite.setTint(0xffbe0b);
+              this.stateEndTime = time + CONFIG.ENEMY.SHIELD_GUARDIAN.TELEGRAPH_MS * 0.85;
+              SFX.telegraph();
+            } else {
+              this.state = 'ADVANCE';
+            }
+          }
+        } else if (this.state === 'TELEGRAPH') {
+          this.sprite.body.setVelocityX(0);
+          if (time >= this.stateEndTime) {
+            this.state = 'SHIELD_BASH';
+            this.isTelegraphing = false;
+            this.telegraphLabel.setVisible(false);
+            this.sprite.setTint(0xff4d4d);
+            this.stateEndTime = time + 480;
+            SFX.swing(3, false);
+          }
+        } else if (this.state === 'SHIELD_BASH') {
+          this.sprite.body.setVelocityX(this.facing * CONFIG.ENEMY.SHIELD_GUARDIAN.BASH_SPEED);
+
+          if (Phaser.Geom.Intersects.RectangleToRectangle(this.sprite.getBounds(), player.sprite.getBounds())) {
+            player.takeDamage(CONFIG.ENEMY.SHIELD_GUARDIAN.DAMAGE_BASH, this.sprite.x);
+            this.state = 'COOLDOWN';
+            this.sprite.clearTint();
+            this.sprite.body.setVelocityX(-this.facing * 90);
+            this.stateEndTime = time + CONFIG.ENEMY.SHIELD_GUARDIAN.COOLDOWN_MS;
+            return;
+          }
+
+          if (time >= this.stateEndTime) {
+            this.state = 'COOLDOWN';
+            this.sprite.clearTint();
+            this.sprite.body.setVelocityX(0);
+            this.stateEndTime = time + CONFIG.ENEMY.SHIELD_GUARDIAN.COOLDOWN_MS;
+          }
+        } else if (this.state === 'COOLDOWN') {
+          this.sprite.body.setVelocityX(this.sprite.body.velocity.x * 0.8);
+          if (time >= this.stateEndTime) {
+            this.state = 'ADVANCE';
+          }
+        }
+      }
+    }
+
+    /**
+     * SUBCLASS E: Лісова Нявка (Eerie Woodland Spirit / Mavka)
+     * - Hover-glides with a haunting sine wave motion, shrieks, and performs either a
+     *   Phantom Swoop or fires a glowing Will-o'-Wisp ('willowisp' — вогник Блуду).
+     */
+    class NyavkaEnemy extends Enemy {
+      constructor(scene, x, y, minX, maxX) {
+        super(scene, x, y, 'enemy_nyavka', CONFIG.ENEMY.NYAVKA.MAX_STUN);
+        this.minX = minX !== undefined ? minX : Math.max(100, x - 180);
+        this.maxX = maxX !== undefined ? maxX : Math.min(CONFIG.WORLD_WIDTH - 100, x + 180);
+        this.patrolDir = -1;
+        this.state = 'FLOAT'; // FLOAT, TELEGRAPH, SWOOP, COOLDOWN
+        this.stateEndTime = 0;
+        this.swoopDir = -1;
+        this.attackCycle = 0;
+        this.sprite.setAlpha(0.92);
+      }
+
+      update(time, player) {
+        if (!this.updateBase(time)) return;
+
+        const dist = Phaser.Math.Distance.Between(this.sprite.x, this.sprite.y, player.sprite.x, player.sprite.y);
+        const dirToPlayer = player.sprite.x >= this.sprite.x ? 1 : -1;
+
+        if (this.state === 'FLOAT') {
+          this.sprite.body.setVelocityX(this.patrolDir * CONFIG.ENEMY.NYAVKA.FLOAT_SPEED);
+          this.sprite.setFlipX(this.patrolDir < 0);
+
+          if (this.sprite.x >= this.maxX || this.sprite.body.blocked.right) this.patrolDir = -1;
+          if (this.sprite.x <= this.minX || this.sprite.body.blocked.left) this.patrolDir = 1;
+
+          // Eerie floating hop when touching floor
+          if ((this.sprite.body.blocked.down || this.sprite.body.touching.down) && Math.random() < 0.03) {
+            this.sprite.body.setVelocityY(-260);
+          }
+
+          if (dist < CONFIG.ENEMY.NYAVKA.AGGRO_RANGE && Math.abs(player.sprite.y - this.sprite.y) < 210) {
+            this.state = 'TELEGRAPH';
+            this.isTelegraphing = true;
+            this.swoopDir = dirToPlayer;
+            this.sprite.setFlipX(this.swoopDir < 0);
+            this.sprite.body.setVelocityX(0);
+            this.telegraphLabel.setText('!').setColor('#00f5d4').setVisible(true);
+            this.sprite.setTint(0x80ed99);
+            this.sprite.setScale(1.18, 0.84);
+            this.stateEndTime = time + CONFIG.ENEMY.NYAVKA.TELEGRAPH_MS;
+            SFX.nyavkaWail();
+          }
+        } else if (this.state === 'TELEGRAPH') {
+          this.sprite.body.setVelocityX(0);
+          if (time >= this.stateEndTime) {
+            this.isTelegraphing = false;
+            this.telegraphLabel.setVisible(false);
+            this.sprite.clearTint();
+            this.attackCycle++;
+
+            if (this.attackCycle % 2 === 0 && dist > 150) {
+              // Fire ghostly Will-o'-Wisp orb toward Omelko
+              this.scene.spawnWillOWisp(this.sprite.x, this.sprite.y - 8, player.sprite.x, player.sprite.y);
+              this.state = 'COOLDOWN';
+              this.stateEndTime = time + CONFIG.ENEMY.NYAVKA.COOLDOWN_MS;
+            } else {
+              // Fast Phantom Swoop!
+              this.state = 'SWOOP';
+              this.swoopDir = dirToPlayer;
+              this.sprite.setFlipX(this.swoopDir < 0);
+              this.sprite.setTint(0x00f5d4);
+              if (player.sprite.y < this.sprite.y - 35 && (this.sprite.body.blocked.down || this.sprite.body.touching.down)) {
+                this.sprite.body.setVelocityY(-490);
+              }
+              this.stateEndTime = time + 620;
+            }
+          }
+        } else if (this.state === 'SWOOP') {
+          this.sprite.body.setVelocityX(this.swoopDir * CONFIG.ENEMY.NYAVKA.SWOOP_SPEED);
+
+          if (Phaser.Geom.Intersects.RectangleToRectangle(this.sprite.getBounds(), player.sprite.getBounds())) {
+            player.takeDamage(CONFIG.ENEMY.NYAVKA.DAMAGE, this.sprite.x);
+            this.state = 'COOLDOWN';
+            this.sprite.clearTint();
+            this.sprite.body.setVelocityX(-this.swoopDir * 120);
+            this.stateEndTime = time + CONFIG.ENEMY.NYAVKA.COOLDOWN_MS;
+            return;
+          }
+
+          if (time >= this.stateEndTime) {
+            this.state = 'COOLDOWN';
+            this.sprite.clearTint();
+            this.sprite.body.setVelocityX(0);
+            this.stateEndTime = time + CONFIG.ENEMY.NYAVKA.COOLDOWN_MS;
+          }
+        } else if (this.state === 'COOLDOWN') {
+          this.sprite.body.setVelocityX(this.sprite.body.velocity.x * 0.82);
+          if (time >= this.stateEndTime) {
+            this.state = 'FLOAT';
+          }
+        }
+      }
+    }
+
+    /**
+     * SUBCLASS F: Болотяник (Hulking Swamp Mire Demon)
+     * - Hurls heavy toxic bog-sludge ('swamp_glob') at range, and performs a ground-shaking
+     *   Mire Slam if Omelko gets close!
+     */
+    class BolotyanykEnemy extends Enemy {
+      constructor(scene, x, y, minX, maxX) {
+        super(scene, x, y, 'enemy_bolotyanyk', CONFIG.ENEMY.BOLOTYANYK.MAX_STUN);
+        this.sprite.body.setSize(46, 50);
+        this.sprite.body.setOffset(5, 6);
+        this.minX = minX !== undefined ? minX : Math.max(100, x - 160);
+        this.maxX = maxX !== undefined ? maxX : Math.min(CONFIG.WORLD_WIDTH - 100, x + 160);
+        this.walkDir = -1;
+        this.state = 'PATROL'; // PATROL, TELEGRAPH_THROW, TELEGRAPH_SLAM, COOLDOWN
+        this.stateEndTime = 0;
+        this.nextAttackTime = 0;
+      }
+
+      update(time, player) {
+        if (!this.updateBase(time)) return;
+
+        const dist = Phaser.Math.Distance.Between(this.sprite.x, this.sprite.y, player.sprite.x, player.sprite.y);
+        const horizDist = Math.abs(player.sprite.x - this.sprite.x);
+        const dirToPlayer = player.sprite.x >= this.sprite.x ? 1 : -1;
+
+        if (this.state === 'PATROL') {
+          this.sprite.body.setVelocityX(this.walkDir * CONFIG.ENEMY.BOLOTYANYK.WALK_SPEED);
+          this.sprite.setFlipX(this.walkDir < 0);
+
+          if (this.sprite.x >= this.maxX || this.sprite.body.blocked.right) this.walkDir = -1;
+          if (this.sprite.x <= this.minX || this.sprite.body.blocked.left) this.walkDir = 1;
+
+          if (dist < CONFIG.ENEMY.BOLOTYANYK.AGGRO_RANGE && time >= this.nextAttackTime) {
+            this.isTelegraphing = true;
+            this.sprite.body.setVelocityX(0);
+            this.sprite.setFlipX(dirToPlayer < 0);
+            this.telegraphLabel.setText('!').setColor('#80ed99').setVisible(true);
+            this.sprite.setTint(0x80ed99);
+            this.sprite.setScale(1.22, 0.8);
+            this.stateEndTime = time + CONFIG.ENEMY.BOLOTYANYK.TELEGRAPH_MS;
+            this.state = horizDist < CONFIG.ENEMY.BOLOTYANYK.SLAM_RANGE ? 'TELEGRAPH_SLAM' : 'TELEGRAPH_THROW';
+            SFX.telegraph();
+          }
+        } else if (this.state === 'TELEGRAPH_THROW') {
+          this.sprite.body.setVelocityX(0);
+          if (time >= this.stateEndTime) {
+            this.isTelegraphing = false;
+            this.telegraphLabel.setVisible(false);
+            this.sprite.clearTint();
+            this.sprite.setScale(0.85, 1.22);
+            this.scene.spawnSwampGlob(this.sprite.x, this.sprite.y - 12, player.sprite.x, player.sprite.y);
+            this.state = 'COOLDOWN';
+            this.stateEndTime = time + 400;
+            this.nextAttackTime = time + CONFIG.ENEMY.BOLOTYANYK.COOLDOWN_MS;
+          }
+        } else if (this.state === 'TELEGRAPH_SLAM') {
+          this.sprite.body.setVelocityX(0);
+          if (time >= this.stateEndTime) {
+            this.isTelegraphing = false;
+            this.telegraphLabel.setVisible(false);
+            this.sprite.clearTint();
+            this.sprite.setScale(1.34, 0.72);
+            this.scene.cameras.main.shake(150, 0.008);
+            this.scene.spawnHitParticles(this.sprite.x, this.sprite.y + 18, 8);
+            if (horizDist < CONFIG.ENEMY.BOLOTYANYK.SLAM_RANGE + 25 && Math.abs(player.sprite.y - this.sprite.y) < 75) {
+              player.takeDamage(CONFIG.ENEMY.BOLOTYANYK.DAMAGE_SLAM, this.sprite.x);
+            }
+            // Also hurl two short mire globs left & right on slam
+            this.scene.spawnSwampGlob(this.sprite.x, this.sprite.y - 8, this.sprite.x - 160, this.sprite.y);
+            this.scene.spawnSwampGlob(this.sprite.x, this.sprite.y - 8, this.sprite.x + 160, this.sprite.y);
+            this.state = 'COOLDOWN';
+            this.stateEndTime = time + 480;
+            this.nextAttackTime = time + CONFIG.ENEMY.BOLOTYANYK.COOLDOWN_MS;
+          }
+        } else if (this.state === 'COOLDOWN') {
+          this.sprite.body.setVelocityX(0);
+          if (time >= this.stateEndTime) {
+            this.state = 'PATROL';
+          }
+        }
+      }
+    }
+
+    /**
+     * ============================================================================
+     * 9C. BOSS OF ACT II («ЗЛИЙ ЛІС»): ПРАДАВНІЙ ЛІСОВИК «ЧОРНОБОР»
+     * - Towering Master of the Evil Forest.
+     * - Combines a strict 1-2 hit window with a Frontal Bark-Shield Stance:
+     *   during Bark-Shield Stance (or frontal spam), Omelko MUST Roll [Shift] behind him!
+     * - Moves: ROOT_CHARGE, CLAW_FLURRY, THORN_SLAM (root shockwaves), SUMMON_FOREST.
+     * ============================================================================
+     */
+    class DarkLisovykBoss extends Enemy {
+      constructor(scene, x, y) {
+        super(scene, x, y, 'boss_lisovyk', CONFIG.ENEMY.BOSS_LISOVYK.MAX_STUN);
+        this.sprite.body.setSize(72, 86);
+        this.sprite.body.setOffset(12, 8);
+
+        this.stage = 1; // 1 or 2
+        this.active = false;
+        this.facing = -1;
+        this.sprite.setFlipX(true);
+
+        this.state = 'IDLE'; // IDLE, COOLDOWN, TELEGRAPH, ROOT_CHARGE, CLAW_FLURRY, THORN_SLAM, SUMMON_FOREST
+        this.nextMove = 'ROOT_CHARGE';
+        this.moveCycle = 0;
+        this.stateEndTime = 0;
+        this.waitingForSlamLand = false;
+
+        this.hitsTakenInWindow = 0;
+        this.allowedWindowHits = 2;
+        this.barkShieldActive = false; // When true, frontal hits are 100% blocked — must roll behind!
+        this.chainedChargeCount = 0;
+        this.clawBurstStep = 0;
+        this.nextClawBurstTime = 0;
+        this.lastGuardNoticeTime = 0;
+      }
+
+      activate() {
+        if (this.active) return;
+        this.active = true;
+        this.enterCooldownWindow(this.scene.time.now, 680);
+        SFX.lisovykRoar();
+      }
+
+      enterCooldownWindow(time, durationMs) {
+        this.state = 'COOLDOWN';
+        this.isTelegraphing = false;
+        this.telegraphLabel.setVisible(false);
+        this.sprite.setAngle(0);
+        this.sprite.clearTint();
+        this.stateEndTime = time + durationMs;
+        this.hitsTakenInWindow = 0;
+        this.allowedWindowHits = (this.stage === 2 && Math.random() < 0.5) ? 1 : Phaser.Math.Between(1, 2);
+        // Every second cooldown window (or in Stage 2), Chornobor raises his frontal Bark Shield so Omelko must roll behind him!
+        this.barkShieldActive = (this.moveCycle % 2 === 1) || (this.stage === 2 && Math.random() < 0.6);
+      }
+
+      startCounterAttack(time, targetX) {
+        if (this.isStunned || this.isFinished) return;
+
+        this.state = 'TELEGRAPH';
+        this.isTelegraphing = true;
+        this.telegraphLabel.setText('⚡!').setColor('#ff002b').setVisible(true);
+
+        this.facing = targetX >= this.sprite.x ? 1 : -1;
+        this.sprite.setFlipX(this.facing < 0);
+        this.sprite.setTint(0xd90429);
+        this.sprite.setScale(1.25, 0.78);
+        this.sprite.body.setVelocity(-this.facing * 115, -170);
+
+        const dist = Math.abs(targetX - this.sprite.x);
+        if (dist < 185) {
+          this.nextMove = Math.random() < 0.7 ? 'CLAW_FLURRY' : 'THORN_SLAM';
+        } else {
+          this.nextMove = Math.random() < 0.65 ? 'ROOT_CHARGE' : 'THORN_SLAM';
+        }
+
+        const counterTelMs = CONFIG.ENEMY.BOSS_LISOVYK.COUNTER_TELEGRAPH_MS * (this.stage === 2 ? 0.84 : 1);
+        this.stateEndTime = time + counterTelMs;
+        SFX.lisovykRoar();
+
+        if (time - this.lastGuardNoticeTime > 650) {
+          this.lastGuardNoticeTime = time;
+          this.scene.showFloatingText(this.sprite.x, this.sprite.y - 70, '⚡ ГНІВ ЛІСОВИКА!', '#ff4d4d');
+        }
+      }
+
+      receiveStunHit(stunAmount, fromX, isHeavy = false) {
+        if (this.isFinished) return;
+
+        if (this.isStunned) {
+          this.triggerFinisher(fromX);
+          return;
+        }
+
+        const now = this.scene.time.now;
+        const hitFromRight = fromX >= this.sprite.x;
+        const isFrontalHit = (this.facing > 0 && hitFromRight) || (this.facing < 0 && !hitFromRight);
+
+        // If Bark Shield is active and player attacks from the front, block 100% and prompt roll behind!
+        if (this.barkShieldActive && isFrontalHit) {
+          SFX.shieldBlock();
+          this.scene.spawnHitParticles(this.sprite.x + this.facing * 26, this.sprite.y, 5);
+          this.sprite.setScale(1.15, 0.9);
+          if (now - this.lastGuardNoticeTime > 650) {
+            this.lastGuardNoticeTime = now;
+            this.scene.showFloatingText(this.sprite.x, this.sprite.y - 68, '🛡 Коровий щит! Перекотись за спину [Shift]!', '#00f5d4');
+          }
+          return;
+        }
+
+        const inOpenWindow = (this.state === 'COOLDOWN') && (this.hitsTakenInWindow < this.allowedWindowHits);
+
+        if (inOpenWindow || !isFrontalHit) {
+          this.hitsTakenInWindow++;
+          const bonusMult = !isFrontalHit ? 1.25 : 1;
+          this.stun = Math.min(this.maxStun, this.stun + Math.round(stunAmount * bonusMult));
+          SFX.panHit(isHeavy || !isFrontalHit);
+
+          if (!isFrontalHit) {
+            this.scene.showFloatingText(this.sprite.x, this.sprite.y - 68, STRINGS.BACKSTAB_HIT, '#00f5d4');
+          }
+
+          this.scene.triggerHitStop(CONFIG.FEEL.HIT_STOP_MS);
+          this.scene.cameras.main.shake(
+            isHeavy ? CONFIG.FEEL.SHAKE_HEAVY_DURATION : CONFIG.FEEL.SHAKE_LIGHT_DURATION,
+            isHeavy ? CONFIG.FEEL.SHAKE_HEAVY_INTENSITY : CONFIG.FEEL.SHAKE_LIGHT_INTENSITY
+          );
+
+          const dir = this.sprite.x >= fromX ? 1 : -1;
+          this.sprite.body.setVelocity(dir * 90, -25);
+          this.sprite.setScale(1.24, 0.82);
+          this.sprite.setTintFill(0xffffff);
+          this.scene.time.delayedCall(80, () => {
+            if (this.sprite && this.sprite.active && !this.isTelegraphing) this.sprite.clearTint();
+          });
+
+          this.scene.spawnHitParticles(this.sprite.x, this.sprite.y);
+
+          if (this.stun >= this.maxStun) {
+            this.enterStunState();
+            return;
+          }
+
+          if (this.hitsTakenInWindow >= this.allowedWindowHits) {
+            this.startCounterAttack(now, fromX);
+          }
+        } else {
+          // Deflected by ancient bark armor outside punish window
+          const reducedStun = Math.max(3, Math.round(stunAmount * 0.18));
+          this.stun = Math.min(this.maxStun, this.stun + reducedStun);
+          SFX.shieldBlock();
+          this.scene.spawnHitParticles(this.sprite.x, this.sprite.y, 4);
+          if (now - this.lastGuardNoticeTime > 700) {
+            this.lastGuardNoticeTime = now;
+            this.scene.showFloatingText(this.sprite.x, this.sprite.y - 68, '🛡 Броня Пралісу! Заходь зі спини [Shift]!', '#ff9f1c');
+          }
+          if (this.stun >= this.maxStun) {
+            this.enterStunState();
+            return;
+          }
+          if (this.state === 'COOLDOWN') {
+            this.startCounterAttack(now, fromX);
+          }
+        }
+      }
+
+      update(time, player) {
+        if (!this.active || !this.updateBase(time)) return;
+
+        const onFloor = this.sprite.body.blocked.down || this.sprite.body.touching.down;
+        const distToPlayer = Math.abs(player.sprite.x - this.sprite.x);
+        const dirToPlayer = player.sprite.x >= this.sprite.x ? 1 : -1;
+
+        if (this.state === 'COOLDOWN') {
+          // Turn toward player with slight delay if player rolled behind him
+          if (dirToPlayer !== this.facing) {
+            if (!this.turnAroundAt) {
+              this.turnAroundAt = time + 440;
+            } else if (time >= this.turnAroundAt) {
+              this.facing = dirToPlayer;
+              this.sprite.setFlipX(this.facing < 0);
+              this.turnAroundAt = 0;
+            }
+          } else {
+            this.turnAroundAt = 0;
+          }
+
+          if (distToPlayer > 130 && dirToPlayer === this.facing) {
+            const stalkSpeed = CONFIG.ENEMY.BOSS_LISOVYK.STALK_SPEED * (this.stage === 2 ? 1.25 : 1);
+            this.sprite.body.setVelocityX(this.facing * stalkSpeed);
+          } else {
+            this.sprite.body.setVelocityX(this.sprite.body.velocity.x * 0.8);
+          }
+
+          if (time >= this.stateEndTime) {
+            const moves = distToPlayer < 170
+              ? ['CLAW_FLURRY', 'THORN_SLAM', 'ROOT_CHARGE', 'SUMMON_FOREST']
+              : ['ROOT_CHARGE', 'THORN_SLAM', 'CLAW_FLURRY', 'SUMMON_FOREST'];
+            this.nextMove = moves[this.moveCycle % moves.length];
+            this.moveCycle++;
+
+            this.state = 'TELEGRAPH';
+            this.isTelegraphing = true;
+            this.facing = dirToPlayer;
+            this.sprite.setFlipX(this.facing < 0);
+            this.telegraphLabel.setText('!').setColor('#ff002b').setVisible(true);
+            this.sprite.setTint(0x00f5d4);
+            this.sprite.setScale(1.2, 0.82);
+            const telMs = CONFIG.ENEMY.BOSS_LISOVYK.TELEGRAPH_MS * (this.stage === 2 ? 0.82 : 1);
+            this.stateEndTime = time + telMs;
+            SFX.telegraph();
+          }
+        } else if (this.state === 'TELEGRAPH') {
+          this.sprite.body.setVelocityX(this.sprite.body.velocity.x * 0.82);
+          if (time >= this.stateEndTime) {
+            this.isTelegraphing = false;
+            this.telegraphLabel.setVisible(false);
+            this.sprite.clearTint();
+            this.facing = dirToPlayer;
+            this.sprite.setFlipX(this.facing < 0);
+
+            if (this.nextMove === 'ROOT_CHARGE') {
+              this.state = 'ROOT_CHARGE';
+              this.chainedChargeCount = this.stage === 2 ? 1 : 0;
+              this.sprite.setTint(0xd90429);
+              this.stateEndTime = time + 650;
+            } else if (this.nextMove === 'CLAW_FLURRY') {
+              this.state = 'CLAW_FLURRY';
+              this.clawBurstStep = 0;
+              this.nextClawBurstTime = time;
+              this.sprite.setTint(0xff002b);
+              this.stateEndTime = time + (this.stage === 2 ? 720 : 540);
+            } else if (this.nextMove === 'THORN_SLAM') {
+              this.state = 'THORN_SLAM';
+              this.waitingForSlamLand = false;
+              const horizJumpVel = Phaser.Math.Clamp((player.sprite.x - this.sprite.x) * 1.2, -360, 360);
+              this.sprite.body.setVelocity(horizJumpVel, CONFIG.ENEMY.BOSS_LISOVYK.JUMP_VEL_Y);
+              this.timeOutJump = time + 1500;
+              this.scene.time.delayedCall(140, () => { this.waitingForSlamLand = true; });
+            } else if (this.nextMove === 'SUMMON_FOREST') {
+              this.state = 'SUMMON_FOREST';
+              SFX.lisovykRoar();
+              this.scene.showFloatingText(this.sprite.x, this.sprite.y - 65, STRINGS.BOSS_LISOVYK_SUMMON, '#00f5d4');
+              this.scene.summonLisovykMinions(this.sprite.x, this.stage);
+              this.enterCooldownWindow(time, CONFIG.ENEMY.BOSS_LISOVYK.COOLDOWN_MS * 0.78);
+            }
+          }
+        } else if (this.state === 'ROOT_CHARGE') {
+          const speed = CONFIG.ENEMY.BOSS_LISOVYK.CHARGE_SPEED * (this.stage === 2 ? 1.18 : 1);
+          this.sprite.body.setVelocityX(this.facing * speed);
+
+          if (Phaser.Geom.Intersects.RectangleToRectangle(this.sprite.getBounds(), player.sprite.getBounds())) {
+            player.takeDamage(CONFIG.ENEMY.BOSS_LISOVYK.DAMAGE_CHARGE, this.sprite.x);
+          }
+
+          const arenaMinX = (this.scene.levelData ? this.scene.levelData.bossArenaStartX : 3880) + 65;
+          const hitArenaWall = (this.facing < 0 && this.sprite.x < arenaMinX) ||
+                               (this.facing > 0 && this.sprite.x > CONFIG.WORLD_WIDTH - 65);
+
+          if (time >= this.stateEndTime || hitArenaWall) {
+            if (this.chainedChargeCount > 0) {
+              this.chainedChargeCount--;
+              this.facing = dirToPlayer;
+              this.sprite.setFlipX(this.facing < 0);
+              this.sprite.setScale(1.24, 0.8);
+              this.stateEndTime = time + 530;
+              SFX.telegraph();
+            } else {
+              const cd = CONFIG.ENEMY.BOSS_LISOVYK.COOLDOWN_MS * (this.stage === 2 ? 0.72 : 1);
+              this.enterCooldownWindow(time, cd);
+            }
+          }
+        } else if (this.state === 'CLAW_FLURRY') {
+          if (time >= this.nextClawBurstTime) {
+            this.clawBurstStep++;
+            this.nextClawBurstTime = time + 220;
+            this.facing = dirToPlayer;
+            this.sprite.setFlipX(this.facing < 0);
+            const clawSpeed = CONFIG.ENEMY.BOSS_LISOVYK.CLAW_SPEED * (this.stage === 2 ? 1.16 : 1);
+            this.sprite.body.setVelocityX(this.facing * clawSpeed);
+            if (onFloor && this.clawBurstStep === 1) {
+              this.sprite.body.setVelocityY(-240);
+            }
+            this.sprite.setScale(1.3, 0.78);
+            SFX.swing(this.clawBurstStep, true);
+          }
+
+          this.sprite.setAngle(Math.sin(time * 0.045) * 12 * this.facing);
+
+          if (Phaser.Geom.Intersects.RectangleToRectangle(this.sprite.getBounds(), player.sprite.getBounds())) {
+            player.takeDamage(CONFIG.ENEMY.BOSS_LISOVYK.DAMAGE_CLAW, this.sprite.x);
+          }
+
+          if (time >= this.stateEndTime) {
+            const cd = CONFIG.ENEMY.BOSS_LISOVYK.COOLDOWN_MS * (this.stage === 2 ? 0.7 : 0.9);
+            this.enterCooldownWindow(time, cd);
+          }
+        } else if (this.state === 'THORN_SLAM') {
+          if ((this.waitingForSlamLand && onFloor) || time > this.timeOutJump) {
+            this.sprite.body.setVelocityX(0);
+            this.sprite.setScale(1.35, 0.72);
+            this.scene.cameras.main.shake(CONFIG.FEEL.SHAKE_HEAVY_DURATION, CONFIG.FEEL.SHAKE_HEAVY_INTENSITY);
+            this.scene.spawnRootWaves(this.sprite.x, CONFIG.GROUND_Y - 14);
+            const cd = CONFIG.ENEMY.BOSS_LISOVYK.COOLDOWN_MS * (this.stage === 2 ? 0.72 : 1);
+            this.enterCooldownWindow(time, cd);
+          }
+        }
+      }
+
+      triggerFinisher(fromX) {
+        if (this.stage === 1) {
+          this.stage = 2;
+          this.isStunned = false;
+          this.stun = 0;
+          this.barFill.setFillStyle(0xffbe0b);
+          this.stunPrompt.setVisible(false);
+          this.stars.forEach(s => s.setVisible(false));
+
+          SFX.finisher();
+          SFX.lisovykRoar();
+          this.scene.triggerHitStop(CONFIG.FEEL.FINISHER_HIT_STOP_MS);
+          this.scene.cameras.main.shake(260, 0.016);
+          this.scene.spawnHitParticles(this.sprite.x, this.sprite.y, 20);
+          this.scene.spawnLoot(this.sprite.x, this.sprite.y);
+          this.scene.showFloatingText(this.sprite.x, this.sprite.y - 70, STRINGS.BOSS_LISOVYK_STAGE_2, '#00f5d4');
+
+          // Leap into Stage 2 Thorn Slam!
+          this.state = 'THORN_SLAM';
+          this.waitingForSlamLand = false;
+          this.sprite.body.setVelocity(0, -540);
+          this.timeOutJump = this.scene.time.now + 1400;
+          this.scene.time.delayedCall(140, () => { this.waitingForSlamLand = true; });
+        } else {
           super.triggerFinisher(fromX);
           this.scene.time.delayedCall(1200, () => {
             this.scene.triggerVictory();
@@ -3777,21 +5210,41 @@
           fontSize: '14px', fontStyle: 'bold', color: '#ff758f'
         }).setScrollFactor(0).setDepth(101);
 
+        // Current Level Badge in top-left under HUD panel
+        const isLevel2 = this.scene.currentLevel === 2;
+        this.levelBadgeText = this.scene.add.text(
+          16,
+          92,
+          isLevel2 ? `🌲 ${STRINGS.LEVEL_2_TITLE} (Шабля кума)` : `🌻 ${STRINGS.LEVEL_1_TITLE}`,
+          {
+            fontSize: '12px',
+            fontStyle: 'bold',
+            color: isLevel2 ? '#ff9f1c' : '#ffd166',
+            backgroundColor: '#14161fe0',
+            padding: { x: 8, y: 3 }
+          }
+        ).setScrollFactor(0).setDepth(101);
+
         // Boss Stun Bar (Direct screen-space elements, hidden until entering Boss Arena)
         const bx = CONFIG.WIDTH / 2;
         const by = 52;
-        this.bossBg = this.scene.add.rectangle(bx, by, 390, 48, 0x14161f, 0.9)
+        this.bossBg = this.scene.add.rectangle(bx, by, 410, 48, 0x14161f, 0.92)
           .setStrokeStyle(2, 0xff4d4d).setScrollFactor(0).setDepth(101).setVisible(false);
-        this.bossTitle = this.scene.add.text(bx, by - 11, STRINGS.BOSS_NAME, {
-          fontSize: '14px',
-          fontStyle: 'bold',
-          color: '#ffbe0b'
-        }).setOrigin(0.5).setScrollFactor(0).setDepth(102).setVisible(false);
+        this.bossTitle = this.scene.add.text(
+          bx,
+          by - 11,
+          isLevel2 ? STRINGS.BOSS_LISOVYK_NAME : STRINGS.BOSS_NAME,
+          {
+            fontSize: '14px',
+            fontStyle: 'bold',
+            color: '#ffbe0b'
+          }
+        ).setOrigin(0.5).setScrollFactor(0).setDepth(102).setVisible(false);
         this.bossBarTrack = this.scene.add.rectangle(bx - 175, by + 10, 350, 12, 0x2b2d42)
           .setOrigin(0, 0.5).setScrollFactor(0).setDepth(102).setVisible(false);
         this.bossBarFill = this.scene.add.rectangle(bx - 175, by + 10, 0, 12, 0xff9f1c)
           .setOrigin(0, 0.5).setScrollFactor(0).setDepth(103).setVisible(false);
-        this.bossStageBadges = this.scene.add.text(bx + 175, by - 11, '●●', {
+        this.bossStageBadges = this.scene.add.text(bx + 185, by - 11, '●●', {
           fontSize: '16px',
           color: '#ff4d4d'
         }).setOrigin(1, 0.5).setScrollFactor(0).setDepth(102).setVisible(false);
@@ -3985,26 +5438,28 @@
           .setDepth(200)
           .setInteractive();
 
-        // Modal Card
-        const card = this.scene.add.rectangle(cx, cy, 430, 390, 0x1d1e2c, 0.98)
+        // Modal Card (taller to fit Level Switch option cleanly)
+        const card = this.scene.add.rectangle(cx, cy, 445, 435, 0x1d1e2c, 0.98)
           .setStrokeStyle(3, 0xffd166)
           .setScrollFactor(0)
           .setDepth(201);
 
-        const title = this.scene.add.text(cx, cy - 150, STRINGS.PAUSE_TITLE, {
+        const title = this.scene.add.text(cx, cy - 176, STRINGS.PAUSE_TITLE, {
           fontSize: '25px',
           fontStyle: 'bold',
           color: '#ffd166'
         }).setOrigin(0.5).setScrollFactor(0).setDepth(202);
 
-        const navHint = this.scene.add.text(cx, cy + 162, STRINGS.PAUSE_NAV_HINT, {
+        const navHint = this.scene.add.text(cx, cy + 186, STRINGS.PAUSE_NAV_HINT, {
           fontSize: '12px',
           color: '#a8dadc'
         }).setOrigin(0.5).setScrollFactor(0).setDepth(202);
 
         this.pauseElements.push(overlay, card, title, navHint);
 
-        // Pause Menu Buttons (in Hardcore mode Checkpoint button is omitted)
+        const isLvl2 = this.scene.currentLevel === 2;
+
+        // Pause Menu Buttons (includes quick jump to Evil Forest Act II or back to Act I)
         const buttonConfigs = [
           {
             text: STRINGS.PAUSE_RESUME,
@@ -4022,6 +5477,11 @@
             action: () => this.scene.restartLevel()
           },
           {
+            text: isLvl2 ? STRINGS.PAUSE_LEVEL_1 : STRINGS.PAUSE_LEVEL_2,
+            color: isLvl2 ? 0x52796f : 0x3b2854,
+            action: () => this.scene.switchLevelFromMenu(isLvl2 ? 1 : 2)
+          },
+          {
             text: STRINGS.PAUSE_HUT,
             color: 0x457b9d,
             action: () => this.scene.goToHutScene()
@@ -4034,12 +5494,12 @@
           }
         ];
 
-        const startY = cy - 92;
-        const stepY = 52;
+        const startY = cy - 122;
+        const stepY = 47;
 
         buttonConfigs.forEach((cfg, idx) => {
           const btnY = startY + idx * stepY;
-          const btnObj = this.createScreenSpaceMenuButton(cx, btnY, 320, 42, cfg.text, cfg.color, 203, () => {
+          const btnObj = this.createScreenSpaceMenuButton(cx, btnY, 340, 39, cfg.text, cfg.color, 203, () => {
             this.selectedPauseIndex = idx;
             this.refreshPauseButtonHighlight();
             cfg.action();
@@ -4191,44 +5651,56 @@
       createVictoryModal() {
         const cx = CONFIG.WIDTH / 2;
         const cy = CONFIG.HEIGHT / 2;
+        const isLvl2 = this.scene.currentLevel === 2;
 
-        const overlay = this.scene.add.rectangle(cx, cy, CONFIG.WIDTH, CONFIG.HEIGHT, 0x0b0c10, 0.84)
+        const overlay = this.scene.add.rectangle(cx, cy, CONFIG.WIDTH, CONFIG.HEIGHT, 0x0b0c10, 0.86)
           .setScrollFactor(0)
           .setDepth(210)
           .setInteractive();
 
-        const card = this.scene.add.rectangle(cx, cy, 800, 350, 0x1d3557, 0.98)
+        const card = this.scene.add.rectangle(cx, cy, 820, 385, isLvl2 ? 0x161224 : 0x1d3557, 0.98)
           .setStrokeStyle(4, 0xffd166)
           .setScrollFactor(0)
           .setDepth(211);
 
-        const title = this.scene.add.text(cx, cy - 118, STRINGS.VICTORY_TITLE, {
+        const title = this.scene.add.text(cx, cy - 132, isLvl2 ? STRINGS.VICTORY_ACT2_TITLE : STRINGS.VICTORY_TITLE, {
           fontFamily: "'Cormorant Infant', Georgia, serif",
           fontSize: '34px',
           fontStyle: 'bold',
           color: '#ffd166'
         }).setOrigin(0.5).setScrollFactor(0).setDepth(212);
 
-        const msg = this.scene.add.text(cx, cy - 42, STRINGS.VICTORY_TEXT, {
+        const msg = this.scene.add.text(cx, cy - 52, isLvl2 ? STRINGS.VICTORY_ACT2_TEXT : STRINGS.VICTORY_TEXT, {
           fontFamily: "'Cormorant Infant', Georgia, serif",
           fontSize: '21px',
           fontStyle: 'bold',
           color: '#ffffff',
           align: 'center',
-          wordWrap: { width: 740 },
-          lineSpacing: 8
+          wordWrap: { width: 750 },
+          lineSpacing: 7
         }).setOrigin(0.5).setScrollFactor(0).setDepth(212);
 
-        this.victoryStats = this.scene.add.text(cx, cy + 32, '', {
+        const sub = this.scene.add.text(cx, cy + 12, isLvl2 ? STRINGS.VICTORY_ACT2_SUBTEXT : STRINGS.VICTORY_SUBTEXT, {
+          fontFamily: "'Cormorant Infant', Georgia, serif",
+          fontSize: '17px',
+          fontStyle: 'italic bold',
+          color: '#f6e4b5',
+          align: 'center',
+          wordWrap: { width: 750 }
+        }).setOrigin(0.5).setScrollFactor(0).setDepth(212);
+
+        this.victoryStats = this.scene.add.text(cx, cy + 56, '', {
           fontSize: '16px',
           fontStyle: 'bold',
-          color: '#a8dadc'
+          color: '#a8dadc',
+          backgroundColor: '#0f172a',
+          padding: { x: 14, y: 5 }
         }).setOrigin(0.5).setScrollFactor(0).setDepth(212);
 
         const againBtn = this.createScreenSpaceMenuButton(
           cx,
-          cy + 104,
-          300,
+          cy + 124,
+          320,
           48,
           STRINGS.PLAY_AGAIN,
           0x2a9d8f,
@@ -4236,7 +5708,7 @@
           () => this.scene.goToHutScene()
         );
 
-        this.victoryElements.push(overlay, card, title, msg, this.victoryStats, againBtn.bg, againBtn.lbl);
+        this.victoryElements.push(overlay, card, title, msg, sub, this.victoryStats, againBtn.bg, againBtn.lbl);
         this.setVictoryModalVisible(false);
       }
 
@@ -4402,7 +5874,11 @@
         this.staminaBarFill.width = 210 * ratio;
         this.staminaValueText.setText(`${Math.ceil(player.stamina)}%`);
         this.coinsText.setText(`🪙 ${player.coins}`);
-        this.galushkaText.setText(`🥟 Галушки [S]: ${player.galushkas}`);
+        this.galushkaText.setText(
+          GAME_STATE.hasSwampFrogs
+            ? `🐸 Жаби [S]: ${player.galushkas}`
+            : `🥟 Галушки [S]: ${player.galushkas}`
+        );
         this.uzvarText.setText(`🍒 [A]: ${player.uzvarCharges}`);
 
         const showBoss = Boolean(boss && boss.active && !boss.isFinished);
@@ -4431,8 +5907,25 @@
         super('GameScene');
       }
 
+      init(data) {
+        if (data && data.level) {
+          this.currentLevel = data.level;
+          GAME_STATE.currentLevel = data.level;
+        } else {
+          this.currentLevel = GAME_STATE.currentLevel || 1;
+        }
+        if (this.currentLevel === 2) {
+          GAME_STATE.hasSaber = true;
+        }
+        this.initialCoins = (data && data.coins !== undefined) ? data.coins : (GAME_STATE.savedCoins || 0);
+      }
+
       create() {
-        this.physics.world.setBounds(0, 0, CONFIG.WORLD_WIDTH, CONFIG.WORLD_HEIGHT);
+        const isLevel2 = this.currentLevel === 2;
+        this.levelData = isLevel2 ? buildEvilForestLevelData() : LEVEL_1_DATA;
+        this.worldWidth = this.levelData.worldWidth || CONFIG.WORLD_WIDTH;
+
+        this.physics.world.setBounds(0, 0, this.worldWidth, CONFIG.WORLD_HEIGHT);
         this.physics.world.OVERLAP_BIAS = 16;
         this.isPaused = false;
         this.isDeathModalOpen = false;
@@ -4440,12 +5933,13 @@
         this.enemiesStunnedCount = 0;
         this.lookaheadX = 0;
         this.hasSeenPesyholovets = false;
+        this.hasSeenShieldGuardian = false;
         this.activeSpeechBubble = null;
 
-        // 1. Create 3 Parallax Background Layers
+        // 1. Create 3 Parallax Background Layers (Sunny Village Steppe vs. Dark Eerie "Злий Ліс")
         this.createParallaxBackground();
 
-        // 2. Build Platforms & Wider Ground/Underground Cross-Section from LEVEL_1_DATA
+        // 2. Build Platforms & Wider Ground/Underground Cross-Section
         this.platforms = this.physics.add.staticGroup();
         this.undergroundFloorGroup = this.physics.add.staticGroup();
 
@@ -4453,41 +5947,69 @@
         const groundVisual = this.add.graphics();
         const groundH = CONFIG.HEIGHT - CONFIG.GROUND_Y;
 
-        // Deep underground stone & catacomb stratum
-        groundVisual.fillStyle(0x231912, 1);
-        groundVisual.fillRect(0, CONFIG.GROUND_Y, CONFIG.WORLD_WIDTH, groundH);
+        if (isLevel2) {
+          // Dark cursed peat & tangled root catacombs of "Злий Ліс"
+          groundVisual.fillStyle(0x0b0e14, 1);
+          groundVisual.fillRect(0, CONFIG.GROUND_Y, this.worldWidth, groundH);
 
-        // Mid-earth warm clay & soil band
-        groundVisual.fillStyle(0x3d291a, 1);
-        groundVisual.fillRect(0, CONFIG.GROUND_Y + 12, CONFIG.WORLD_WIDTH, 52);
+          groundVisual.fillStyle(0x161d24, 1);
+          groundVisual.fillRect(0, CONFIG.GROUND_Y + 12, this.worldWidth, 52);
 
-        // Underground tunnel archways, roots & rocky texture details so the lower band is clearly visible
-        for (let x = 40; x < CONFIG.WORLD_WIDTH; x += 120) {
-          // Subtle subterranean brick/stone blocks
-          groundVisual.fillStyle(0x332419, 1);
-          groundVisual.fillRoundedRect(x, CONFIG.GROUND_Y + 68, 72, 26, 5);
-          groundVisual.fillStyle(0x2c1f16, 1);
-          groundVisual.fillRoundedRect(x + 36, CONFIG.GROUND_Y + 100, 68, 24, 5);
+          for (let x = 40; x < this.worldWidth; x += 120) {
+            groundVisual.fillStyle(0x12171d, 1);
+            groundVisual.fillRoundedRect(x, CONFIG.GROUND_Y + 68, 72, 26, 5);
+            groundVisual.fillStyle(0x0e1318, 1);
+            groundVisual.fillRoundedRect(x + 36, CONFIG.GROUND_Y + 100, 68, 24, 5);
 
-          // Hanging tree roots & pebbles in upper soil
-          groundVisual.lineStyle(2.5, 0x5c3c24, 0.85);
-          groundVisual.lineBetween(x + 20, CONFIG.GROUND_Y + 14, x + 12, CONFIG.GROUND_Y + 46);
-          groundVisual.lineBetween(x + 20, CONFIG.GROUND_Y + 28, x + 30, CONFIG.GROUND_Y + 42);
-          groundVisual.fillStyle(0x6c584c, 0.75);
-          groundVisual.fillCircle(x + 85, CONFIG.GROUND_Y + 34, 6);
+            // Gnarled black roots & glowing swamp crystals in underground soil
+            groundVisual.lineStyle(3, 0x2b1d14, 0.9);
+            groundVisual.lineBetween(x + 20, CONFIG.GROUND_Y + 14, x + 8, CONFIG.GROUND_Y + 52);
+            groundVisual.lineBetween(x + 20, CONFIG.GROUND_Y + 28, x + 34, CONFIG.GROUND_Y + 46);
+            groundVisual.fillStyle(0x2a9d8f, 0.55);
+            groundVisual.fillCircle(x + 85, CONFIG.GROUND_Y + 34, 5);
+          }
+
+          // Dark mossy forest floor border at CONFIG.GROUND_Y (405)
+          groundVisual.fillStyle(0x1b4332, 1);
+          groundVisual.fillRect(0, CONFIG.GROUND_Y, this.worldWidth, 14);
+          groundVisual.fillStyle(0x2d6a4f, 1);
+          groundVisual.fillRect(0, CONFIG.GROUND_Y, this.worldWidth, 5);
+        } else {
+          // Deep underground stone & catacomb stratum
+          groundVisual.fillStyle(0x231912, 1);
+          groundVisual.fillRect(0, CONFIG.GROUND_Y, this.worldWidth, groundH);
+
+          // Mid-earth warm clay & soil band
+          groundVisual.fillStyle(0x3d291a, 1);
+          groundVisual.fillRect(0, CONFIG.GROUND_Y + 12, this.worldWidth, 52);
+
+          // Underground tunnel archways, roots & rocky texture details so the lower band is clearly visible
+          for (let x = 40; x < this.worldWidth; x += 120) {
+            groundVisual.fillStyle(0x332419, 1);
+            groundVisual.fillRoundedRect(x, CONFIG.GROUND_Y + 68, 72, 26, 5);
+            groundVisual.fillStyle(0x2c1f16, 1);
+            groundVisual.fillRoundedRect(x + 36, CONFIG.GROUND_Y + 100, 68, 24, 5);
+
+            // Hanging tree roots & pebbles in upper soil
+            groundVisual.lineStyle(2.5, 0x5c3c24, 0.85);
+            groundVisual.lineBetween(x + 20, CONFIG.GROUND_Y + 14, x + 12, CONFIG.GROUND_Y + 46);
+            groundVisual.lineBetween(x + 20, CONFIG.GROUND_Y + 28, x + 30, CONFIG.GROUND_Y + 42);
+            groundVisual.fillStyle(0x6c584c, 0.75);
+            groundVisual.fillCircle(x + 85, CONFIG.GROUND_Y + 34, 6);
+          }
+
+          // Lush Top Grass Border at CONFIG.GROUND_Y (405)
+          groundVisual.fillStyle(0x4c953e, 1);
+          groundVisual.fillRect(0, CONFIG.GROUND_Y, this.worldWidth, 14);
+          groundVisual.fillStyle(0x6ab04c, 1);
+          groundVisual.fillRect(0, CONFIG.GROUND_Y, this.worldWidth, 5);
         }
-
-        // Lush Top Grass Border at CONFIG.GROUND_Y (405)
-        groundVisual.fillStyle(0x4c953e, 1);
-        groundVisual.fillRect(0, CONFIG.GROUND_Y, CONFIG.WORLD_WIDTH, 14);
-        groundVisual.fillStyle(0x6ab04c, 1);
-        groundVisual.fillRect(0, CONFIG.GROUND_Y, CONFIG.WORLD_WIDTH, 5);
 
         // One-way surface collider at CONFIG.GROUND_Y so jumping up from underground never gets blocked from below
         this.groundBody = this.add.rectangle(
-          CONFIG.WORLD_WIDTH / 2,
+          this.worldWidth / 2,
           CONFIG.GROUND_Y + 12,
-          CONFIG.WORLD_WIDTH,
+          this.worldWidth,
           24,
           0x000000,
           0
@@ -4499,9 +6021,9 @@
 
         // Solid bottom floor collider for the underground catacombs
         const undergroundFloor = this.add.rectangle(
-          CONFIG.WORLD_WIDTH / 2,
+          this.worldWidth / 2,
           CONFIG.HEIGHT - 4,
-          CONFIG.WORLD_WIDTH,
+          this.worldWidth,
           8,
           0x000000,
           0
@@ -4511,20 +6033,23 @@
         this.undergroundFloorGroup.add(undergroundFloor);
 
         // Elevated Platforms at 3 Heights
-        LEVEL_1_DATA.platforms.forEach(p => {
-          const tile = this.add.tileSprite(p.x, p.y, p.w, 24, 'platform_tile');
+        const platTex = isLevel2 ? 'platform_tile_dark' : 'platform_tile';
+        this.levelData.platforms.forEach(p => {
+          const tile = this.add.tileSprite(p.x, p.y, p.w, 24, platTex);
           this.physics.add.existing(tile, true);
           this.platforms.add(tile);
         });
 
-        // 3. Create 2 Checkpoints (Well & Pillar)
+        // 3. Create Checkpoints
         this.activeCheckpoint = { x: 120, y: CONFIG.GROUND_Y - 45, id: 0 };
         this.checkpointObjects = [];
-        LEVEL_1_DATA.checkpoints.forEach(cp => {
+        this.levelData.checkpoints.forEach(cp => {
           const tex = cp.type === 'well' ? 'checkpoint_well' : 'checkpoint_pillar';
           const img = this.add.image(cp.x, cp.y - 40, tex);
           if (GAME_STATE.isHardcore()) {
             img.setTint(0x555555);
+          } else if (isLevel2) {
+            img.setTint(0x95d5b2);
           }
           const lbl = this.add.text(
             cp.x,
@@ -4540,27 +6065,30 @@
         });
 
         // Boss Arena Gate Marker
-        this.add.text(LEVEL_1_DATA.bossArenaStartX + 20, CONFIG.GROUND_Y - 110, '⚠ ПТАШИНИЙ ДВІР ПІВНЯ →', {
-          fontSize: '16px',
-          fontStyle: 'bold',
-          color: '#ffbe0b',
-          backgroundColor: '#2b2d42',
-          padding: { x: 8, y: 4 }
-        });
+        this.add.text(
+          this.levelData.bossArenaStartX + 20,
+          CONFIG.GROUND_Y - 110,
+          isLevel2 ? '⚠ ГАЛЯВИНА ЧОРНОБОРА →' : '⚠ ПТАШИНИЙ ДВІР ПІВНЯ →',
+          {
+            fontSize: '16px',
+            fontStyle: 'bold',
+            color: isLevel2 ? '#ff6b6b' : '#ffbe0b',
+            backgroundColor: isLevel2 ? '#1a0f1e' : '#2b2d42',
+            padding: { x: 8, y: 4 }
+          }
+        );
 
         // 4. Create Player & Platform Collisions (with Shift+Down drop-through support on groundBody)
         this.player = new Player(this, this.activeCheckpoint.x, this.activeCheckpoint.y);
+        this.player.coins = this.initialCoins;
         this.physics.add.collider(this.player.sprite, this.platforms);
         this.physics.add.collider(
           this.player.sprite,
           this.groundBody,
           null,
           (playerSprite) => {
-            // Allow leaping upward from underground through the ground surface
             if (playerSprite.body.velocity.y < 0) return false;
-            // Allow intentional diving
             if (this.time.now < this.player.dropThroughUntil) return false;
-            // When falling or landing from above, always reliably collide and stay on top of the grass
             const prevBottom = playerSprite.body.prev.y + playerSprite.body.height;
             if (prevBottom <= CONFIG.GROUND_Y + 14) return true;
             if (playerSprite.body.bottom <= CONFIG.GROUND_Y + 28) return true;
@@ -4571,16 +6099,26 @@
 
         // 5. Setup Camera with Lookahead Target & Deadzone
         this.camTarget = this.add.zone(this.player.sprite.x, this.player.sprite.y - 25, 1, 1);
-        this.cameras.main.setBounds(0, 0, CONFIG.WORLD_WIDTH, CONFIG.WORLD_HEIGHT);
+        this.cameras.main.setBounds(0, 0, this.worldWidth, CONFIG.WORLD_HEIGHT);
         this.cameras.main.startFollow(this.camTarget, true, CONFIG.CAMERA.LERP_X, CONFIG.CAMERA.LERP_Y);
         this.cameras.main.setDeadzone(CONFIG.CAMERA.DEADZONE_W, CONFIG.CAMERA.DEADZONE_H);
 
-        // 6. Create Enemies & Mad Rooster Boss
+        // 6. Create Enemies & Boss (Act I vs. Act II "Злий Ліс")
         this.enemies = [];
-        LEVEL_1_DATA.enemies.forEach(eData => {
+        this.levelData.enemies.forEach(eData => {
           let enemy;
           if (eData.type === 'goose') {
             enemy = new GooseEnemy(this, eData.x, eData.y, eData.minX, eData.maxX);
+            this.physics.add.collider(enemy.sprite, this.platforms);
+            this.physics.add.collider(enemy.sprite, this.groundBody);
+          } else if (eData.type === 'shield_guardian') {
+            enemy = new ShieldGuardianEnemy(this, eData.x, eData.y, eData.minX, eData.maxX);
+            this.physics.add.collider(enemy.sprite, this.platforms);
+            this.physics.add.collider(enemy.sprite, this.groundBody);
+          } else if (eData.type === 'nyavka') {
+            enemy = new NyavkaEnemy(this, eData.x, eData.y, eData.minX, eData.maxX);
+          } else if (eData.type === 'bolotyanyk') {
+            enemy = new BolotyanykEnemy(this, eData.x, eData.y, eData.minX, eData.maxX);
             this.physics.add.collider(enemy.sprite, this.platforms);
             this.physics.add.collider(enemy.sprite, this.groundBody);
           } else {
@@ -4596,7 +6134,9 @@
                 const ref = enemySprite.enemyRef;
                 if (ref && this.time.now < ref.burrowPassUntil) return false;
                 if (enemySprite.body.velocity.y < 0) return false;
-                return enemySprite.body.bottom <= CONFIG.GROUND_Y + 18;
+                const prevBottom = enemySprite.body.prev.y + enemySprite.body.height;
+                if (prevBottom <= CONFIG.GROUND_Y + 18) return true;
+                return enemySprite.body.bottom <= CONFIG.GROUND_Y + 28;
               },
               this
             );
@@ -4604,23 +6144,35 @@
           this.enemies.push(enemy);
         });
 
-        this.boss = new MadRoosterBoss(this, LEVEL_1_DATA.bossSpawnX, CONFIG.GROUND_Y - 50);
+        if (isLevel2) {
+          this.boss = new DarkLisovykBoss(this, this.levelData.bossSpawnX, CONFIG.GROUND_Y - 58);
+        } else {
+          this.boss = new MadRoosterBoss(this, this.levelData.bossSpawnX, CONFIG.GROUND_Y - 50);
+        }
         this.physics.add.collider(this.boss.sprite, this.platforms);
         this.physics.add.collider(this.boss.sprite, this.groundBody);
         this.enemies.push(this.boss);
 
         // 7. Create Projectiles & Loot Physics Groups
         this.galushkaGroup = this.physics.add.group();
-        this.physics.add.collider(this.galushkaGroup, this.platforms, (g) => {
+        this.physics.add.collider(this.galushkaGroup, this.platforms, (obj1, obj2) => {
+          const g = this.galushkaGroup.contains(obj1) ? obj1 : obj2;
           if (g && g.active) g.destroy();
         });
-        this.physics.add.collider(this.galushkaGroup, this.groundBody, (g) => {
-          if (g && g.active) g.destroy();
+        this.physics.add.collider(this.galushkaGroup, this.groundBody, (obj1, obj2) => {
+          const g = (obj1 === this.groundBody) ? obj2 : obj1;
+          if (g && g !== this.groundBody && g.active) g.destroy();
         });
 
         this.enemyProjectiles = this.physics.add.group();
         this.physics.add.collider(this.enemyProjectiles, this.platforms, (proj) => {
-          if (proj && proj.active && proj.texture.key === 'pinecone' && proj.body.velocity.y > 0) {
+          if (proj && proj.active && (proj.texture.key === 'pinecone' || proj.texture.key === 'swamp_glob') && proj.body.velocity.y > 0) {
+            proj.destroy();
+          }
+        });
+        this.physics.add.collider(this.enemyProjectiles, this.groundBody, (obj1, obj2) => {
+          const proj = (obj1 === this.groundBody) ? obj2 : obj1;
+          if (proj && proj !== this.groundBody && proj.active && proj.texture && proj.texture.key === 'swamp_glob' && proj.body.velocity.y > 0) {
             proj.destroy();
           }
         });
@@ -4633,12 +6185,24 @@
         this.ui = new UI(this, false);
         this.pauseStartedAt = 0;
 
-        // Show stylized Controls Guide Modal upon exiting the hut into the level
-        this.isControlsModalOpen = true;
-        this.controlsModalReadyTime = this.time.now + 250;
-        this.physics.world.pause();
-        this.ui.setControlsModalVisible(true);
-        SFX.itemFanfare();
+        if (isLevel2) {
+          // In Act II ("Злий Ліс"), start immediately with atmospheric intro banner & Omelko's remark
+          this.isControlsModalOpen = false;
+          this.ui.setControlsModalVisible(false);
+          this.cameras.main.fadeIn(450, 10, 12, 20);
+          SFX.lisovykRoar();
+          this.showFloatingText(this.player.sprite.x + 60, this.player.sprite.y - 85, `🌲 ${STRINGS.LEVEL_2_TITLE} — ${STRINGS.LEVEL_2_SUBTITLE}`, '#ff9f1c');
+          this.time.delayedCall(450, () => {
+            this.showOmelkoSpeech(STRINGS.OMELKO_REMARK_EVIL_FOREST, 5000);
+          });
+        } else {
+          // Show stylized Controls Guide Modal upon exiting the hut into Level 1
+          this.isControlsModalOpen = true;
+          this.controlsModalReadyTime = this.time.now + 250;
+          this.physics.world.pause();
+          this.ui.setControlsModalVisible(true);
+          SFX.itemFanfare();
+        }
 
         this.input.keyboard.on('keydown-ESC', () => {
           if (this.isControlsModalOpen) {
@@ -4783,7 +6347,118 @@
       createParallaxBackground() {
         const gY = CONFIG.GROUND_Y; // 405
 
-        // Sky gradient background fixed to screen (sized to the lower sky)
+        if (this.currentLevel === 2) {
+          // ====================================================================
+          // ACT II: «ЗЛИЙ ЛІС» — DARK, GLOOMY & EERIE UKRAINIAN MYTHOLOGY FOREST
+          // ====================================================================
+          const sky = this.add.graphics().setScrollFactor(0);
+          sky.fillGradientStyle(0x070810, 0x0d1021, 0x16242b, 0x1e3832, 1);
+          sky.fillRect(0, 0, CONFIG.WIDTH, gY + 10);
+
+          // Eerie blood-amber full moon shrouded in forest mist
+          sky.fillStyle(0xff6b35, 0.16);
+          sky.fillCircle(760, 88, 66);
+          sky.fillStyle(0xff9f1c, 0.35);
+          sky.fillCircle(760, 88, 48);
+          sky.fillStyle(0xffd166, 0.85);
+          sky.fillCircle(760, 88, 34);
+
+          // Layer 1 (Far, scrollFactor 0.16): Silhouette of ancient cursed ridges & dead pines
+          const layer1 = this.add.graphics().setScrollFactor(0.16);
+          layer1.fillStyle(0x0d171a, 1);
+          for (let x = 0; x < 2400; x += 220) {
+            layer1.fillEllipse(x + 110, gY - 20, 320, 210);
+            // Jagged dead pine spires
+            layer1.fillStyle(0x091014, 0.95);
+            layer1.fillTriangle(x + 60, gY - 20, x + 90, gY - 20, x + 75, gY - 185);
+            layer1.fillTriangle(x + 140, gY - 20, x + 166, gY - 20, x + 153, gY - 160);
+            layer1.fillStyle(0x0d171a, 1);
+          }
+
+          // Layer 2 (Mid, scrollFactor 0.42): Gnarled Black Oaks, Swamp Willows & Watching Red Eyes
+          const layer2 = this.add.graphics().setScrollFactor(0.42);
+          for (let x = 40; x < 3400; x += 175) {
+            // Massive twisted black-oak trunk
+            layer2.fillStyle(0x13191d, 1);
+            layer2.fillRect(x + 20, gY - 175, 28, 175);
+            // Gnarled roots gripping the ground
+            layer2.fillTriangle(x + 4, gY, x + 24, gY - 32, x + 28, gY);
+            layer2.fillTriangle(x + 44, gY, x + 46, gY - 32, x + 64, gY);
+            // Crooked branches
+            layer2.lineStyle(5, 0x13191d, 1);
+            layer2.lineBetween(x + 26, gY - 125, x - 12, gY - 155);
+            layer2.lineBetween(x + 42, gY - 135, x + 78, gY - 168);
+
+            // Dark oppressive canopy
+            layer2.fillStyle(0x112622, 0.96);
+            layer2.fillCircle(x + 34, gY - 190, 62);
+            layer2.fillCircle(x + 8, gY - 160, 46);
+            layer2.fillCircle(x + 62, gY - 160, 46);
+
+            // Eerie glowing eyes peeking out from tree hollows every second tree
+            if (x % 350 === 40) {
+              layer2.fillStyle(0xff2a2a, 0.9);
+              layer2.fillCircle(x + 30, gY - 82, 2.5);
+              layer2.fillCircle(x + 38, gY - 82, 2.5);
+            } else if (x % 525 === 0) {
+              layer2.fillStyle(0xffea00, 0.85);
+              layer2.fillCircle(x + 29, gY - 98, 2);
+              layer2.fillCircle(x + 37, gY - 98, 2);
+            }
+          }
+
+          // Layer 3 (Near, scrollFactor 0.76): Swamp mist, bioluminescent mushrooms, crookedtotems & ferns
+          const layer3 = this.add.graphics().setScrollFactor(0.76);
+          for (let x = 30; x < 4800; x += 130) {
+            // Low creeping swamp mist bank
+            layer3.fillStyle(0x52b788, 0.08);
+            layer3.fillEllipse(x + 60, gY - 14, 150, 28);
+
+            // Thorny brambles
+            layer3.lineStyle(2.5, 0x1b2f26, 0.9);
+            layer3.lineBetween(x, gY, x + 18, gY - 26);
+            layer3.lineBetween(x + 18, gY - 26, x + 34, gY - 8);
+
+            // Glowing cyan/emerald forest mushrooms (Мавчині гриби)
+            layer3.fillStyle(0xd8f3dc, 0.85);
+            layer3.fillRect(x + 74, gY - 14, 4, 14);
+            layer3.fillStyle(0x00f5d4, 0.85);
+            layer3.fillEllipse(x + 76, gY - 15, 14, 7);
+
+            layer3.fillStyle(0xd8f3dc, 0.75);
+            layer3.fillRect(x + 86, gY - 9, 3, 9);
+            layer3.fillStyle(0x80ffdb, 0.85);
+            layer3.fillEllipse(x + 87.5, gY - 10, 10, 5);
+          }
+
+          // Floating eerie spore / Will-o'-the-wisp particles drifting in screen space
+          this.forestSpores = [];
+          for (let i = 0; i < 18; i++) {
+            const sp = this.add.circle(
+              Phaser.Math.Between(20, CONFIG.WIDTH - 20),
+              Phaser.Math.Between(40, gY - 10),
+              Phaser.Math.Between(2, 3.5),
+              i % 3 === 0 ? 0xff9f1c : 0x52b788,
+              0.42
+            ).setScrollFactor(0).setDepth(5);
+            this.tweens.add({
+              targets: sp,
+              y: sp.y - Phaser.Math.Between(18, 42),
+              x: sp.x + Phaser.Math.Between(-24, 24),
+              alpha: { from: 0.18, to: 0.58 },
+              duration: Phaser.Math.Between(1800, 3400),
+              yoyo: true,
+              repeat: -1,
+              ease: 'Sine.easeInOut'
+            });
+            this.forestSpores.push(sp);
+          }
+          return;
+        }
+
+        // ====================================================================
+        // ACT I: SUNNY UKRAINIAN VILLAGE & STEPPE OUTSKIRTS
+        // ====================================================================
         const sky = this.add.graphics().setScrollFactor(0);
         sky.fillGradientStyle(0x1d3557, 0x1d3557, 0x457b9d, 0xa8dadc, 1);
         sky.fillRect(0, 0, CONFIG.WIDTH, gY + 10);
@@ -4865,8 +6540,19 @@
         this.lookaheadX = Phaser.Math.Linear(this.lookaheadX, targetOffset, CONFIG.CAMERA.LOOKAHEAD_LERP);
         this.camTarget.setPosition(this.player.sprite.x + this.lookaheadX, this.player.sprite.y - 25);
 
-        // Trigger Omelko's surprise line the first time a Pesyholovets (LeshyEnemy) enters view
-        if (!this.hasSeenPesyholovets) {
+        // Trigger Omelko's tactical remark when encountering the first Shielded Moss Guardian in Level 2
+        if (this.currentLevel === 2 && !this.hasSeenShieldGuardian) {
+          const firstShield = this.enemies.find(
+            e => (e instanceof ShieldGuardianEnemy) && !e.isFinished && Math.abs(e.sprite.x - this.player.sprite.x) < 380
+          );
+          if (firstShield) {
+            this.hasSeenShieldGuardian = true;
+            this.showOmelkoSpeech(STRINGS.OMELKO_REMARK_SHIELD, 4800);
+          }
+        }
+
+        // Trigger Omelko's surprise line the first time a Pesyholovets (LeshyEnemy) enters view in Level 1
+        if (this.currentLevel === 1 && !this.hasSeenPesyholovets) {
           const firstMonster = this.enemies.find(
             e => (e instanceof LeshyEnemy) && !e.isFinished && Math.abs(e.sprite.x - this.player.sprite.x) < 420
           );
@@ -4894,10 +6580,15 @@
         });
 
         // Activate Boss when Player enters Boss Arena
-        if (!this.boss.active && this.player.sprite.x >= LEVEL_1_DATA.bossArenaStartX) {
+        if (!this.boss.active && this.player.sprite.x >= this.levelData.bossArenaStartX) {
           this.boss.activate();
-          this.showFloatingText(this.boss.sprite.x - 80, 200, STRINGS.BOSS_NAME, '#ffbe0b');
-          this.showOmelkoSpeech(STRINGS.OMELKO_REMARK_BOSS, 5200);
+          if (this.currentLevel === 2) {
+            this.showFloatingText(this.boss.sprite.x - 80, 195, STRINGS.BOSS_LISOVYK_NAME, '#52b788');
+            this.showOmelkoSpeech(STRINGS.OMELKO_REMARK_LISOVYK, 5200);
+          } else {
+            this.showFloatingText(this.boss.sprite.x - 80, 200, STRINGS.BOSS_NAME, '#ffbe0b');
+            this.showOmelkoSpeech(STRINGS.OMELKO_REMARK_BOSS, 5200);
+          }
         }
 
         // Update all active Enemies & Boss
@@ -4907,18 +6598,19 @@
           }
         });
 
-        // Update Galushka Projectiles
+        // Update Galushka / Swamp Frog Projectiles
         this.galushkaGroup.getChildren().forEach(g => {
-          g.angle += 10;
+          g.angle += g.isSwampFrog ? 6 : 10;
           this.enemies.forEach(enemy => {
             if (!enemy.isFinished && g.active && Phaser.Geom.Intersects.RectangleToRectangle(g.getBounds(), enemy.sprite.getBounds())) {
-              enemy.receiveStunHit(CONFIG.PLAYER.GALUSHKA_STUN, g.x, true);
+              const stunDmg = g.isSwampFrog ? (CONFIG.PLAYER.GALUSHKA_STUN + 14) : CONFIG.PLAYER.GALUSHKA_STUN;
+              enemy.receiveStunHit(stunDmg, g.x, true);
               g.destroy();
             }
           });
         });
 
-        // Update Enemy Projectiles (Pinecones & Boss Shockwaves)
+        // Update Enemy Projectiles (Pinecones, Swamp Globs, Will-o'-the-Wisps & Boss Shockwaves)
         this.enemyProjectiles.getChildren().forEach(proj => {
           if (proj.isSpinning) proj.angle += 12;
           if (proj.active && Phaser.Geom.Intersects.RectangleToRectangle(proj.getBounds(), this.player.sprite.getBounds())) {
@@ -4926,7 +6618,7 @@
               proj.destroy();
             }
           }
-          if (proj.x < 0 || proj.x > CONFIG.WORLD_WIDTH || proj.y > CONFIG.WORLD_HEIGHT) {
+          if (proj.x < 0 || proj.x > this.worldWidth || proj.y > CONFIG.WORLD_HEIGHT) {
             proj.destroy();
           }
         });
@@ -4943,7 +6635,12 @@
               this.showFloatingText(item.x, item.y - 15, '+20 Сили', '#2ec4b6');
             } else if (item.lootType === 'galushka') {
               this.player.galushkas = Math.min(CONFIG.PLAYER.MAX_GALUSHKAS, this.player.galushkas + 2);
-              this.showFloatingText(item.x, item.y - 15, '+2 Галушки', '#f6e4b5');
+              this.showFloatingText(
+                item.x,
+                item.y - 15,
+                GAME_STATE.hasSwampFrogs ? '+2 Болотні жаби' : '+2 Галушки',
+                GAME_STATE.hasSwampFrogs ? '#80ed99' : '#f6e4b5'
+              );
             }
             item.destroy();
           }
@@ -4953,18 +6650,21 @@
       }
 
       handlePlayerMeleeHit(comboStep, isCounterAttack) {
-        const hitX = this.player.sprite.x + this.player.facing * (CONFIG.PLAYER.ATTACK_RANGE_X * 0.55);
+        const usingSaber = GAME_STATE.hasSaber || this.currentLevel === 2;
+        const rangeX = usingSaber ? CONFIG.PLAYER.ATTACK_RANGE_X + 12 : CONFIG.PLAYER.ATTACK_RANGE_X;
+        const hitX = this.player.sprite.x + this.player.facing * (rangeX * 0.55);
         const hitY = this.player.sprite.y;
         const hitBox = new Phaser.Geom.Rectangle(
-          hitX - CONFIG.PLAYER.ATTACK_RANGE_X / 2,
+          hitX - rangeX / 2,
           hitY - CONFIG.PLAYER.ATTACK_RANGE_Y / 2,
-          CONFIG.PLAYER.ATTACK_RANGE_X,
+          rangeX,
           CONFIG.PLAYER.ATTACK_RANGE_Y
         );
 
         let baseStun = CONFIG.PLAYER.HIT_1_STUN;
         if (comboStep === 2) baseStun = CONFIG.PLAYER.HIT_2_STUN;
         if (comboStep === 3) baseStun = CONFIG.PLAYER.HIT_3_STUN;
+        if (usingSaber) baseStun += 5;
         if (isCounterAttack) baseStun += CONFIG.PLAYER.COUNTER_BONUS_STUN;
 
         this.enemies.forEach(enemy => {
@@ -4978,18 +6678,30 @@
       }
 
       throwPlayerGalushka() {
+        const usingFrogs = Boolean(GAME_STATE.hasSwampFrogs);
         if (this.player.galushkas <= 0) {
-          this.showFloatingText(this.player.sprite.x, this.player.sprite.y - 40, STRINGS.GALUSHKA_EMPTY, '#ff6b6b');
+          this.showFloatingText(
+            this.player.sprite.x,
+            this.player.sprite.y - 40,
+            usingFrogs ? STRINGS.FROG_EMPTY : STRINGS.GALUSHKA_EMPTY,
+            '#ff6b6b'
+          );
           return;
         }
         this.player.galushkas--;
-        SFX.throwGalushka();
+        if (usingFrogs) {
+          SFX.throwFrog();
+        } else {
+          SFX.throwGalushka();
+        }
 
         const g = this.galushkaGroup.create(
           this.player.sprite.x + this.player.facing * 20,
           this.player.sprite.y - 8,
-          'galushka'
+          usingFrogs ? 'swamp_frog' : 'galushka'
         );
+        g.isSwampFrog = usingFrogs;
+        g.setFlipX(this.player.facing < 0);
         g.body.setVelocity(
           this.player.facing * CONFIG.PLAYER.GALUSHKA_SPEED_X,
           CONFIG.PLAYER.GALUSHKA_SPEED_Y
@@ -5022,6 +6734,50 @@
         cone.damageAmount = CONFIG.ENEMY.LESHY.DAMAGE;
       }
 
+      spawnSwampGlob(fromX, fromY, targetX, targetY) {
+        const glob = this.enemyProjectiles.create(fromX, fromY, 'swamp_glob');
+        const dir = targetX >= fromX ? 1 : -1;
+        const dist = Math.min(430, Math.abs(targetX - fromX));
+        glob.body.setVelocity(dir * (dist * 0.88 + 95), CONFIG.ENEMY.BOLOTYANYK.THROW_SPEED_Y);
+        glob.isSpinning = true;
+        glob.damageAmount = CONFIG.ENEMY.BOLOTYANYK.DAMAGE;
+      }
+
+      spawnWillOWisp(fromX, fromY, targetX, targetY) {
+        const wisp = this.enemyProjectiles.create(fromX, fromY, 'willowisp');
+        wisp.body.setAllowGravity(false);
+        const angle = Phaser.Math.Angle.Between(fromX, fromY, targetX, targetY);
+        const speed = 265;
+        wisp.body.setVelocity(Math.cos(angle) * speed, Math.sin(angle) * speed);
+        wisp.damageAmount = CONFIG.ENEMY.BOSS_LISOVYK.DAMAGE_WISP;
+      }
+
+      spawnRootWaves(x, y) {
+        [-1, 1].forEach(dir => {
+          const wave = this.enemyProjectiles.create(x + dir * 28, y, 'root_wave');
+          wave.body.setAllowGravity(false);
+          wave.body.setVelocityX(dir * CONFIG.ENEMY.BOSS_LISOVYK.ROOT_WAVE_SPEED);
+          wave.damageAmount = CONFIG.ENEMY.BOSS_LISOVYK.DAMAGE_WAVE;
+        });
+      }
+
+      summonLisovykMinions(bossX, stage) {
+        const arenaMin = this.levelData.bossArenaStartX + 60;
+        const arenaMax = this.worldWidth - 60;
+        const spawnX = Phaser.Math.Clamp(bossX - 140, arenaMin, arenaMax);
+        const nyavka = new NyavkaEnemy(this, spawnX, CONFIG.GROUND_Y - 125, arenaMin, arenaMax);
+        this.enemies.push(nyavka);
+
+        if (stage === 2) {
+          const spawnX2 = Phaser.Math.Clamp(bossX + 140, arenaMin, arenaMax);
+          const leshy = new LeshyEnemy(this, spawnX2, CONFIG.GROUND_Y - 40, arenaMin, arenaMax);
+          this.physics.add.collider(leshy.sprite, this.platforms);
+          this.physics.add.collider(leshy.sprite, this.undergroundFloorGroup);
+          this.physics.add.collider(leshy.sprite, this.groundBody);
+          this.enemies.push(leshy);
+        }
+      }
+
       spawnShockwaves(x, y) {
         [-1, 1].forEach(dir => {
           const wave = this.enemyProjectiles.create(x + dir * 24, y, 'shockwave');
@@ -5034,9 +6790,10 @@
       summonBossChicks(bossX, stage) {
         const count = stage === 2 ? 2 : 1;
         for (let i = 0; i < count; i++) {
-          const spawnX = Phaser.Math.Clamp(bossX + (i === 0 ? -90 : 90), LEVEL_1_DATA.bossArenaStartX + 50, CONFIG.WORLD_WIDTH - 50);
+          const spawnX = Phaser.Math.Clamp(bossX + (i === 0 ? -90 : 90), this.levelData.bossArenaStartX + 50, this.worldWidth - 50);
           const chick = new ChickEnemy(this, spawnX, CONFIG.GROUND_Y - 35);
           this.physics.add.collider(chick.sprite, this.platforms);
+          this.physics.add.collider(chick.sprite, this.groundBody);
           this.enemies.push(chick);
         }
       }
@@ -5044,7 +6801,9 @@
       spawnLoot(x, y) {
         const types = ['coin', 'coin', 'food', 'galushka'];
         types.forEach((t, idx) => {
-          const tex = t === 'coin' ? 'loot_coin' : (t === 'food' ? 'loot_food' : 'loot_galushka');
+          const tex = t === 'coin'
+            ? 'loot_coin'
+            : (t === 'food' ? 'loot_food' : (GAME_STATE.hasSwampFrogs ? 'swamp_frog' : 'loot_galushka'));
           const item = this.lootGroup.create(x + (idx - 1.5) * 14, y - 10, tex);
           item.lootType = t;
           item.body.setBounce(0.45);
@@ -5195,6 +6954,7 @@
             if (e.stunEndTime) e.stunEndTime += pausedDuration;
             if (e.stateEndTime) e.stateEndTime += pausedDuration;
             if (e.timeOutJump) e.timeOutJump += pausedDuration;
+            if (e.turnReadyTime) e.turnReadyTime += pausedDuration;
           });
 
           this.physics.world.resume();
@@ -5215,13 +6975,26 @@
         this.showFloatingText(this.player.sprite.x, this.player.sprite.y - 45, STRINGS.TIRED_MESSAGE, '#00f5d4');
       }
 
+      switchLevelFromMenu(targetLevel) {
+        if (this.hitStopTimeout) {
+          clearTimeout(this.hitStopTimeout);
+          this.hitStopTimeout = null;
+        }
+        this.isPaused = false;
+        GAME_STATE.currentLevel = targetLevel;
+        if (targetLevel === 2) {
+          GAME_STATE.hasSaber = true;
+        }
+        this.scene.restart({ level: targetLevel, coins: this.player ? this.player.coins : 0 });
+      }
+
       restartLevel() {
         if (this.hitStopTimeout) {
           clearTimeout(this.hitStopTimeout);
           this.hitStopTimeout = null;
         }
         this.isPaused = false;
-        this.scene.restart();
+        this.scene.restart({ level: this.currentLevel, coins: this.initialCoins });
       }
 
       goToHutScene() {
@@ -5230,6 +7003,10 @@
           this.hitStopTimeout = null;
         }
         this.isPaused = false;
+        GAME_STATE.currentLevel = 1;
+        GAME_STATE.hasSaber = false;
+        GAME_STATE.hasSwampFrogs = false;
+        GAME_STATE.savedCoins = 0;
         this.scene.start('HutScene');
       }
 
@@ -5246,13 +7023,24 @@
         this.physics.world.pause();
         SFX.checkpoint();
 
-        this.cameras.main.fadeOut(500, 18, 19, 26);
-        this.time.delayedCall(520, () => {
-          this.scene.start('HrytskoScene', {
-            coins: this.player.coins,
-            enemiesStunned: this.enemiesStunnedCount
+        GAME_STATE.savedCoins = this.player.coins;
+        this.cameras.main.fadeOut(500, 14, 16, 24);
+        if (this.currentLevel === 1) {
+          this.time.delayedCall(520, () => {
+            this.scene.start('HrytskoScene', {
+              coins: this.player.coins,
+              enemiesStunned: this.enemiesStunnedCount
+            });
           });
-        });
+        } else {
+          // Act II ("Злий Ліс") Finale: Omelko approaches Baba Yaga's Hut on Chicken Legs!
+          this.time.delayedCall(520, () => {
+            this.scene.start('BabaYagaScene', {
+              coins: this.player.coins,
+              enemiesStunned: this.enemiesStunnedCount
+            });
+          });
+        }
       }
     }
 
@@ -5709,6 +7497,7 @@
         this.skipHint.setVisible(false);
         this.stage = 'SABER_MODAL';
         this.modalReadyTime = this.time.now + 240;
+        GAME_STATE.hasSaber = true;
 
         this.saberModal.setVisible(true);
         this.saberModal.setScale(0.9);
@@ -5780,13 +7569,13 @@
           }
         ).setOrigin(0.5);
 
-        const btnBg = this.add.rectangle(cx, cy + 124, 300, 48, 0x2a9d8f, 1)
+        const btnBg = this.add.rectangle(cx, cy + 124, 390, 50, 0x2d6a4f, 1)
           .setStrokeStyle(2.5, 0xffea00)
           .setInteractive({ useHandCursor: true });
 
-        const btnLbl = this.add.text(cx, cy + 124, STRINGS.PLAY_AGAIN, {
+        const btnLbl = this.add.text(cx, cy + 124, STRINGS.ENTER_EVIL_FOREST, {
           fontFamily: "'Cormorant Infant', Georgia, serif",
-          fontSize: '20px',
+          fontSize: '21px',
           fontStyle: 'bold',
           color: '#ffffff'
         }).setOrigin(0.5);
@@ -5802,7 +7591,7 @@
         });
         btnBg.on('pointerdown', (pointer, lx, ly, event) => {
           if (event && event.stopPropagation) event.stopPropagation();
-          this.restartWholeGame();
+          this.launchEvilForestAct2();
         });
 
         this.victoryModal.add([overlay, card, title, msg, sub, stats, btnBg, btnLbl]);
@@ -5833,12 +7622,662 @@
           this.showFinaleVictoryModal();
         } else if (this.stage === 'VICTORY_MODAL') {
           if (this.time.now < this.modalReadyTime) return;
-          this.restartWholeGame();
+          this.launchEvilForestAct2();
         }
+      }
+
+      launchEvilForestAct2() {
+        SFX.pickup();
+        GAME_STATE.currentLevel = 2;
+        GAME_STATE.hasSaber = true;
+        GAME_STATE.savedCoins = this.finalCoins;
+        this.scene.start('GameScene', { level: 2, coins: this.finalCoins });
+      }
+    }
+
+    /**
+     * ============================================================================
+     * 11C. ACT 2 FINALE SCENE: BABA YAGA'S HUT ON CHICKEN LEGS ("ХАТКА НА КУРЯЧИХ НІЖКАХ")
+     * Omelko walks up to the chicken-legged hut in the Evil Forest, speaks with Baba Yaga
+     * about the missing salt, and receives Combat Swamp Frogs (Болотні Жаби) for throwing!
+     * ============================================================================
+     */
+    class BabaYagaScene extends Phaser.Scene {
+      constructor() {
+        super('BabaYagaScene');
+      }
+
+      init(data) {
+        this.finalCoins = (data && data.coins !== undefined) ? data.coins : (GAME_STATE.savedCoins || 0);
+        this.finalStunned = (data && data.enemiesStunned !== undefined) ? data.enemiesStunned : 0;
+      }
+
+      create() {
+        this.cameras.main.fadeIn(450, 10, 12, 20);
+        this.lineIndex = 0;
+        this.stage = 'WALK_IN'; // WALK_IN -> DIALOGUE -> FROG_MODAL -> VICTORY_MODAL
+        this.modalReadyTime = 0;
+
+        // 1. Draw the Eerie Glade & Hut on Chicken Legs (Хатка на курячих ніжках)
+        this.drawChickenLegGlade();
+
+        // 2. Place Characters: Cossack Omelko walking in from left, Baba Yaga by the hut, and Chornobor in barrel
+        this.omelko = this.add.image(110, 412, 'cossack').setScale(1.3);
+        this.babaYaga = this.add.image(545, 408, 'npc_baba_yaga').setScale(1.34).setFlipX(true);
+
+        // Idle animation for Baba Yaga
+        this.tweens.add({
+          targets: this.babaYaga,
+          scaleY: 1.39,
+          scaleX: 1.3,
+          duration: 980,
+          yoyo: true,
+          repeat: -1,
+          ease: 'Sine.easeInOut'
+        });
+
+        // Pacified Dark Lisovyk Chornobor upside-down in a mossy swamp barrel on the left
+        const barrelX = 185, barrelY = 420;
+        const propBarrel = this.add.image(barrelX, barrelY, 'prop_barrel').setScale(1.18).setTint(0x74c69d);
+        const lisovykFeet = this.add.image(barrelX, barrelY - 30, 'boss_lisovyk')
+          .setScale(0.52)
+          .setFlipY(true);
+        this.tweens.add({
+          targets: [propBarrel, lisovykFeet],
+          angle: { from: -5, to: 5 },
+          duration: 340,
+          yoyo: true,
+          repeat: -1
+        });
+
+        // Hopping ambient swamp frogs near Baba Yaga's cauldron
+        for (let i = 0; i < 2; i++) {
+          const frog = this.add.image(465 + i * 38, 434, 'swamp_frog').setScale(1.15).setFlipX(i === 1);
+          this.tweens.add({
+            targets: frog,
+            y: 416,
+            duration: 420 + i * 110,
+            yoyo: true,
+            repeat: -1,
+            repeatDelay: 700,
+            ease: 'Quad.easeOut'
+          });
+        }
+
+        // Top Header & Skip Hint
+        this.add.text(24, 16, STRINGS.BABA_YAGA_HEADER, {
+          fontSize: '18px',
+          fontStyle: 'bold',
+          color: '#80ed99',
+          stroke: '#0d131a',
+          strokeThickness: 4
+        });
+
+        this.skipHint = this.add.text(CONFIG.WIDTH - 24, 16, STRINGS.BABA_YAGA_SKIP_HINT, {
+          fontSize: '14px',
+          color: '#f5ebe0',
+          stroke: '#0d131a',
+          strokeThickness: 3
+        }).setOrigin(1, 0);
+
+        // 3. Speech Bubble Container
+        this.bubbleContainer = this.add.container(450, 235).setDepth(50).setVisible(false);
+        this.bubbleBg = this.add.graphics();
+        this.speakerText = this.add.text(-290, -52, '', {
+          fontSize: '16px',
+          fontStyle: 'bold',
+          color: '#c1121f'
+        });
+        this.dialogueText = this.add.text(-290, -24, '', {
+          fontSize: '18px',
+          color: '#1d1e2c',
+          wordWrap: { width: 580 },
+          lineSpacing: 5
+        });
+        this.bubbleContainer.add([this.bubbleBg, this.speakerText, this.dialogueText]);
+
+        // 4. Create Swamp Frogs Item Acquired Modal
+        this.createFrogModal();
+
+        // 5. Create Act 2 Finale Victory Modal
+        this.createAct2VictoryModal();
+
+        // 6. Input Listeners
+        this.input.keyboard.on('keydown-ENTER', () => this.onAdvance());
+        this.input.keyboard.on('keydown-SPACE', () => this.onAdvance());
+        this.input.keyboard.on('keydown-D', () => this.onAdvance());
+        this.input.on('pointerdown', () => {
+          if (this.stage !== 'VICTORY_MODAL') {
+            this.onAdvance();
+          }
+        });
+
+        // Animate Omelko walking up to the Hut on Chicken Legs, then start dialogue
+        this.tweens.add({
+          targets: this.omelko,
+          x: 325,
+          duration: 1050,
+          ease: 'Quad.easeOut',
+          onUpdate: () => {
+            this.omelko.y = 412 - Math.abs(Math.sin(this.time.now * 0.018)) * 6;
+          },
+          onComplete: () => {
+            this.omelko.y = 412;
+            this.tweens.add({
+              targets: this.omelko,
+              y: 409,
+              duration: 950,
+              yoyo: true,
+              repeat: -1,
+              ease: 'Sine.easeInOut'
+            });
+            if (this.stage === 'WALK_IN') {
+              this.stage = 'DIALOGUE';
+              this.bubbleContainer.setVisible(true);
+              this.showDialogueLine(0);
+            }
+          }
+        });
+      }
+
+      drawChickenLegGlade() {
+        const bg = this.add.graphics();
+
+        // Deep eerie twilight sky of the Evil Forest glade
+        bg.fillGradientStyle(0x070912, 0x111827, 0x1b3a36, 0x244c3c, 1);
+        bg.fillRect(0, 0, CONFIG.WIDTH, 435);
+
+        // Blood-amber moon behind twisted branches
+        bg.fillStyle(0xff9f1c, 0.22);
+        bg.fillCircle(195, 110, 62);
+        bg.fillStyle(0xffd166, 0.85);
+        bg.fillCircle(195, 110, 38);
+
+        // Gnarled background trees on the left & right
+        bg.fillStyle(0x0d1b18, 1);
+        for (let tx = 20; tx <= 940; tx += 110) {
+          if (tx < 520 || tx > 860) {
+            bg.fillRect(tx, 160, 26, 220);
+            bg.fillCircle(tx + 13, 150, 56);
+            bg.fillCircle(tx - 12, 175, 42);
+            bg.fillCircle(tx + 38, 175, 42);
+          }
+        }
+
+        // Mossy swamp glade ground
+        bg.fillStyle(0x162e26, 1);
+        bg.fillRect(0, 365, CONFIG.WIDTH, 175);
+        bg.fillStyle(0x283618, 1);
+        bg.fillEllipse(470, 445, 790, 92);
+
+        // Crooked palisade fence with glowing swamp lanterns
+        bg.lineStyle(4, 0x3d291a, 1);
+        for (let fx = 55; fx < 475; fx += 48) {
+          bg.lineBetween(fx, 330, fx + (fx % 96 === 0 ? -4 : 4), 392);
+          if (fx % 96 === 55) {
+            bg.fillStyle(0x80ffdb, 0.85);
+            bg.fillCircle(fx, 326, 5);
+            bg.fillStyle(0x00f5d4, 0.22);
+            bg.fillCircle(fx, 326, 13);
+          }
+        }
+        bg.lineBetween(45, 355, 480, 355);
+        bg.lineBetween(45, 375, 480, 375);
+
+        // Bubbling Cast-Iron Cauldron (казан Баби-Яги) in the yard
+        const cx = 435, cy = 406;
+        bg.fillStyle(0xff6b35, 0.85);
+        bg.fillTriangle(cx - 18, cy + 16, cx + 18, cy + 16, cx, cy - 4);
+        bg.fillStyle(0x1f242d, 1);
+        bg.fillEllipse(cx, cy, 46, 32);
+        bg.fillStyle(0x80ed99, 0.95);
+        bg.fillEllipse(cx, cy - 11, 36, 10);
+
+        // ====================================================================
+        // ХАТКА НА КУРЯЧИХ НІЖКАХ (BABA YAGA'S HUT ON CHICKEN LEGS)
+        // ====================================================================
+        this.hutContainer = this.add.container(705, 255);
+        const hutG = this.add.graphics();
+
+        // Two giant scaly golden Chicken Legs supporting the log hut!
+        hutG.fillStyle(0xe9c46a, 1);
+        // Left chicken leg
+        hutG.fillRoundedRect(-78, 85, 24, 62, 8);
+        hutG.fillRoundedRect(-86, 68, 38, 28, 10); // feathered thigh
+        // Left talons
+        hutG.lineStyle(6, 0xe9c46a, 1);
+        hutG.lineBetween(-68, 145, -96, 160);
+        hutG.lineBetween(-66, 145, -66, 163);
+        hutG.lineBetween(-64, 145, -42, 158);
+        // Claws
+        hutG.fillStyle(0x2b2d42, 1);
+        hutG.fillCircle(-98, 160, 4);
+        hutG.fillCircle(-66, 164, 4);
+        hutG.fillCircle(-40, 158, 4);
+
+        // Right chicken leg
+        hutG.fillStyle(0xe9c46a, 1);
+        hutG.fillRoundedRect(46, 85, 24, 62, 8);
+        hutG.fillRoundedRect(38, 68, 38, 28, 10);
+        // Right talons
+        hutG.lineStyle(6, 0xe9c46a, 1);
+        hutG.lineBetween(56, 145, 30, 158);
+        hutG.lineBetween(58, 145, 58, 163);
+        hutG.lineBetween(60, 145, 86, 160);
+        hutG.fillStyle(0x2b2d42, 1);
+        hutG.fillCircle(28, 158, 4);
+        hutG.fillCircle(58, 164, 4);
+        hutG.fillCircle(88, 160, 4);
+
+        // Wooden Log Cabin Body (сруб із темних колод)
+        hutG.fillStyle(0x4a3222, 1);
+        hutG.fillRoundedRect(-125, -55, 240, 132, 8);
+
+        // Horizontal log ribs & corner notches
+        hutG.lineStyle(2.5, 0x2b1d14, 0.9);
+        for (let ly = -35; ly <= 60; ly += 22) {
+          hutG.lineBetween(-124, ly, 114, ly);
+          hutG.fillStyle(0x6f4518, 1);
+          hutG.fillCircle(-124, ly - 10, 9);
+          hutG.fillCircle(114, ly - 10, 9);
+        }
+
+        // Crooked wooden door & porch steps
+        hutG.fillStyle(0x2b1d14, 1);
+        hutG.fillRoundedRect(-92, -10, 52, 84, 5);
+        hutG.fillStyle(0x5c3c24, 1);
+        hutG.fillRect(-86, -4, 40, 74);
+
+        // Glowing amber-green witch window with carved shutters
+        hutG.fillStyle(0x1b4332, 1);
+        hutG.fillRoundedRect(4, -8, 66, 54, 5);
+        hutG.fillStyle(0xffea00, 0.9);
+        hutG.fillRect(14, 0, 46, 38);
+        hutG.lineStyle(3, 0x3d2314, 1);
+        hutG.strokeRect(14, 0, 46, 38);
+        hutG.lineBetween(37, 0, 37, 38);
+        hutG.lineBetween(14, 19, 60, 19);
+
+        // Steep mossy shingled roof & crooked chimney
+        hutG.fillStyle(0x3d291a, 1);
+        hutG.fillRect(45, -130, 26, 48);
+        hutG.fillStyle(0x1f3528, 1);
+        hutG.fillTriangle(-150, -48, 140, -48, -5, -138);
+        hutG.fillStyle(0x2d4a3e, 1);
+        hutG.fillTriangle(-136, -52, 126, -52, -5, -130);
+
+        this.hutContainer.add(hutG);
+
+        // Subtle rhythmic bobbing of the hut on its chicken legs!
+        this.tweens.add({
+          targets: this.hutContainer,
+          y: 249,
+          angle: { from: -1.2, to: 1.2 },
+          duration: 1350,
+          yoyo: true,
+          repeat: -1,
+          ease: 'Sine.easeInOut'
+        });
+      }
+
+      showDialogueLine(index) {
+        if (index >= STRINGS.BABA_YAGA_LINES.length) {
+          this.showFrogModal();
+          return;
+        }
+
+        this.lineIndex = index;
+        const line = STRINGS.BABA_YAGA_LINES[index];
+        SFX.speechBlip();
+
+        const isYaga = line.speaker.includes('Яга');
+        const targetX = isYaga ? 500 : 365;
+        const tailX = isYaga ? 45 : -45;
+
+        if (isYaga) {
+          this.tweens.add({ targets: this.babaYaga, y: 398, duration: 130, yoyo: true });
+        } else {
+          this.tweens.add({ targets: this.omelko, y: 400, duration: 130, yoyo: true });
+        }
+
+        this.bubbleContainer.setVisible(true);
+        this.bubbleContainer.setPosition(targetX, 238);
+        this.bubbleBg.clear();
+        this.bubbleBg.fillStyle(0xfefae0, 0.98);
+        this.bubbleBg.lineStyle(4, isYaga ? 0x2d6a4f : 0xc1121f, 1);
+        this.bubbleBg.fillRoundedRect(-310, -66, 620, 138, 16);
+        this.bubbleBg.strokeRoundedRect(-310, -66, 620, 138, 16);
+        this.bubbleBg.fillTriangle(tailX - 14, 72, tailX + 14, 72, tailX, 96);
+
+        this.speakerText.setText(line.speaker + ':');
+        this.speakerText.setColor(isYaga ? '#2d6a4f' : '#c1121f');
+        this.dialogueText.setText('«' + line.text + '»');
+
+        this.bubbleContainer.setScale(0.85);
+        this.tweens.add({
+          targets: this.bubbleContainer,
+          scale: 1,
+          duration: 180,
+          ease: 'Back.easeOut'
+        });
+
+        if (this.autoTimer) this.autoTimer.remove();
+        this.autoTimer = this.time.delayedCall(5600, () => {
+          if (this.stage === 'DIALOGUE') {
+            this.showDialogueLine(this.lineIndex + 1);
+          }
+        });
+      }
+
+      createFrogModal() {
+        const cx = CONFIG.WIDTH / 2;
+        const cy = CONFIG.HEIGHT / 2;
+
+        this.frogModal = this.add.container(0, 0).setDepth(150).setVisible(false);
+
+        const dim = this.add.rectangle(cx, cy, CONFIG.WIDTH, CONFIG.HEIGHT, 0x090c12, 0.84);
+
+        const card = this.add.graphics();
+        card.fillStyle(0x162229, 0.98);
+        card.fillRoundedRect(cx - 305, cy - 195, 610, 390, 18);
+        card.lineStyle(4, 0x80ed99, 1);
+        card.strokeRoundedRect(cx - 305, cy - 195, 610, 390, 18);
+        card.lineStyle(2, 0xffd166, 0.9);
+        card.strokeRoundedRect(cx - 293, cy - 183, 586, 366, 14);
+
+        const headerTxt = this.add.text(cx, cy - 156, STRINGS.ITEM_ACQUIRED_HEADER, {
+          fontFamily: "'Cormorant Infant', Georgia, serif",
+          fontSize: '18px',
+          fontStyle: 'bold',
+          color: '#ffd166',
+          letterSpacing: 2,
+          padding: { top: 4, bottom: 4 }
+        }).setOrigin(0.5);
+
+        const titleTxt = this.add.text(cx, cy - 106, STRINGS.ITEM_FROG_TITLE, {
+          fontFamily: "'Cormorant Infant', Georgia, serif",
+          fontSize: '28px',
+          fontStyle: 'bold',
+          color: '#ffffff',
+          align: 'center',
+          lineSpacing: 2,
+          padding: { top: 4, bottom: 6 }
+        }).setOrigin(0.5);
+
+        const glow = this.add.circle(cx, cy + 2, 66, 0x52b788, 0.2)
+          .setStrokeStyle(2.5, 0x80ed99, 0.65);
+
+        this.tweens.add({
+          targets: glow,
+          scaleX: 1.09,
+          scaleY: 1.09,
+          alpha: 0.34,
+          duration: 780,
+          yoyo: true,
+          repeat: -1
+        });
+
+        // Detailed Custom Illustration of Baba Yaga's Combat Swamp Frog (Болотна Жаба)
+        const frogArt = this.add.graphics();
+        const fx = cx;
+        const fy = cy + 6;
+
+        // Swamp lilypad base
+        frogArt.fillStyle(0x1b4332, 1);
+        frogArt.fillEllipse(fx, fy + 26, 116, 28);
+        frogArt.lineStyle(2, 0x52b788, 0.9);
+        frogArt.strokeEllipse(fx, fy + 26, 116, 28);
+
+        // Hind muscular jumping legs
+        frogArt.fillStyle(0x2d6a4f, 1);
+        frogArt.fillEllipse(fx - 34, fy + 10, 28, 22);
+        frogArt.fillEllipse(fx + 34, fy + 10, 28, 22);
+        // Webbed feet
+        frogArt.fillStyle(0x40916c, 1);
+        frogArt.fillTriangle(fx - 48, fy + 22, fx - 24, fy + 22, fx - 34, fy + 14);
+        frogArt.fillTriangle(fx + 24, fy + 22, fx + 48, fy + 22, fx + 34, fy + 14);
+
+        // Plump emerald frog body
+        frogArt.fillStyle(0x40916c, 1);
+        frogArt.fillEllipse(fx, fy + 2, 68, 48);
+        // Pale green throat/belly with vocal sac
+        frogArt.fillStyle(0xd8f3dc, 1);
+        frogArt.fillEllipse(fx, fy + 8, 46, 28);
+
+        // Dark forest warts on back
+        frogArt.fillStyle(0x1b4332, 1);
+        frogArt.fillCircle(fx - 18, fy - 6, 4.5);
+        frogArt.fillCircle(fx + 19, fy - 5, 4);
+        frogArt.fillCircle(fx - 10, fy - 14, 3);
+        frogArt.fillCircle(fx + 11, fy - 13, 3.5);
+
+        // Big golden-amber amphibian eyes
+        frogArt.fillStyle(0x40916c, 1);
+        frogArt.fillCircle(fx - 16, fy - 20, 12);
+        frogArt.fillCircle(fx + 16, fy - 20, 12);
+        frogArt.fillStyle(0xffea00, 1);
+        frogArt.fillCircle(fx - 16, fy - 20, 8.5);
+        frogArt.fillCircle(fx + 16, fy - 20, 8.5);
+        frogArt.fillStyle(0x111111, 1);
+        frogArt.fillEllipse(fx - 16, fy - 20, 4, 9);
+        frogArt.fillEllipse(fx + 16, fy - 20, 4, 9);
+        frogArt.fillStyle(0xffffff, 1);
+        frogArt.fillCircle(fx - 18, fy - 23, 2.2);
+        frogArt.fillCircle(fx + 14, fy - 23, 2.2);
+
+        // Determined Cossack-style smirk
+        frogArt.lineStyle(3, 0x1b4332, 1);
+        frogArt.lineBetween(fx - 20, fy + 1, fx + 20, fy + 1);
+
+        // Magical glowing swamp bubbles around the frog
+        frogArt.fillStyle(0x80ffdb, 0.85);
+        frogArt.fillCircle(fx - 44, fy - 16, 5);
+        frogArt.fillCircle(fx + 46, fy - 12, 6);
+        frogArt.fillCircle(fx + 36, fy - 28, 3.5);
+
+        const badgeTxt = this.add.text(cx, cy + 84, STRINGS.ITEM_FROG_BADGE, {
+          fontSize: '15px',
+          fontStyle: 'bold',
+          color: '#80ed99',
+          backgroundColor: '#1b4332',
+          padding: { x: 14, y: 5 }
+        }).setOrigin(0.5);
+
+        const descTxt = this.add.text(cx, cy + 134, STRINGS.ITEM_FROG_DESC, {
+          fontFamily: "'Cormorant Infant', Georgia, serif",
+          fontSize: '21px',
+          fontStyle: 'italic bold',
+          color: '#f6e4b5',
+          align: 'center',
+          lineSpacing: 5,
+          padding: { top: 4, bottom: 4 }
+        }).setOrigin(0.5);
+
+        this.frogModal.add([dim, card, glow, headerTxt, titleTxt, frogArt, badgeTxt, descTxt]);
+      }
+
+      showFrogModal() {
+        if (this.autoTimer) this.autoTimer.remove();
+        this.bubbleContainer.setVisible(false);
+        this.skipHint.setVisible(false);
+        this.stage = 'FROG_MODAL';
+        this.modalReadyTime = this.time.now + 240;
+        GAME_STATE.hasSwampFrogs = true;
+
+        this.frogModal.setVisible(true);
+        this.frogModal.setScale(0.9);
+        SFX.itemFanfare();
+        SFX.throwFrog();
+
+        this.tweens.add({
+          targets: this.frogModal,
+          scale: 1,
+          duration: 210,
+          ease: 'Back.easeOut'
+        });
+      }
+
+      createAct2VictoryModal() {
+        const cx = CONFIG.WIDTH / 2;
+        const cy = CONFIG.HEIGHT / 2;
+
+        this.victoryModal = this.add.container(0, 0).setDepth(210).setVisible(false);
+
+        const overlay = this.add.rectangle(cx, cy, CONFIG.WIDTH, CONFIG.HEIGHT, 0x080a10, 0.86)
+          .setInteractive();
+
+        const card = this.add.graphics();
+        card.fillStyle(0x162229, 0.98);
+        card.fillRoundedRect(cx - 415, cy - 195, 830, 390, 18);
+        card.lineStyle(4, 0xffd166, 1);
+        card.strokeRoundedRect(cx - 415, cy - 195, 830, 390, 18);
+        card.lineStyle(2, 0x52b788, 0.9);
+        card.strokeRoundedRect(cx - 403, cy - 183, 806, 366, 14);
+
+        const title = this.add.text(cx, cy - 134, STRINGS.VICTORY_ACT2_TITLE, {
+          fontFamily: "'Cormorant Infant', Georgia, serif",
+          fontSize: '36px',
+          fontStyle: 'bold',
+          color: '#ffd166',
+          padding: { top: 4, bottom: 6 }
+        }).setOrigin(0.5);
+
+        const msg = this.add.text(cx, cy - 58, STRINGS.VICTORY_ACT2_TEXT, {
+          fontFamily: "'Cormorant Infant', Georgia, serif",
+          fontSize: '22px',
+          fontStyle: 'bold',
+          color: '#ffffff',
+          align: 'center',
+          wordWrap: { width: 760 },
+          lineSpacing: 8,
+          padding: { top: 4, bottom: 4 }
+        }).setOrigin(0.5);
+
+        const sub = this.add.text(cx, cy + 8, STRINGS.VICTORY_ACT2_SUBTEXT, {
+          fontFamily: "'Cormorant Infant', Georgia, serif",
+          fontSize: '18px',
+          fontStyle: 'italic bold',
+          color: '#80ed99',
+          align: 'center',
+          wordWrap: { width: 760 }
+        }).setOrigin(0.5);
+
+        const stats = this.add.text(
+          cx,
+          cy + 52,
+          `✦ Зібрано червінців: ${this.finalCoins}   |   Подолано лісової нечисті: ${this.finalStunned} ✦`,
+          {
+            fontSize: '16px',
+            fontStyle: 'bold',
+            color: '#a8dadc',
+            backgroundColor: '#0f172a',
+            padding: { x: 16, y: 6 }
+          }
+        ).setOrigin(0.5);
+
+        // Button 1: Replay Evil Forest with Swamp Frogs & Saber equipped
+        const btn1Bg = this.add.rectangle(cx - 165, cy + 126, 390, 48, 0x2d6a4f, 1)
+          .setStrokeStyle(2.5, 0xffea00)
+          .setInteractive({ useHandCursor: true });
+
+        const btn1Lbl = this.add.text(cx - 165, cy + 126, STRINGS.REPLAY_WITH_FROGS_BTN, {
+          fontFamily: "'Cormorant Infant', Georgia, serif",
+          fontSize: '19px',
+          fontStyle: 'bold',
+          color: '#ffffff'
+        }).setOrigin(0.5);
+
+        btn1Bg.on('pointerover', () => {
+          btn1Bg.setScale(1.04);
+          btn1Lbl.setScale(1.04);
+          SFX.speechBlip();
+        });
+        btn1Bg.on('pointerout', () => {
+          btn1Bg.setScale(1);
+          btn1Lbl.setScale(1);
+        });
+        btn1Bg.on('pointerdown', (pointer, lx, ly, event) => {
+          if (event && event.stopPropagation) event.stopPropagation();
+          this.replayEvilForestWithFrogs();
+        });
+
+        // Button 2: Return to Title Screen
+        const btn2Bg = this.add.rectangle(cx + 215, cy + 126, 310, 48, 0x3d405b, 1)
+          .setStrokeStyle(2, 0xf5ebe0)
+          .setInteractive({ useHandCursor: true });
+
+        const btn2Lbl = this.add.text(cx + 215, cy + 126, STRINGS.PLAY_AGAIN, {
+          fontFamily: "'Cormorant Infant', Georgia, serif",
+          fontSize: '19px',
+          fontStyle: 'bold',
+          color: '#ffffff'
+        }).setOrigin(0.5);
+
+        btn2Bg.on('pointerover', () => {
+          btn2Bg.setScale(1.04);
+          btn2Lbl.setScale(1.04);
+          SFX.speechBlip();
+        });
+        btn2Bg.on('pointerout', () => {
+          btn2Bg.setScale(1);
+          btn2Lbl.setScale(1);
+        });
+        btn2Bg.on('pointerdown', (pointer, lx, ly, event) => {
+          if (event && event.stopPropagation) event.stopPropagation();
+          this.restartWholeGame();
+        });
+
+        this.victoryModal.add([overlay, card, title, msg, sub, stats, btn1Bg, btn1Lbl, btn2Bg, btn2Lbl]);
+      }
+
+      showAct2VictoryModal() {
+        this.frogModal.setVisible(false);
+        this.stage = 'VICTORY_MODAL';
+        this.modalReadyTime = this.time.now + 240;
+
+        this.victoryModal.setVisible(true);
+        this.victoryModal.setScale(0.9);
+        SFX.banduraStart();
+
+        this.tweens.add({
+          targets: this.victoryModal,
+          scale: 1,
+          duration: 220,
+          ease: 'Back.easeOut'
+        });
+      }
+
+      onAdvance() {
+        if (this.stage === 'WALK_IN') {
+          this.omelko.x = 325;
+          this.stage = 'DIALOGUE';
+          this.bubbleContainer.setVisible(true);
+          this.showDialogueLine(0);
+        } else if (this.stage === 'DIALOGUE') {
+          this.showDialogueLine(this.lineIndex + 1);
+        } else if (this.stage === 'FROG_MODAL') {
+          if (this.time.now < this.modalReadyTime) return;
+          this.showAct2VictoryModal();
+        } else if (this.stage === 'VICTORY_MODAL') {
+          if (this.time.now < this.modalReadyTime) return;
+          this.replayEvilForestWithFrogs();
+        }
+      }
+
+      replayEvilForestWithFrogs() {
+        SFX.throwFrog();
+        GAME_STATE.currentLevel = 2;
+        GAME_STATE.hasSaber = true;
+        GAME_STATE.hasSwampFrogs = true;
+        this.scene.start('GameScene', { level: 2, coins: this.finalCoins });
       }
 
       restartWholeGame() {
         SFX.pickup();
+        GAME_STATE.currentLevel = 1;
+        GAME_STATE.hasSaber = false;
+        GAME_STATE.hasSwampFrogs = false;
+        GAME_STATE.savedCoins = 0;
         this.scene.start('TitleScene');
       }
     }
@@ -5869,7 +8308,7 @@
             debug: false
           }
         },
-        scene: [BootScene, TitleScene, HutScene, GameScene, HrytskoScene]
+        scene: [BootScene, TitleScene, HutScene, GameScene, HrytskoScene, BabaYagaScene]
       };
 
       const game = new Phaser.Game(gameConfig);
