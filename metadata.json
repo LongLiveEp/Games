@@ -1,0 +1,6 @@
+{
+  "name": "В пошуках солі",
+  "description": "Як козак Омелько смачний борщ рятував — динамічний український платформер від LongLiveEP",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
