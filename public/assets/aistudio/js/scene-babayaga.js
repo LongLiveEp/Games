@@ -108,13 +108,38 @@
         this.createAct2VictoryModal();
 
         // 6. Input Listeners
+        this.transitioningOut = false;
         this.input.keyboard.on('keydown-ENTER', () => this.onAdvance());
         this.input.keyboard.on('keydown-SPACE', () => this.onAdvance());
         this.input.keyboard.on('keydown-D', () => this.onAdvance());
-        this.input.on('pointerdown', () => {
-          if (this.stage !== 'VICTORY_MODAL') {
-            this.onAdvance();
+        this.input.keyboard.on('keydown-R', () => {
+          if (this.stage === 'VICTORY_MODAL') {
+            this.restartWholeGame();
           }
+        });
+        this.input.keyboard.on('keydown-TAB', (e) => {
+          if (e && e.preventDefault) e.preventDefault();
+          if (this.stage !== 'VICTORY_MODAL') {
+            this.showAct2VictoryModal();
+          }
+        });
+        this.input.on('pointerdown', (pointer) => {
+          if (this.stage === 'VICTORY_MODAL') {
+            const cx = CONFIG.WIDTH / 2;
+            const cy = CONFIG.HEIGHT / 2;
+            if (pointer.y >= cy + 96 && pointer.y <= cy + 156) {
+              if (pointer.x >= cx - 365 && pointer.x <= cx + 35) {
+                this.launchDniproAct3();
+                return;
+              }
+              if (pointer.x >= cx + 55 && pointer.x <= cx + 375) {
+                this.restartWholeGame();
+                return;
+              }
+            }
+            return;
+          }
+          this.onAdvance();
         });
 
         // Animate Omelko walking up to the Hut on Chicken Legs, then start dialogue
@@ -462,24 +487,21 @@
       }
 
       showFrogModal() {
-        if (this.autoTimer) this.autoTimer.remove();
+        if (this.stage === 'FROG_MODAL' || this.stage === 'VICTORY_MODAL' || this.transitioningOut) return;
+        if (this.autoTimer) {
+          this.autoTimer.remove();
+          this.autoTimer = null;
+        }
         this.bubbleContainer.setVisible(false);
         this.skipHint.setVisible(false);
         this.stage = 'FROG_MODAL';
-        this.modalReadyTime = this.time.now + 240;
+        this.modalReadyTime = this.time.now + 200;
         GAME_STATE.hasSwampFrogs = true;
 
         this.frogModal.setVisible(true);
-        this.frogModal.setScale(0.9);
+        this.frogModal.setScale(1);
         SFX.itemFanfare();
         SFX.throwFrog();
-
-        this.tweens.add({
-          targets: this.frogModal,
-          scale: 1,
-          duration: 210,
-          ease: 'Back.easeOut'
-        });
       }
 
       createAct2VictoryModal() {
@@ -488,8 +510,7 @@
 
         this.victoryModal = this.add.container(0, 0).setDepth(210).setVisible(false);
 
-        const overlay = this.add.rectangle(cx, cy, CONFIG.WIDTH, CONFIG.HEIGHT, 0x080a10, 0.86)
-          .setInteractive();
+        const overlay = this.add.rectangle(cx, cy, CONFIG.WIDTH, CONFIG.HEIGHT, 0x080a10, 0.86);
 
         const card = this.add.graphics();
         card.fillStyle(0x162229, 0.98);
@@ -540,79 +561,95 @@
           }
         ).setOrigin(0.5);
 
-        // Button 1: Proceed to Act III ("На Дніпрі") with Swamp Frogs & Saber equipped!
-        const btn1Bg = this.add.rectangle(cx - 165, cy + 126, 390, 48, 0x0077b6, 1)
+        this.victoryModal.add([overlay, card, title, msg, sub, stats]);
+
+        // Direct screen-space buttons (outside Container to avoid Phaser 3 container input hitbox bugs)
+        this.act2Btn1Bg = this.add.rectangle(cx - 165, cy + 126, 390, 48, 0x0077b6, 1)
           .setStrokeStyle(2.5, 0xffea00)
+          .setScrollFactor(0)
+          .setDepth(220)
+          .setVisible(false)
           .setInteractive({ useHandCursor: true });
 
-        const btn1Lbl = this.add.text(cx - 165, cy + 126, STRINGS.ENTER_DNIPRO_ACT3, {
+        this.act2Btn1Lbl = this.add.text(cx - 165, cy + 126, STRINGS.ENTER_DNIPRO_ACT3, {
           fontFamily: "'Cormorant Infant', Georgia, serif",
           fontSize: '19px',
           fontStyle: 'bold',
           color: '#ffffff'
-        }).setOrigin(0.5);
+        }).setOrigin(0.5).setScrollFactor(0).setDepth(221).setVisible(false);
 
-        btn1Bg.on('pointerover', () => {
-          btn1Bg.setScale(1.04);
-          btn1Lbl.setScale(1.04);
+        this.act2Btn1Bg.on('pointerover', () => {
+          this.act2Btn1Bg.setFillStyle(0x0096c7, 1);
           SFX.speechBlip();
         });
-        btn1Bg.on('pointerout', () => {
-          btn1Bg.setScale(1);
-          btn1Lbl.setScale(1);
+        this.act2Btn1Bg.on('pointerout', () => {
+          this.act2Btn1Bg.setFillStyle(0x0077b6, 1);
         });
-        btn1Bg.on('pointerdown', (pointer, lx, ly, event) => {
+        this.act2Btn1Bg.on('pointerdown', (pointer, lx, ly, event) => {
+          if (event && event.stopPropagation) event.stopPropagation();
+          this.launchDniproAct3();
+        });
+        this.act2Btn1Bg.on('pointerup', (pointer, lx, ly, event) => {
           if (event && event.stopPropagation) event.stopPropagation();
           this.launchDniproAct3();
         });
 
         // Button 2: Return to Title Screen
-        const btn2Bg = this.add.rectangle(cx + 215, cy + 126, 310, 48, 0x3d405b, 1)
+        this.act2Btn2Bg = this.add.rectangle(cx + 215, cy + 126, 310, 48, 0x3d405b, 1)
           .setStrokeStyle(2, 0xf5ebe0)
+          .setScrollFactor(0)
+          .setDepth(220)
+          .setVisible(false)
           .setInteractive({ useHandCursor: true });
 
-        const btn2Lbl = this.add.text(cx + 215, cy + 126, STRINGS.PLAY_AGAIN, {
+        this.act2Btn2Lbl = this.add.text(cx + 215, cy + 126, STRINGS.PLAY_AGAIN, {
           fontFamily: "'Cormorant Infant', Georgia, serif",
           fontSize: '19px',
           fontStyle: 'bold',
           color: '#ffffff'
-        }).setOrigin(0.5);
+        }).setOrigin(0.5).setScrollFactor(0).setDepth(221).setVisible(false);
 
-        btn2Bg.on('pointerover', () => {
-          btn2Bg.setScale(1.04);
-          btn2Lbl.setScale(1.04);
+        this.act2Btn2Bg.on('pointerover', () => {
+          this.act2Btn2Bg.setFillStyle(0x4f5375, 1);
           SFX.speechBlip();
         });
-        btn2Bg.on('pointerout', () => {
-          btn2Bg.setScale(1);
-          btn2Lbl.setScale(1);
+        this.act2Btn2Bg.on('pointerout', () => {
+          this.act2Btn2Bg.setFillStyle(0x3d405b, 1);
         });
-        btn2Bg.on('pointerdown', (pointer, lx, ly, event) => {
+        this.act2Btn2Bg.on('pointerdown', (pointer, lx, ly, event) => {
           if (event && event.stopPropagation) event.stopPropagation();
           this.restartWholeGame();
         });
-
-        this.victoryModal.add([overlay, card, title, msg, sub, stats, btn1Bg, btn1Lbl, btn2Bg, btn2Lbl]);
-      }
-
-      showAct2VictoryModal() {
-        this.frogModal.setVisible(false);
-        this.stage = 'VICTORY_MODAL';
-        this.modalReadyTime = this.time.now + 240;
-
-        this.victoryModal.setVisible(true);
-        this.victoryModal.setScale(0.9);
-        SFX.banduraStart();
-
-        this.tweens.add({
-          targets: this.victoryModal,
-          scale: 1,
-          duration: 220,
-          ease: 'Back.easeOut'
+        this.act2Btn2Bg.on('pointerup', (pointer, lx, ly, event) => {
+          if (event && event.stopPropagation) event.stopPropagation();
+          this.restartWholeGame();
         });
       }
 
+      showAct2VictoryModal() {
+        if (this.stage === 'VICTORY_MODAL' || this.transitioningOut) return;
+        if (this.autoTimer) {
+          this.autoTimer.remove();
+          this.autoTimer = null;
+        }
+        this.bubbleContainer.setVisible(false);
+        this.skipHint.setVisible(false);
+        this.frogModal.setVisible(false);
+        this.stage = 'VICTORY_MODAL';
+        this.modalReadyTime = this.time.now + 180;
+        GAME_STATE.hasSwampFrogs = true;
+
+        this.victoryModal.setVisible(true);
+        this.victoryModal.setScale(1);
+        if (this.act2Btn1Bg) this.act2Btn1Bg.setVisible(true);
+        if (this.act2Btn1Lbl) this.act2Btn1Lbl.setVisible(true);
+        if (this.act2Btn2Bg) this.act2Btn2Bg.setVisible(true);
+        if (this.act2Btn2Lbl) this.act2Btn2Lbl.setVisible(true);
+        SFX.banduraStart();
+      }
+
       onAdvance() {
+        if (this.transitioningOut) return;
         if (this.stage === 'WALK_IN') {
           this.omelko.x = 325;
           this.stage = 'DIALOGUE';
@@ -630,6 +667,12 @@
       }
 
       launchDniproAct3() {
+        if (this.transitioningOut) return;
+        this.transitioningOut = true;
+        if (this.autoTimer) {
+          this.autoTimer.remove();
+          this.autoTimer = null;
+        }
         SFX.waterSplash();
         GAME_STATE.currentLevel = 3;
         GAME_STATE.hasSaber = true;
@@ -639,6 +682,12 @@
       }
 
       restartWholeGame() {
+        if (this.transitioningOut) return;
+        this.transitioningOut = true;
+        if (this.autoTimer) {
+          this.autoTimer.remove();
+          this.autoTimer = null;
+        }
         SFX.pickup();
         GAME_STATE.currentLevel = 1;
         GAME_STATE.hasSaber = false;

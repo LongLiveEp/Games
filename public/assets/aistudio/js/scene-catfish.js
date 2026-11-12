@@ -19,8 +19,9 @@
       create() {
         this.cameras.main.fadeIn(450, 8, 22, 42);
         this.lineIndex = 0;
-        this.stage = 'MOUNT_AND_SWIM'; // MOUNT_AND_SWIM -> DIALOGUE -> SCALE_MODAL -> VICTORY_MODAL
+        this.stage = 'MOUNT_AND_SWIM'; // MOUNT_AND_SWIM -> DIALOGUE -> SWIM_TO_SHORE -> SCALE_MODAL -> VICTORY_MODAL
         this.modalReadyTime = 0;
+        this.transitioningOut = false;
         SFX.playMusic('mus_catfish', { volume: 0.42 });
 
         // 1. Draw the Wide Dnipro River Crossing & Far Shore Pier
@@ -95,15 +96,40 @@
         this.input.keyboard.on('keydown-ENTER', () => this.onAdvance());
         this.input.keyboard.on('keydown-SPACE', () => this.onAdvance());
         this.input.keyboard.on('keydown-D', () => this.onAdvance());
-        this.input.on('pointerdown', () => {
-          if (this.stage !== 'VICTORY_MODAL') {
-            this.onAdvance();
+        this.input.keyboard.on('keydown-R', () => {
+          if (this.stage === 'VICTORY_MODAL') {
+            this.restartWholeGame();
           }
+        });
+        this.input.keyboard.on('keydown-TAB', (e) => {
+          if (e && e.preventDefault) e.preventDefault();
+          if (this.stage !== 'VICTORY_MODAL') {
+            this.showAct3VictoryModal();
+          }
+        });
+        this.input.on('pointerdown', (pointer) => {
+          if (this.stage === 'VICTORY_MODAL') {
+            const cx = CONFIG.WIDTH / 2;
+            const cy = CONFIG.HEIGHT / 2;
+            // Fallback coordinate hit-check for Button 1 ("🌾 Далі: Акт IV") & Button 2 ("Грати знову з початку")
+            if (pointer.y >= cy + 96 && pointer.y <= cy + 156) {
+              if (pointer.x >= cx - 365 && pointer.x <= cx + 35) {
+                this.startSteppeAct4();
+                return;
+              }
+              if (pointer.x >= cx + 55 && pointer.x <= cx + 375) {
+                this.restartWholeGame();
+                return;
+              }
+            }
+            return;
+          }
+          this.onAdvance();
         });
 
         // Swim from left rapids toward mid-river, then start dialogue while swimming to the far shore!
         SFX.waterSplash();
-        this.tweens.add({
+        this.mountSwimTween = this.tweens.add({
           targets: this.catfishRiderGroup,
           x: 420,
           duration: 1350,
@@ -184,17 +210,26 @@
       }
 
       showDialogueLine(index) {
+        if (this.autoTimer) {
+          this.autoTimer.remove();
+          this.autoTimer = null;
+        }
+
         if (index >= STRINGS.CATFISH_LINES.length) {
+          if (this.stage !== 'DIALOGUE') return;
+          this.stage = 'SWIM_TO_SHORE';
           // Swim the rest of the way to the far right shore pier before showing the Trophy Modal!
           this.bubbleContainer.setVisible(false);
           SFX.waterSplash();
-          this.tweens.add({
+          this.swimToShoreTween = this.tweens.add({
             targets: this.catfishRiderGroup,
             x: 650,
             duration: 900,
             ease: 'Quad.easeInOut',
             onComplete: () => {
-              this.showCatfishScaleModal();
+              if (this.stage === 'SWIM_TO_SHORE') {
+                this.showCatfishScaleModal();
+              }
             }
           });
           return;
@@ -234,7 +269,6 @@
           ease: 'Back.easeOut'
         });
 
-        if (this.autoTimer) this.autoTimer.remove();
         this.autoTimer = this.time.delayedCall(5600, () => {
           if (this.stage === 'DIALOGUE') {
             this.showDialogueLine(this.lineIndex + 1);
@@ -329,22 +363,23 @@
       }
 
       showCatfishScaleModal() {
-        if (this.autoTimer) this.autoTimer.remove();
+        if (this.stage === 'SCALE_MODAL' || this.stage === 'VICTORY_MODAL' || this.transitioningOut) return;
+        if (this.autoTimer) {
+          this.autoTimer.remove();
+          this.autoTimer = null;
+        }
+        if (this.swimToShoreTween) {
+          this.swimToShoreTween.stop();
+          this.swimToShoreTween = null;
+        }
         this.bubbleContainer.setVisible(false);
         this.skipHint.setVisible(false);
         this.stage = 'SCALE_MODAL';
-        this.modalReadyTime = this.time.now + 240;
+        this.modalReadyTime = this.time.now + 200;
 
         this.scaleModal.setVisible(true);
-        this.scaleModal.setScale(0.9);
+        this.scaleModal.setScale(1);
         SFX.itemFanfare();
-
-        this.tweens.add({
-          targets: this.scaleModal,
-          scale: 1,
-          duration: 210,
-          ease: 'Back.easeOut'
-        });
       }
 
       createAct3VictoryModal() {
@@ -353,8 +388,7 @@
 
         this.victoryModal = this.add.container(0, 0).setDepth(210).setVisible(false);
 
-        const overlay = this.add.rectangle(cx, cy, CONFIG.WIDTH, CONFIG.HEIGHT, 0x050b14, 0.86)
-          .setInteractive();
+        const overlay = this.add.rectangle(cx, cy, CONFIG.WIDTH, CONFIG.HEIGHT, 0x050b14, 0.86);
 
         const card = this.add.graphics();
         card.fillStyle(0x0f2537, 0.98);
@@ -403,86 +437,116 @@
           }
         ).setOrigin(0.5);
 
-        // Button 1: Proceed to Act IV ("Дике поле і Чорне море")
-        const btn1Bg = this.add.rectangle(cx - 165, cy + 126, 390, 48, 0x0077b6, 1)
+        this.victoryModal.add([overlay, card, title, msg, sub, stats]);
+
+        // Direct screen-space buttons (outside Container to avoid Phaser 3 container input hitbox bugs)
+        this.act3Btn1Bg = this.add.rectangle(cx - 165, cy + 126, 390, 48, 0x0077b6, 1)
           .setStrokeStyle(2.5, 0xffea00)
+          .setScrollFactor(0)
+          .setDepth(220)
+          .setVisible(false)
           .setInteractive({ useHandCursor: true });
 
-        const btn1Lbl = this.add.text(cx - 165, cy + 126, STRINGS.ENTER_STEPPE_ACT4_BTN, {
+        this.act3Btn1Lbl = this.add.text(cx - 165, cy + 126, STRINGS.ENTER_STEPPE_ACT4_BTN, {
           fontFamily: "'Cormorant Infant', Georgia, serif",
           fontSize: '19px',
           fontStyle: 'bold',
           color: '#ffffff'
-        }).setOrigin(0.5);
+        }).setOrigin(0.5).setScrollFactor(0).setDepth(221).setVisible(false);
 
-        btn1Bg.on('pointerover', () => {
-          btn1Bg.setScale(1.04);
-          btn1Lbl.setScale(1.04);
+        this.act3Btn1Bg.on('pointerover', () => {
+          this.act3Btn1Bg.setFillStyle(0x0096c7, 1);
           SFX.speechBlip();
         });
-        btn1Bg.on('pointerout', () => {
-          btn1Bg.setScale(1);
-          btn1Lbl.setScale(1);
+        this.act3Btn1Bg.on('pointerout', () => {
+          this.act3Btn1Bg.setFillStyle(0x0077b6, 1);
         });
-        btn1Bg.on('pointerdown', (pointer, lx, ly, event) => {
+        this.act3Btn1Bg.on('pointerdown', (pointer, lx, ly, event) => {
+          if (event && event.stopPropagation) event.stopPropagation();
+          this.startSteppeAct4();
+        });
+        this.act3Btn1Bg.on('pointerup', (pointer, lx, ly, event) => {
           if (event && event.stopPropagation) event.stopPropagation();
           this.startSteppeAct4();
         });
 
         // Button 2: Return to Title Screen
-        const btn2Bg = this.add.rectangle(cx + 215, cy + 126, 310, 48, 0x3d405b, 1)
+        this.act3Btn2Bg = this.add.rectangle(cx + 215, cy + 126, 310, 48, 0x3d405b, 1)
           .setStrokeStyle(2, 0xf5ebe0)
+          .setScrollFactor(0)
+          .setDepth(220)
+          .setVisible(false)
           .setInteractive({ useHandCursor: true });
 
-        const btn2Lbl = this.add.text(cx + 215, cy + 126, STRINGS.PLAY_AGAIN, {
+        this.act3Btn2Lbl = this.add.text(cx + 215, cy + 126, STRINGS.PLAY_AGAIN, {
           fontFamily: "'Cormorant Infant', Georgia, serif",
           fontSize: '19px',
           fontStyle: 'bold',
           color: '#ffffff'
-        }).setOrigin(0.5);
+        }).setOrigin(0.5).setScrollFactor(0).setDepth(221).setVisible(false);
 
-        btn2Bg.on('pointerover', () => {
-          btn2Bg.setScale(1.04);
-          btn2Lbl.setScale(1.04);
+        this.act3Btn2Bg.on('pointerover', () => {
+          this.act3Btn2Bg.setFillStyle(0x4f5375, 1);
           SFX.speechBlip();
         });
-        btn2Bg.on('pointerout', () => {
-          btn2Bg.setScale(1);
-          btn2Lbl.setScale(1);
+        this.act3Btn2Bg.on('pointerout', () => {
+          this.act3Btn2Bg.setFillStyle(0x3d405b, 1);
         });
-        btn2Bg.on('pointerdown', (pointer, lx, ly, event) => {
+        this.act3Btn2Bg.on('pointerdown', (pointer, lx, ly, event) => {
           if (event && event.stopPropagation) event.stopPropagation();
           this.restartWholeGame();
         });
-
-        this.victoryModal.add([overlay, card, title, msg, sub, stats, btn1Bg, btn1Lbl, btn2Bg, btn2Lbl]);
-      }
-
-      showAct3VictoryModal() {
-        this.scaleModal.setVisible(false);
-        this.stage = 'VICTORY_MODAL';
-        this.modalReadyTime = this.time.now + 240;
-
-        this.victoryModal.setVisible(true);
-        this.victoryModal.setScale(0.9);
-        SFX.banduraStart();
-
-        this.tweens.add({
-          targets: this.victoryModal,
-          scale: 1,
-          duration: 220,
-          ease: 'Back.easeOut'
+        this.act3Btn2Bg.on('pointerup', (pointer, lx, ly, event) => {
+          if (event && event.stopPropagation) event.stopPropagation();
+          this.restartWholeGame();
         });
       }
 
+      showAct3VictoryModal() {
+        if (this.stage === 'VICTORY_MODAL' || this.transitioningOut) return;
+        if (this.autoTimer) {
+          this.autoTimer.remove();
+          this.autoTimer = null;
+        }
+        if (this.swimToShoreTween) {
+          this.swimToShoreTween.stop();
+          this.swimToShoreTween = null;
+        }
+        this.bubbleContainer.setVisible(false);
+        this.skipHint.setVisible(false);
+        this.scaleModal.setVisible(false);
+        this.stage = 'VICTORY_MODAL';
+        this.modalReadyTime = this.time.now + 180;
+
+        this.victoryModal.setVisible(true);
+        this.victoryModal.setScale(1);
+        if (this.act3Btn1Bg) this.act3Btn1Bg.setVisible(true);
+        if (this.act3Btn1Lbl) this.act3Btn1Lbl.setVisible(true);
+        if (this.act3Btn2Bg) this.act3Btn2Bg.setVisible(true);
+        if (this.act3Btn2Lbl) this.act3Btn2Lbl.setVisible(true);
+        SFX.banduraStart();
+      }
+
       onAdvance() {
+        if (this.transitioningOut) return;
         if (this.stage === 'MOUNT_AND_SWIM') {
+          if (this.mountSwimTween) {
+            this.mountSwimTween.stop();
+            this.mountSwimTween = null;
+          }
           this.catfishRiderGroup.x = 420;
           this.stage = 'DIALOGUE';
           this.bubbleContainer.setVisible(true);
           this.showDialogueLine(0);
         } else if (this.stage === 'DIALOGUE') {
           this.showDialogueLine(this.lineIndex + 1);
+        } else if (this.stage === 'SWIM_TO_SHORE') {
+          if (this.swimToShoreTween) {
+            this.swimToShoreTween.stop();
+            this.swimToShoreTween = null;
+          }
+          this.catfishRiderGroup.x = 650;
+          this.showCatfishScaleModal();
         } else if (this.stage === 'SCALE_MODAL') {
           if (this.time.now < this.modalReadyTime) return;
           this.showAct3VictoryModal();
@@ -493,6 +557,12 @@
       }
 
       startSteppeAct4() {
+        if (this.transitioningOut) return;
+        this.transitioningOut = true;
+        if (this.autoTimer) {
+          this.autoTimer.remove();
+          this.autoTimer = null;
+        }
         if (SFX.windWhistle) SFX.windWhistle();
         else SFX.pickup();
         GAME_STATE.currentLevel = 4;
@@ -503,6 +573,8 @@
       }
 
       replayDniproAct3() {
+        if (this.transitioningOut) return;
+        this.transitioningOut = true;
         SFX.waterSplash();
         GAME_STATE.currentLevel = 3;
         GAME_STATE.hasSaber = true;
@@ -511,6 +583,12 @@
       }
 
       restartWholeGame() {
+        if (this.transitioningOut) return;
+        this.transitioningOut = true;
+        if (this.autoTimer) {
+          this.autoTimer.remove();
+          this.autoTimer = null;
+        }
         SFX.pickup();
         GAME_STATE.currentLevel = 1;
         GAME_STATE.hasSaber = false;

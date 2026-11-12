@@ -237,11 +237,13 @@
         POLOVYK: {
           HIDDEN_ALPHA: 0.38,
           PATROL_SPEED: 105,
+          WALK_SPEED: 105,
           CHASE_SPEED: 215,
           AMBUSH_RANGE: 210,
           AGGRO_RANGE: 380,
           TELEGRAPH_MS: 380,
           LEAP_VEL_Y: -540,
+          LEAP_SPEED_Y: -540,
           LEAP_SPEED_X: 250,
           MAX_STUN: 115,
           DAMAGE: 17,
@@ -252,6 +254,7 @@
           STALK_SPEED: 225,
           POUNCE_SPEED_X: 460,
           POUNCE_VEL_Y: -420,
+          POUNCE_SPEED_Y: -420,
           AGGRO_RANGE: 440,
           POUNCE_RANGE: 270,
           TELEGRAPH_MS: 450,       // ~0.45s telegraph before pouncing!
@@ -261,7 +264,8 @@
         },
         TUMBLEWEED: {
           ROLL_SPEED: 185,
-          GUST_BOOST_SPEED: 310,
+          GUST_BOOST_SPEED: 125,
+          WIND_BOOST_SPEED: 125,
           BOUNCE_VEL_Y: -340,
           SPIN_SPEED: 7.5,
           KNOCK_FLY_SPEED_X: 520,
@@ -319,22 +323,30 @@
       },
       WIND: {
         INTERVAL_MIN_MS: 6000,
+        GUST_INTERVAL_MIN_MS: 6000,
         INTERVAL_MAX_MS: 9000,
+        GUST_INTERVAL_MAX_MS: 9000,
         TELEGRAPH_MS: 1400,
         GUST_DURATION_MS: 2200,
         GROUND_PUSH_FORCE: 125,    // Horizontal push velocity applied on ground
+        GROUND_PUSH_X: 125,
         AIR_PUSH_FORCE: 245,       // Stronger horizontal push when Omelko is airborne
+        AIR_PUSH_X: 245,
         GRASS_SWAY_NORMAL: 6,
         GRASS_SWAY_TELEGRAPH: 13,
         GRASS_SWAY_GUST: 22
       },
       WAVES: {
         CYCLE_MS: 4800,
+        PERIOD_MS: 4800,
         WARN_MS: 1150,
+        TELEGRAPH_MS: 1150,
         FLOOD_MS: 1450,
+        FLOOD_DURATION_MS: 1450,
         SURGE_HEIGHT: 26,
         DAMAGE: 16,
-        KNOCK_VEL_Y: -360
+        KNOCK_VEL_Y: -360,
+        KNOCKBACK_Y: -360
       },
       FINALE: {
         WALK_IN_DURATION_MS: 1250,

@@ -102,13 +102,26 @@
         this.createFinaleVictoryModal();
 
         // 6. Input Listeners
+        this.transitioningOut = false;
         this.input.keyboard.on('keydown-ENTER', () => this.onAdvance());
         this.input.keyboard.on('keydown-SPACE', () => this.onAdvance());
         this.input.keyboard.on('keydown-D', () => this.onAdvance());
-        this.input.on('pointerdown', () => {
+        this.input.keyboard.on('keydown-TAB', (e) => {
+          if (e && e.preventDefault) e.preventDefault();
           if (this.stage !== 'VICTORY_MODAL') {
-            this.onAdvance();
+            this.showFinaleVictoryModal();
           }
+        });
+        this.input.on('pointerdown', (pointer) => {
+          if (this.stage === 'VICTORY_MODAL') {
+            const cx = CONFIG.WIDTH / 2;
+            const cy = CONFIG.HEIGHT / 2;
+            if (pointer.x >= cx - 205 && pointer.x <= cx + 205 && pointer.y >= cy + 94 && pointer.y <= cy + 154) {
+              this.launchEvilForestAct2();
+            }
+            return;
+          }
+          this.onAdvance();
         });
 
         // Start dialogue
@@ -448,23 +461,20 @@
       }
 
       showSaberModal() {
-        if (this.autoTimer) this.autoTimer.remove();
+        if (this.stage === 'SABER_MODAL' || this.stage === 'VICTORY_MODAL' || this.transitioningOut) return;
+        if (this.autoTimer) {
+          this.autoTimer.remove();
+          this.autoTimer = null;
+        }
         this.bubbleContainer.setVisible(false);
         this.skipHint.setVisible(false);
         this.stage = 'SABER_MODAL';
-        this.modalReadyTime = this.time.now + 240;
+        this.modalReadyTime = this.time.now + 200;
         GAME_STATE.hasSaber = true;
 
         this.saberModal.setVisible(true);
-        this.saberModal.setScale(0.9);
+        this.saberModal.setScale(1);
         SFX.itemFanfare();
-
-        this.tweens.add({
-          targets: this.saberModal,
-          scale: 1,
-          duration: 200,
-          ease: 'Back.easeOut'
-        });
       }
 
       createFinaleVictoryModal() {
@@ -473,8 +483,7 @@
 
         this.victoryModal = this.add.container(0, 0).setDepth(210).setVisible(false);
 
-        const overlay = this.add.rectangle(cx, cy, CONFIG.WIDTH, CONFIG.HEIGHT, 0x0b0c10, 0.85)
-          .setInteractive();
+        const overlay = this.add.rectangle(cx, cy, CONFIG.WIDTH, CONFIG.HEIGHT, 0x0b0c10, 0.85);
 
         const card = this.add.graphics();
         card.fillStyle(0x1d3557, 0.98);
@@ -525,52 +534,61 @@
           }
         ).setOrigin(0.5);
 
-        const btnBg = this.add.rectangle(cx, cy + 124, 390, 50, 0x2d6a4f, 1)
+        this.victoryModal.add([overlay, card, title, msg, sub, stats]);
+
+        this.act1BtnBg = this.add.rectangle(cx, cy + 124, 390, 50, 0x2d6a4f, 1)
           .setStrokeStyle(2.5, 0xffea00)
+          .setScrollFactor(0)
+          .setDepth(220)
+          .setVisible(false)
           .setInteractive({ useHandCursor: true });
 
-        const btnLbl = this.add.text(cx, cy + 124, STRINGS.ENTER_EVIL_FOREST, {
+        this.act1BtnLbl = this.add.text(cx, cy + 124, STRINGS.ENTER_EVIL_FOREST, {
           fontFamily: "'Cormorant Infant', Georgia, serif",
           fontSize: '21px',
           fontStyle: 'bold',
           color: '#ffffff'
-        }).setOrigin(0.5);
+        }).setOrigin(0.5).setScrollFactor(0).setDepth(221).setVisible(false);
 
-        btnBg.on('pointerover', () => {
-          btnBg.setScale(1.05);
-          btnLbl.setScale(1.05);
+        this.act1BtnBg.on('pointerover', () => {
+          this.act1BtnBg.setFillStyle(0x40916c, 1);
           SFX.speechBlip();
         });
-        btnBg.on('pointerout', () => {
-          btnBg.setScale(1);
-          btnLbl.setScale(1);
+        this.act1BtnBg.on('pointerout', () => {
+          this.act1BtnBg.setFillStyle(0x2d6a4f, 1);
         });
-        btnBg.on('pointerdown', (pointer, lx, ly, event) => {
+        this.act1BtnBg.on('pointerdown', (pointer, lx, ly, event) => {
           if (event && event.stopPropagation) event.stopPropagation();
           this.launchEvilForestAct2();
         });
-
-        this.victoryModal.add([overlay, card, title, msg, sub, stats, btnBg, btnLbl]);
-      }
-
-      showFinaleVictoryModal() {
-        this.saberModal.setVisible(false);
-        this.stage = 'VICTORY_MODAL';
-        this.modalReadyTime = this.time.now + 240;
-
-        this.victoryModal.setVisible(true);
-        this.victoryModal.setScale(0.9);
-        SFX.banduraStart();
-
-        this.tweens.add({
-          targets: this.victoryModal,
-          scale: 1,
-          duration: 220,
-          ease: 'Back.easeOut'
+        this.act1BtnBg.on('pointerup', (pointer, lx, ly, event) => {
+          if (event && event.stopPropagation) event.stopPropagation();
+          this.launchEvilForestAct2();
         });
       }
 
+      showFinaleVictoryModal() {
+        if (this.stage === 'VICTORY_MODAL' || this.transitioningOut) return;
+        if (this.autoTimer) {
+          this.autoTimer.remove();
+          this.autoTimer = null;
+        }
+        this.bubbleContainer.setVisible(false);
+        this.skipHint.setVisible(false);
+        this.saberModal.setVisible(false);
+        this.stage = 'VICTORY_MODAL';
+        this.modalReadyTime = this.time.now + 180;
+        GAME_STATE.hasSaber = true;
+
+        this.victoryModal.setVisible(true);
+        this.victoryModal.setScale(1);
+        if (this.act1BtnBg) this.act1BtnBg.setVisible(true);
+        if (this.act1BtnLbl) this.act1BtnLbl.setVisible(true);
+        SFX.banduraStart();
+      }
+
       onAdvance() {
+        if (this.transitioningOut) return;
         if (this.stage === 'DIALOGUE') {
           this.showDialogueLine(this.lineIndex + 1);
         } else if (this.stage === 'SABER_MODAL') {
@@ -583,6 +601,12 @@
       }
 
       launchEvilForestAct2() {
+        if (this.transitioningOut) return;
+        this.transitioningOut = true;
+        if (this.autoTimer) {
+          this.autoTimer.remove();
+          this.autoTimer = null;
+        }
         SFX.pickup();
         GAME_STATE.currentLevel = 2;
         GAME_STATE.hasSaber = true;
