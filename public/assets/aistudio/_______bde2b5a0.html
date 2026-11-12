@@ -306,6 +306,7 @@
           MAX_STUN: 150,
           DAMAGE_MIRE: 18,
           DAMAGE_SLAM: 22,
+          DAMAGE: 18,
           COOLDOWN_MS: 1550
         },
         BOSS_LISOVYK: {
@@ -321,7 +322,66 @@
           DAMAGE_CHARGE: 24,
           DAMAGE_CLAW: 21,
           DAMAGE_WAVE: 19,
+          DAMAGE_WISP: 17,
           COOLDOWN_MS: 820
+        },
+        // ACT III: «НА ДНІПРІ» — UKRAINIAN WATER MYTHOLOGY & CLOUD PLATFORMER
+        RUSALKA: {
+          SWIM_SPEED: 115,
+          AGGRO_RANGE_X: 250,
+          WARN_MS: 680,            // Clear water-bubble & siren warning before leaping!
+          TELEGRAPH_MS: 680,
+          LEAP_VEL_Y: -610,
+          LEAP_SPEED_X: 165,
+          GRAB_PULL_VEL_Y: 255,    // Pulls Omelko down toward the Dnipro water unless he dodges/breaks free
+          PULL_SPEED_Y: 255,
+          GRAB_DURATION_MS: 950,
+          DAMAGE_GRAB: 16,
+          DAMAGE: 16,
+          MAX_STUN: 85,
+          STUN_MS: 3100,
+          COOLDOWN_MS: 2300
+        },
+        VODYANYK: {
+          WALK_SPEED: 82,
+          PATROL_SPEED: 82,
+          AGGRO_RANGE: 450,
+          TELEGRAPH_MS: 440,
+          ORB_SPEED: 285,
+          THROW_SPEED_Y: -250,
+          MAX_STUN: 140,
+          STUN_MS: 3300,
+          DAMAGE_ORB: 18,
+          DAMAGE_SPLASH: 21,
+          DAMAGE: 18,
+          COOLDOWN_MS: 1450
+        },
+        POTERCHA: {
+          FLOAT_SPEED: 135,
+          FLY_SPEED: 135,
+          DASH_SPEED: 375,
+          SWOOP_SPEED: 375,
+          AGGRO_RANGE: 390,
+          TELEGRAPH_MS: 390,
+          MAX_STUN: 90,
+          STUN_MS: 2900,
+          DAMAGE: 16,
+          COOLDOWN_MS: 1300
+        },
+        BOSS_VODYANYK_TSAR: {
+          MAX_STUN: 350,
+          STUN_MS: 3600,
+          STAGES_REQUIRED: 2,
+          TELEGRAPH_MS: 390,
+          COUNTER_TELEGRAPH_MS: 280,
+          SURGE_SPEED: 530,
+          STALK_SPEED: 190,
+          JUMP_VEL_Y: -660,
+          WAVE_SPEED: 395,
+          DAMAGE_SURGE: 23,
+          DAMAGE_TRIDENT: 20,
+          DAMAGE_WAVE: 18,
+          COOLDOWN_MS: 840
         }
       }
     };
@@ -507,12 +567,34 @@
       BOSS_LISOVYK_STAGE_2: "ЛІСОВИК КЛИЧЕ ТЕМРЯВУ! (Фаза 2: Гнів Пралісу!)",
       BOSS_LISOVYK_SUMMON: "Чорнобор скликає лісову нечисть із хащів!",
 
+      LEVEL_3_TITLE: "Рівень 3: На Дніпрі",
+      LEVEL_3_SUBTITLE: "Хмарна переправа, вири та русалки",
+      CHECKPOINT_CHAYKA: "Чекпоїнт: Козацький острівець (Силу та кисіль відновлено!)",
+      CHECKPOINT_KHORTYTSIA: "Чекпоїнт: Скеля Порогів (Силу та кисіль відновлено!)",
+      WATER_FALL_WARNING: "🌊 Бульк у Дніпро! Стрибай лише по хмаринках!",
+      WATER_HAZARD_MSG: "🌊 Бульк у Дніпро! Стрибай лише по хмаринках!",
+      STORM_CLOUD_WARN: "⚡ Грозова хмара заряджається! Стрибай!",
+      GEYSER_WARN: "🌊 Водяний гейзер б'є з Дніпра!",
+      RUSALKA_WARN: "🧜‍♀️ Русалка виринає! Ухились [Shift / Стрибок]!",
+      RUSALKA_GRABBED: "🧜‍♀️ Русалка тягне у воду! Тисни [Shift / Пробіл]!",
+      RUSALKA_ESCAPED: "💨 Вирвався з обіймів русалки!",
+      RUSALKA_DODGED: "💨 Ухилився від русалки!",
+      OMELKO_REMARK_DNIPRO: "«Ого, який широкий Дніпро-Славутич! У воду падати зась —\nбуду стрибати по хмаринках та стерегтися русалок і грозових пасток!»",
+      OMELKO_REMARK_RUSALKA: "«Ой лишенько, дніпрова русалка з води вистрибує!\nТреба перекочуватися [Shift] або перестрибувати, щоб у вир не затягла!»",
+      OMELKO_REMARK_VODYANYK: "«Сам Водяний Цар порогів не пускає до річкового сома!\nНумо, водяний діду, скуштуй козацької шаблі та болотних жаб!»",
+      OMELKO_REMARK_VODYANYK_BOSS: "«Сам Водяний Цар порогів не пускає до річкового сома!\nНумо, водяний діду, скуштуй козацької шаблі та болотних жаб!»",
+      BOSS_VODYANYK_NAME: "БОС: ВОДЯНИЙ ЦАР ДНІПРОВИХ ПОРОГІВ",
+      BOSS_VODYANYK_STAGE_2: "ВОДЯНИК ЗДІЙМАЄ БУРЮ! (Фаза 2: Вир Славутича!)",
+      BOSS_VODYANYK_SUMMON: "Водяник кличе русалок і потерчат із глибин!",
+      BOSS_COUNTER_WARN: "⚡ Бос іде у контрнаступ! Ухились [Shift]!",
+
       PAUSE_TITLE: "ПЕРЕПОЧИНОК (ПАУЗА)",
       PAUSE_RESUME: "Продовжити гру (Esc)",
       PAUSE_CHECKPOINT: "На чекпоїнт (C)",
       PAUSE_RESTART: "Спочатку рівень (R)",
-      PAUSE_LEVEL_1: "🌻 У Хутір і ліс (Акт I)",
-      PAUSE_LEVEL_2: "🌲 У Злий Ліс (Акт II)",
+      PAUSE_LEVEL_1: "🌻 Акт I: Хутір і ліс",
+      PAUSE_LEVEL_2: "🌲 Акт II: Злий Ліс",
+      PAUSE_LEVEL_3: "🌊 Акт III: На Дніпрі",
       PAUSE_EVIL_FOREST: "🌲 У Злий Ліс (Акт II)",
       PAUSE_HUT: "Вступ у хаті (H)",
       PAUSE_SOUND_ON: "Звук: УВІМК (M)",
@@ -543,10 +625,10 @@
       BABA_YAGA_SKIP_HINT: "[Пробіл / Enter / Клік] — Далі",
       BABA_YAGA_LINES: [
         { speaker: "Козак Омелько", text: "Агов, хатинко на курячих ніжках, стань до лісу задом, а до козака передом! Здорова була, бабусю Яго! Чи нема в тебе дрібки солі до борщу?" },
-        { speaker: "Баба-Яга", text: "Тьху, козаче, налякав стару! Яка там сіль — у самої мухомори в казані прісні киплять! Останню сіль Водяник із болота поцупив!" },
+        { speaker: "Баба-Яга", text: "Тьху, козаче, налякав стару! Яка там сіль — у самої мухомори в казані прісні киплять! Останню сіль Водяник із болота на Дніпро поцупив!" },
         { speaker: "Козак Омелько", text: "От тобі й маєш! Я ж поки твого сусіда Лісовика Чорнобора вгамував, усі вчорашні галушки об нечисть потрощив!" },
         { speaker: "Баба-Яга", text: "Хе-хе, за те що Чорнобора провчив — виручу! Замість твоїх галушок тримай моїх бойових Болотних Жаб! Як жбурнеш — очі слизом заліпить і з ніг зіб'є!" },
-        { speaker: "Козак Омелько", text: "Оце так гостинець! Болотні жаби замість галушок і гостра шабля при боці — ну, тримайся, нечисть, борщ таки буде солоний!" }
+        { speaker: "Козак Омелько", text: "Оце так гостинець! Болотні жаби замість галушок і гостра шабля при боці — тепер гайда через Дніпро!" }
       ],
       ITEM_FROG_TITLE: "Бойові Болотні Жаби\nвід Баби-Яги",
       ITEM_FROG_BADGE: "Заміна метальної зброї: замість галушок [S]",
@@ -554,11 +636,34 @@
 
       VICTORY_ACT2_TITLE: "КІНЕЦЬ ДРУГОГО АКТУ!",
       VICTORY_ACT2_TEXT: "Злий Ліс та Чорнобора подолано, а в Баби-Яги солі теж катма...\nЗате тепер у торбі квакають бойові болотні жаби замість галушок!",
-      VICTORY_ACT2_SUBTEXT: "Жбурляй болотних жаб [S] та рубай шаблею [D]! Попереду шлях за сіллю крізь болота!",
+      VICTORY_ACT2_SUBTEXT: "Попереду Акт III: «На Дніпрі» — стрибай по хмаринках, оминай пастки й русалок!",
       ACT2_VICTORY_TITLE: "КІНЕЦЬ ДРУГОГО АКТУ!",
       ACT2_VICTORY_TEXT: "Злий Ліс та Чорнобора подолано, а в Баби-Яги солі теж катма...\nЗате тепер у торбі квакають бойові болотні жаби замість галушок!",
-      ACT2_VICTORY_SUBTEXT: "Жбурляй болотних жаб [S] та рубай шаблею [D]! Попереду шлях за сіллю крізь болота!",
-      REPLAY_WITH_FROGS_BTN: "🐸 Випробувати болотних жаб у бою! (Enter)",
+      ACT2_VICTORY_SUBTEXT: "Попереду Акт III: «На Дніпрі» — стрибай по хмаринках, оминай пастки й русалок!",
+      ENTER_DNIPRO_BTN: "🌊 Вперед на Дніпро! (Акт III) [Enter]",
+      ENTER_DNIPRO_ACT3: "🌊 Вперед на Дніпро! (Акт III) [Enter]",
+      REPLAY_WITH_FROGS_BTN: "🌊 Вперед на Дніпро! (Акт III) [Enter]",
+
+      CATFISH_HEADER: "Переправа через Ревучий Дніпро — На спині Річкового Сома Вусаня",
+      CATFISH_SKIP_HINT: "[Пробіл / Enter / Клік] — Далі",
+      CATFISH_LINES: [
+        { speaker: "Козак Омелько", text: "Ого, оце так рибина! Здоров будь, пане Соме! Вуса в тебе — справжні козацькі, хоч зараз у курінь записуй!" },
+        { speaker: "Річковий Сом Вусань", text: "Буль-буль, спасибі тобі, козаче Омельку! Розбив ти чари Водяного Царя й ще й смачними болотними жабами мене почастував!" },
+        { speaker: "Козак Омелько", text: "На здоров'ячко! Слухай, вусатий брате, чи не бачив ти у цих водах солі? Бо вдома борщ стигне, а ні в Грицька, ні в Баби-Яги солі катма!" },
+        { speaker: "Річковий Сом Вусань", text: "Як у воді солі втриматись — розчинилася б! Але на тому березі Дніпра саме чумацька валка з Криму табором стала, у них солі повні мажі!" },
+        { speaker: "Козак Омелько", text: "Оце щастя! Тримай курс до берега, друже Вусаню! Нареті козацький борщ буде по-справжньому солоний!" }
+      ],
+      ITEM_SCALE_TITLE: "Срібна Луска Дніпрового Сома\nта Дрібка Кримської Солі",
+      ITEM_SCALE_BADGE: "Козацький трофей переправи через Дніпро",
+      ITEM_SCALE_DESC: "«Хто Дніпрові пороги по хмарах перестрибнув і на сомі переплив —\nтому жодна нечисть не страшна!»",
+      ITEM_CATFISH_SCALE_TITLE: "Срібна Луска Дніпрового Сома\nта Дрібка Кримської Солі",
+      ITEM_CATFISH_SCALE_BADGE: "Козацький трофей переправи через Дніпро",
+      ITEM_CATFISH_SCALE_DESC: "«Хто Дніпрові пороги по хмарах перестрибнув і на сомі переплив —\nтому жодна нечисть не страшна!»",
+
+      VICTORY_ACT3_TITLE: "КІНЕЦЬ ТРЕТЬОГО АКТУ!",
+      VICTORY_ACT3_TEXT: "Омелько перестрибнув бурхливий Дніпро по хмаринках, оминув підступних русалок,\nа могутній Річковий Сом Вусань переніс козака на своїй спині до іншого берега!",
+      VICTORY_ACT3_SUBTEXT: "Вітаємо! Ви успішно пройшли Акт III: «На Дніпрі»!",
+      REPLAY_DNIPRO_BTN: "🌊 Пройти «На Дніпрі» ще раз (Enter)",
 
       TOUCH_JUMP: "СТРИБ",
       TOUCH_HIT: "УДАР",
@@ -800,6 +905,105 @@
 
     /**
      * ============================================================================
+     * 3C. LEVEL 3 («НА ДНІПРІ»): CLOUD PLATFORMER WITH TRAPS & WATER MYTHOLOGY
+     * ============================================================================
+     * - Falling into the Dnipro water (y >= CONFIG.GROUND_Y) between dry islands is forbidden!
+     * - Omelko leaps across Cloud Platforms (white clouds, wind-moving clouds, and electric Storm Trap clouds)
+     * - Rusalky leap out of the water below to grab Omelko and drag him down (dodgeable via [Shift] or jump/hit)
+     * - Water Geysers erupt between clouds as timed platforming traps
+     * - Ends at the Far Pier where the Giant River Catfish ("Річковий Сом Вусань") carries Omelko across!
+     */
+    function buildDniproLevelData() {
+      return {
+        worldWidth: 4800,
+        // Solid wooden bridges & island piers at CONFIG.GROUND_Y (everywhere else is deep Dnipro water!)
+        dryIslands: [
+          { startX: 0, endX: 360, x: 180, w: 360, isBridge: true, label: 'Козацький Місточок' },
+          { startX: 1510, endX: 1790, x: 1650, w: 280, isBridge: true, label: 'Козацький Острівець' },
+          { startX: 3100, endX: 3380, x: 3240, w: 280, isBridge: true, label: 'Скеля Порогів' },
+          { startX: 4140, endX: 4800, x: 4470, w: 660, isBridge: true, label: 'Причал Річкового Сома Вусаня' }
+        ],
+        // Raised wooden bridge steps (містки-трампліни) on the piers + Cloud Platforms across the Dnipro
+        platforms: [
+          // Wooden bridge step at the right end of the Starting Bridge (x: 0..360) for an effortless jump to the 1st cloud!
+          { x: 295, y: 368, w: 120, tier: 1, isWoodenBridgeStep: true },
+
+          // Section 1: From Starting Bridge (x: 360) to Checkpoint Island 1 (x: 1510..1790)
+          { x: 455, y: 335, w: 175, tier: 1, cloudType: 'normal' },
+          { x: 645, y: 290, w: 175, tier: 2, cloudType: 'normal' },
+          { x: 845, y: 245, w: 175, tier: 2, cloudType: 'storm', stormOffset: 0 },
+          { x: 1045, y: 285, w: 175, tier: 1, cloudType: 'moving', moveRange: 45, moveSpeed: 0.0022 },
+          { x: 1245, y: 250, w: 175, tier: 2, cloudType: 'normal' },
+          { x: 1425, y: 315, w: 165, tier: 1, cloudType: 'normal' },
+
+          // Wooden bridge step at the right end of Checkpoint Island 1 (x: 1510..1790)
+          { x: 1735, y: 368, w: 110, tier: 1, isWoodenBridgeStep: true },
+
+          // Section 2: From Checkpoint Island 1 (x: 1790) to Checkpoint Island 2 (x: 3100..3380)
+          { x: 1895, y: 330, w: 175, tier: 1, cloudType: 'normal' },
+          { x: 2090, y: 280, w: 175, tier: 2, cloudType: 'storm', stormOffset: 900 },
+          { x: 2290, y: 230, w: 175, tier: 3, cloudType: 'normal' },
+          { x: 2495, y: 275, w: 175, tier: 1, cloudType: 'moving', moveRange: 50, moveSpeed: 0.0024 },
+          { x: 2705, y: 235, w: 175, tier: 2, cloudType: 'storm', stormOffset: 450 },
+          { x: 2900, y: 285, w: 175, tier: 1, cloudType: 'normal' },
+          { x: 3045, y: 335, w: 155, tier: 1, cloudType: 'normal' },
+
+          // Wooden bridge step at the right end of Checkpoint Island 2 (x: 3100..3380)
+          { x: 3325, y: 368, w: 110, tier: 1, isWoodenBridgeStep: true },
+
+          // Section 3: From Checkpoint Island 2 (x: 3380) to the Catfish Pier & Vodyanyk Tsar Arena (x: 4140..4800)
+          { x: 3485, y: 330, w: 175, tier: 1, cloudType: 'normal' },
+          { x: 3685, y: 275, w: 175, tier: 2, cloudType: 'moving', moveRange: 48, moveSpeed: 0.0024 },
+          { x: 3890, y: 230, w: 175, tier: 3, cloudType: 'storm', stormOffset: 300 },
+          { x: 4075, y: 305, w: 170, tier: 1, cloudType: 'normal' },
+
+          // Boss & Catfish Pier Perch Clouds (above the final pier)
+          { x: 4310, y: 295, w: 170, tier: 1, cloudType: 'normal' },
+          { x: 4510, y: 220, w: 180, tier: 2, cloudType: 'normal' },
+          { x: 4680, y: 295, w: 160, tier: 1, cloudType: 'normal' }
+        ],
+        // Pressurized Dnipro Water Geyser Traps erupting between cloud gaps
+        geysers: [
+          { x: 745, offsetMs: 0 },
+          { x: 1145, offsetMs: 1200 },
+          { x: 2190, offsetMs: 500 },
+          { x: 2600, offsetMs: 1600 },
+          { x: 3585, offsetMs: 800 },
+          { x: 3985, offsetMs: 1400 }
+        ],
+        checkpoints: [
+          { id: 1, type: 'well', x: 1640, y: CONFIG.GROUND_Y, name: STRINGS.CHECKPOINT_CHAYKA },
+          { id: 2, type: 'pillar', x: 3240, y: CONFIG.GROUND_Y, name: STRINGS.CHECKPOINT_KHORTYTSIA }
+        ],
+        enemies: [
+          // Section 1: Rusalky leaping from the Dnipro water + Potercha + Vodyanyk on cloud
+          { type: 'rusalka', x: 550, y: CONFIG.GROUND_Y + 4, minX: 430, maxX: 680 },
+          { type: 'potercha', x: 750, y: 195, minX: 620, maxX: 900 },
+          { type: 'rusalka', x: 950, y: CONFIG.GROUND_Y + 4, minX: 830, maxX: 1120 },
+          { type: 'vodyanyk', x: 1245, y: 210, minX: 1185, maxX: 1305 },
+          { type: 'rusalka', x: 1360, y: CONFIG.GROUND_Y + 4, minX: 1260, maxX: 1460 },
+
+          // Section 2: Deeper Dnipro Rapids — more Rusalky, Vodyanyky, and Poterchata
+          { type: 'rusalka', x: 1995, y: CONFIG.GROUND_Y + 4, minX: 1870, maxX: 2130 },
+          { type: 'vodyanyk', x: 2290, y: 190, minX: 2225, maxX: 2355 },
+          { type: 'rusalka', x: 2400, y: CONFIG.GROUND_Y + 4, minX: 2280, maxX: 2560 },
+          { type: 'potercha', x: 2600, y: 175, minX: 2460, maxX: 2780 },
+          { type: 'rusalka', x: 2810, y: CONFIG.GROUND_Y + 4, minX: 2680, maxX: 2980 },
+
+          // Section 3: Final Rapids Gauntlet before the Catfish Pier
+          { type: 'rusalka', x: 3585, y: CONFIG.GROUND_Y + 4, minX: 3460, maxX: 3740 },
+          { type: 'potercha', x: 3790, y: 165, minX: 3650, maxX: 3940 },
+          { type: 'vodyanyk', x: 4075, y: 265, minX: 4010, maxX: 4135 },
+          { type: 'rusalka', x: 3985, y: CONFIG.GROUND_Y + 4, minX: 3860, maxX: 4090 }
+        ],
+        bossArenaStartX: 4160,
+        bossSpawnX: 4540,
+        catfishDockX: 4710
+      };
+    }
+
+    /**
+     * ============================================================================
      * 4. PROCEDURAL WEBAUDIO SOUND MANAGER
      * ============================================================================
      */
@@ -982,6 +1186,24 @@
         // Comical resonant swamp frog "ква-а!" croak when throwing Baba Yaga's frogs
         this.playTone(185, 290, 0.11, 'sawtooth', 0.14);
         setTimeout(() => this.playTone(270, 145, 0.13, 'triangle', 0.13), 65);
+      }
+
+      waterSplash() {
+        // Bubbling river splash when leaping or falling into the Dnipro
+        this.playTone(240, 95, 0.18, 'triangle', 0.16);
+        setTimeout(() => this.playTone(160, 320, 0.14, 'sine', 0.12), 55);
+      }
+
+      rusalkaSong() {
+        // Enchanting two-note siren call when a Rusalka is about to leap from the Dnipro
+        this.playTone(587.33, 783.99, 0.18, 'sine', 0.12);
+        setTimeout(() => this.playTone(783.99, 659.25, 0.22, 'triangle', 0.11), 110);
+      }
+
+      lightningZap() {
+        // Crackling storm-cloud lightning discharge
+        this.playTone(820, 140, 0.15, 'sawtooth', 0.17);
+        setTimeout(() => this.playTone(540, 95, 0.12, 'square', 0.14), 45);
       }
     }
 
@@ -1573,12 +1795,216 @@
         g.lineBetween(8, 13, 18, 13);
         g.generateTexture('swamp_frog', 26, 22);
 
+        // 26. Act III («На Дніпрі»): Fluffy White Cloud Platform ('platform_cloud') & Storm Trap Cloud ('platform_cloud_storm')
+        g.clear();
+        // Soft azure underside shadow
+        g.fillStyle(0x90e0ef, 0.92);
+        g.fillRoundedRect(2, 10, 60, 13, 7);
+        // Fluffy white cloud puffs
+        g.fillStyle(0xf8f9fa, 1);
+        g.fillRoundedRect(2, 6, 60, 13, 7);
+        g.fillCircle(14, 10, 9);
+        g.fillCircle(32, 8, 10);
+        g.fillCircle(50, 10, 9);
+        // Golden sunlight rim on top
+        g.lineStyle(2, 0xffffff, 1);
+        g.lineBetween(8, 4, 56, 4);
+        g.generateTexture('platform_cloud', 64, 24);
+
+        g.clear();
+        // Dark thunderhead underside
+        g.fillStyle(0x240046, 0.95);
+        g.fillRoundedRect(2, 10, 60, 13, 7);
+        // Stormy slate-indigo cloud puffs
+        g.fillStyle(0x3c096c, 1);
+        g.fillRoundedRect(2, 6, 60, 13, 7);
+        g.fillCircle(14, 10, 9);
+        g.fillCircle(32, 8, 10);
+        g.fillCircle(50, 10, 9);
+        // Crackling golden lightning veins across the cloud
+        g.lineStyle(2, 0xffea00, 0.95);
+        g.lineBetween(12, 8, 22, 15);
+        g.lineBetween(22, 15, 18, 20);
+        g.lineBetween(42, 7, 50, 14);
+        g.lineBetween(50, 14, 45, 20);
+        g.generateTexture('platform_cloud_storm', 64, 24);
+
+        // 27. Act III: Дніпрова Русалка ('enemy_rusalka') & Water-Lily Surface Wreath ('rusalka_wreath')
+        g.clear();
+        // Shimmering turquoise water ripple & flower wreath on water surface
+        g.lineStyle(2, 0x00f5d4, 0.85);
+        g.strokeEllipse(21, 10, 38, 10);
+        g.fillStyle(0x2ec4b6, 0.9);
+        g.fillEllipse(21, 8, 20, 7);
+        g.fillStyle(0xffea00, 1);
+        g.fillCircle(15, 7, 2.5);
+        g.fillCircle(21, 6, 3);
+        g.fillCircle(27, 7, 2.5);
+        g.generateTexture('rusalka_wreath', 42, 16);
+
+        g.clear();
+        // Flowing translucent river-mist dress & water tail splashes
+        g.fillStyle(0x48cae4, 0.85);
+        g.fillTriangle(10, 56, 24, 26, 38, 56);
+        g.fillStyle(0xcaf0f8, 0.95);
+        g.fillRoundedRect(14, 24, 20, 26, 6);
+        // Outstretched arms trying to grab Omelko!
+        g.lineStyle(4, 0xd8f3dc, 1);
+        g.lineBetween(16, 28, 3, 20);
+        g.lineBetween(32, 28, 45, 20);
+        // Long flowing emerald-turquoise hair
+        g.fillStyle(0x0096c7, 0.95);
+        g.fillRoundedRect(11, 8, 26, 24, 8);
+        // Pale river-nymph face
+        g.fillStyle(0xe0fbfc, 1);
+        g.fillCircle(24, 15, 7.5);
+        // Glowing cyan siren eyes
+        g.fillStyle(0x00f5d4, 1);
+        g.fillCircle(21.5, 14.5, 2);
+        g.fillCircle(26.5, 14.5, 2);
+        // Wreath of Dnipro water-lilies & reeds (вінок із лілій)
+        g.fillStyle(0x2d6a4f, 1);
+        g.fillRoundedRect(15, 6, 18, 4, 2);
+        g.fillStyle(0xffea00, 1);
+        g.fillCircle(19, 7, 2.5);
+        g.fillCircle(24, 6.5, 3);
+        g.fillCircle(29, 7, 2.5);
+        g.generateTexture('enemy_rusalka', 48, 58);
+
+        // 28. Act III: Водяник ('enemy_vodyanyk') & Потерча ('enemy_potercha')
+        g.clear();
+        // Floating lilypad / river-log base
+        g.fillStyle(0x2d6a4f, 1);
+        g.fillEllipse(28, 52, 46, 10);
+        // Deep river-green body & scales
+        g.fillStyle(0x1b4332, 1);
+        g.fillRoundedRect(12, 20, 32, 32, 9);
+        // Long flowing duckweed beard (борода з ряски й водоростей)
+        g.fillStyle(0x52b788, 1);
+        g.fillTriangle(15, 24, 41, 24, 28, 50);
+        // Bulging golden-green frog-like eyes & reed crown
+        g.fillStyle(0x40916c, 1);
+        g.fillCircle(28, 16, 10);
+        g.fillStyle(0xffbe0b, 1);
+        g.fillCircle(24, 14, 3);
+        g.fillCircle(32, 14, 3);
+        // Crown of reeds (очеретяна корона)
+        g.fillStyle(0xe9c46a, 1);
+        g.fillTriangle(19, 9, 23, 2, 26, 9);
+        g.fillTriangle(26, 9, 28, 1, 31, 9);
+        g.fillTriangle(31, 9, 34, 2, 37, 9);
+        // Whirlpool staff
+        g.lineStyle(3.5, 0x6f4518, 1);
+        g.lineBetween(46, 10, 44, 52);
+        g.fillStyle(0x00f5d4, 0.9);
+        g.fillCircle(46, 9, 5);
+        g.generateTexture('enemy_vodyanyk', 56, 58);
+
+        g.clear();
+        // Misty winged water-imp (Потерча з болотним вогником)
+        g.fillStyle(0x48cae4, 0.45);
+        g.fillEllipse(10, 22, 16, 10);
+        g.fillEllipse(34, 22, 16, 10);
+        g.fillStyle(0x023e8a, 0.9);
+        g.fillRoundedRect(14, 14, 16, 22, 7);
+        g.fillStyle(0x00f5d4, 1);
+        g.fillCircle(19, 20, 2.2);
+        g.fillCircle(25, 20, 2.2);
+        // Hanging marsh lantern
+        g.fillStyle(0xffea00, 0.95);
+        g.fillCircle(22, 38, 4.5);
+        g.generateTexture('enemy_potercha', 44, 46);
+
+        // 29. Act III Projectiles ('water_orb', 'tidal_wave') & Boss ('boss_vodyanyk_tsar') & Giant Catfish ('giant_catfish')
+        g.clear();
+        g.fillStyle(0x0096c7, 0.9);
+        g.fillCircle(9, 9, 8);
+        g.lineStyle(2, 0x90e0ef, 0.95);
+        g.strokeCircle(9, 9, 5);
+        g.fillStyle(0xffffff, 1);
+        g.fillCircle(7, 7, 2.5);
+        g.generateTexture('water_orb', 18, 18);
+
+        g.clear();
+        g.fillStyle(0x0077b6, 0.95);
+        g.fillTriangle(2, 26, 18, 3, 32, 26);
+        g.fillStyle(0x90e0ef, 0.9);
+        g.fillCircle(18, 7, 5);
+        g.generateTexture('tidal_wave', 34, 26);
+
+        // Boss of Act III: Водяний Цар Дніпрових Порогів ('boss_vodyanyk_tsar')
+        g.clear();
+        // Swirling whirlpool base & royal river cloak
+        g.fillStyle(0x03045e, 0.95);
+        g.fillRoundedRect(16, 26, 60, 62, 14);
+        g.fillStyle(0x0077b6, 1);
+        g.fillRoundedRect(22, 28, 48, 44, 10);
+        // Flowing sea-foam & emerald beard
+        g.fillStyle(0x80ffdb, 0.95);
+        g.fillTriangle(24, 34, 68, 34, 46, 76);
+        // Head & Golden Shell/Reed Crown
+        g.fillStyle(0x00b4d8, 1);
+        g.fillRoundedRect(28, 12, 36, 24, 8);
+        g.fillStyle(0xffd166, 1);
+        g.fillTriangle(28, 13, 34, 2, 40, 13);
+        g.fillTriangle(40, 13, 46, 0, 52, 13);
+        g.fillTriangle(52, 13, 58, 2, 64, 13);
+        // Glowing golden-cyan eyes
+        g.fillStyle(0xffea00, 1);
+        g.fillCircle(39, 23, 4);
+        g.fillCircle(53, 23, 4);
+        // Golden River Trident (Тризуб Водяного Царя)
+        g.lineStyle(4, 0xffd166, 1);
+        g.lineBetween(74, 14, 74, 86);
+        g.lineBetween(66, 16, 82, 16);
+        g.lineBetween(66, 16, 66, 5);
+        g.lineBetween(74, 16, 74, 2);
+        g.lineBetween(82, 16, 82, 5);
+        g.generateTexture('boss_vodyanyk_tsar', 92, 92);
+
+        // Giant River Catfish ('giant_catfish' — Річковий Сом Вусань)
+        g.clear();
+        // Tail fin
+        g.fillStyle(0x1d3557, 1);
+        g.fillTriangle(4, 34, 28, 14, 28, 52);
+        // Broad sleek silver-blue catfish body
+        g.fillStyle(0x2b4c65, 1);
+        g.fillEllipse(82, 36, 118, 42);
+        // Pale silver-cream belly
+        g.fillStyle(0xa8dadc, 1);
+        g.fillEllipse(86, 44, 96, 20);
+        // Dorsal fin (спинний плавець, біля якого стоїть Омелько)
+        g.fillStyle(0x1d3557, 1);
+        g.fillTriangle(62, 16, 84, 5, 92, 17);
+        // Friendly golden eye & wide smiling mouth
+        g.fillStyle(0xffea00, 1);
+        g.fillCircle(122, 28, 5.5);
+        g.fillStyle(0x111111, 1);
+        g.fillCircle(123.5, 28, 2.5);
+        // Long curling Cossack Catfish Whiskers (довгі козацькі вуса сома!)
+        g.lineStyle(3.5, 0x1d3557, 1);
+        g.beginPath();
+        g.moveTo(132, 34);
+        g.lineTo(148, 26);
+        g.lineTo(154, 18);
+        g.strokePath();
+        g.beginPath();
+        g.moveTo(130, 38);
+        g.lineTo(146, 46);
+        g.lineTo(152, 54);
+        g.strokePath();
+        g.generateTexture('giant_catfish', 158, 62);
+
+        let titleLaunched = false;
         const launchTitle = () => {
+          if (titleLaunched) return;
+          titleLaunched = true;
           if (this.scene && this.scene.start) {
             this.scene.start('TitleScene');
           }
         };
 
+        setTimeout(launchTitle, 250);
         if (document.fonts && document.fonts.ready) {
           document.fonts.ready.then(launchTitle).catch(launchTitle);
         } else {
@@ -3627,10 +4053,10 @@
         this.isFinished = false;
         this.isTelegraphing = false;
 
-        // Overhead UI: Stun Bar ("Ошелешення") + Telegraph Warning ("!") + Dizzy Stars
+        // Overhead UI: Classic Red Health Bar (starts full red and decreases to 0) + Telegraph Warning ("!") + Dizzy Stars
         this.uiContainer = scene.add.container(x, y - 42);
         this.barBg = scene.add.rectangle(0, 0, 44, 7, 0x1b1d24).setStrokeStyle(1, 0xffffff);
-        this.barFill = scene.add.rectangle(-21, 0, 0, 5, 0xffbe0b).setOrigin(0, 0.5);
+        this.barFill = scene.add.rectangle(-21, 0, 42, 5, 0xe63946).setOrigin(0, 0.5);
         this.telegraphLabel = scene.add.text(0, -18, '!', {
           fontSize: '24px',
           fontStyle: 'bold',
@@ -3660,10 +4086,10 @@
       updateBase(time) {
         if (this.isFinished || !this.sprite.active) return false;
 
-        // Sync overhead Stun Bar position
+        // Sync overhead Health Bar position (classic decreasing red bar: 100% -> 0%)
         this.uiContainer.setPosition(this.sprite.x, this.sprite.y - this.sprite.height * 0.65);
-        const ratio = Phaser.Math.Clamp(this.stun / this.maxStun, 0, 1);
-        this.barFill.width = 42 * ratio;
+        const hpRatio = Phaser.Math.Clamp(1 - (this.stun / this.maxStun), 0, 1);
+        this.barFill.width = 42 * hpRatio;
 
         // Smoothly recover Squash & Stretch
         this.sprite.scaleX = Phaser.Math.Linear(this.sprite.scaleX, 1, 0.2);
@@ -3730,7 +4156,7 @@
         this.isTelegraphing = false;
         this.telegraphLabel.setVisible(false);
         this.stunEndTime = this.scene.time.now + CONFIG.ENEMY.STUN_DURATION_MS;
-        this.barFill.setFillStyle(0x00f5d4);
+        this.barFill.setFillStyle(0xe63946);
         this.stunPrompt.setVisible(true);
         this.stars.forEach(s => s.setVisible(true));
         this.sprite.setAngle(0);
@@ -3740,8 +4166,8 @@
 
       recoverFromStun() {
         this.isStunned = false;
-        this.stun = Math.floor(this.maxStun * 0.35); // Keep 35% stun if player missed finisher
-        this.barFill.setFillStyle(0xffbe0b);
+        this.stun = Math.floor(this.maxStun * 0.35); // Recover 65% of red health bar if player missed finisher
+        this.barFill.setFillStyle(0xe63946);
         this.stunPrompt.setVisible(false);
         this.stars.forEach(s => s.setVisible(false));
         this.sprite.setAngle(0);
@@ -4400,7 +4826,7 @@
           this.stage = 2;
           this.isStunned = false;
           this.stun = 0;
-          this.barFill.setFillStyle(0xffbe0b);
+          this.barFill.setFillStyle(0xe63946);
           this.stunPrompt.setVisible(false);
           this.stars.forEach(s => s.setVisible(false));
 
@@ -5109,7 +5535,7 @@
           this.stage = 2;
           this.isStunned = false;
           this.stun = 0;
-          this.barFill.setFillStyle(0xffbe0b);
+          this.barFill.setFillStyle(0xe63946);
           this.stunPrompt.setVisible(false);
           this.stars.forEach(s => s.setVisible(false));
 
@@ -5130,6 +5556,566 @@
         } else {
           super.triggerFinisher(fromX);
           this.scene.time.delayedCall(1200, () => {
+            this.scene.triggerVictory();
+          });
+        }
+      }
+    }
+
+    /**
+     * ============================================================================
+     * 9G. DNIPRO RUSALKA ("ДНІПРОВА РУСАЛКА-ЛОСКОТАРКА") — ACT III WATER AMBUSH
+     * Swims below cloud gaps, telegraphs with a glowing lily wreath & song, then
+     * leaps high out of the Dnipro to grab Omelko and drag him into the river!
+     * Omelko can dodge with [Shift] or jump, or break free with [Shift]/[Space]/[D].
+     * ============================================================================
+     */
+    class RusalkaEnemy extends Enemy {
+      constructor(scene, x, y, minX, maxX) {
+        super(scene, x, CONFIG.GROUND_Y + 14, 'enemy_rusalka', CONFIG.ENEMY.RUSALKA.MAX_STUN, CONFIG.ENEMY.RUSALKA.STUN_MS);
+        this.minX = minX;
+        this.maxX = maxX;
+        this.patrolDir = 1;
+        this.state = 'SWIM'; // SWIM -> TELEGRAPH -> LEAP -> GRABBING
+        this.stateEndTime = scene.time.now + Phaser.Math.Between(900, 1700);
+        this.sprite.body.setAllowGravity(false);
+        this.sprite.body.setSize(30, 44);
+        this.sprite.setAlpha(0.75);
+
+        // Floating water-lily wreath marker on the water surface so Omelko sees where she lurks
+        this.surfaceWreath = scene.add.image(x, CONFIG.GROUND_Y + 4, 'rusalka_wreath').setDepth(28);
+      }
+
+      update(time, player) {
+        if (this.isFinished) {
+          if (this.scene.grabbedByRusalka === this) {
+            this.scene.grabbedByRusalka = null;
+          }
+          if (this.surfaceWreath && this.surfaceWreath.active) this.surfaceWreath.setVisible(false);
+          return;
+        }
+
+        // Keep surface wreath synced with her X position
+        if (this.surfaceWreath && this.surfaceWreath.active) {
+          this.surfaceWreath.setPosition(this.sprite.x, CONFIG.GROUND_Y + 4 + Math.sin(time * 0.008) * 3);
+        }
+
+        if (this.isStunned) {
+          if (this.scene.grabbedByRusalka === this) {
+            this.scene.grabbedByRusalka = null;
+          }
+          this.sprite.body.setAllowGravity(false);
+          this.sprite.body.setVelocity(0, Math.sin(time * 0.01) * 15);
+          this.updateBase(time);
+          return;
+        }
+
+        if (!this.updateBase(time)) return;
+
+        const distX = Math.abs(player.sprite.x - this.sprite.x);
+        const dirToPlayer = player.sprite.x >= this.sprite.x ? 1 : -1;
+
+        if (this.state === 'SWIM') {
+          this.sprite.body.setAllowGravity(false);
+          this.sprite.y = Phaser.Math.Linear(this.sprite.y, CONFIG.GROUND_Y + 14, 0.15);
+          this.sprite.setAlpha(0.72);
+          this.sprite.body.setVelocityY(0);
+
+          if (this.sprite.x <= this.minX) this.patrolDir = 1;
+          if (this.sprite.x >= this.maxX) this.patrolDir = -1;
+
+          // Track closer toward Omelko when he jumps across clouds above her patrol zone
+          if (player.sprite.x >= this.minX - 60 && player.sprite.x <= this.maxX + 60) {
+            this.patrolDir = dirToPlayer;
+          }
+          this.sprite.body.setVelocityX(this.patrolDir * CONFIG.ENEMY.RUSALKA.SWIM_SPEED);
+          this.sprite.setFlipX(this.patrolDir < 0);
+
+          if (time >= this.stateEndTime && distX < 185 && player.sprite.y < CONFIG.GROUND_Y - 10) {
+            this.state = 'TELEGRAPH';
+            this.isTelegraphing = true;
+            this.stateEndTime = time + CONFIG.ENEMY.RUSALKA.TELEGRAPH_MS;
+            this.sprite.body.setVelocityX(0);
+            this.telegraphLabel.setText('🧜‍♀️!').setColor('#00f5d4').setVisible(true);
+            this.sprite.setTint(0x48cae4);
+            this.sprite.setAlpha(1);
+            if (this.surfaceWreath) this.surfaceWreath.setScale(1.35);
+            SFX.rusalkaSong();
+            this.scene.spawnWaterSplash(this.sprite.x, CONFIG.GROUND_Y, 6);
+            if (distX < 145) {
+              this.scene.showFloatingText(this.sprite.x, CONFIG.GROUND_Y - 36, STRINGS.RUSALKA_WARN, '#48cae4');
+            }
+          }
+        } else if (this.state === 'TELEGRAPH') {
+          this.sprite.body.setVelocityX(0);
+          this.sprite.y = CONFIG.GROUND_Y + 4 + Math.sin(time * 0.05) * 3;
+          if (time >= this.stateEndTime) {
+            this.state = 'LEAP';
+            this.isTelegraphing = false;
+            this.telegraphLabel.setVisible(false);
+            this.sprite.clearTint();
+            if (this.surfaceWreath) this.surfaceWreath.setScale(1);
+
+            this.sprite.body.setAllowGravity(true);
+            const jumpVx = Phaser.Math.Clamp((player.sprite.x - this.sprite.x) * 1.35, -170, 170);
+            this.sprite.body.setVelocity(jumpVx, CONFIG.ENEMY.RUSALKA.LEAP_VEL_Y);
+            this.sprite.setFlipX(jumpVx < 0);
+            this.stateEndTime = time + 1450;
+            SFX.waterSplash();
+            this.scene.spawnWaterSplash(this.sprite.x, CONFIG.GROUND_Y, 10);
+          }
+        } else if (this.state === 'LEAP') {
+          // Check if she grabs Omelko mid-air (unless Omelko dodges with Shift roll or is invulnerable!)
+          if (Phaser.Geom.Intersects.RectangleToRectangle(this.sprite.getBounds(), player.sprite.getBounds())) {
+            if (player.isRolling || time < player.invulnUntil) {
+              // Omelko dodged her grab! Open counter-attack window and stun her briefly
+              player.counterWindowEndTime = time + CONFIG.PLAYER.COUNTER_WINDOW_MS + 250;
+              this.scene.showFloatingText(player.sprite.x, player.sprite.y - 45, STRINGS.RUSALKA_DODGED, '#00f5d4');
+              this.receiveStunHit(28, player.sprite.x, false);
+              this.state = 'SWIM';
+              this.stateEndTime = time + CONFIG.ENEMY.RUSALKA.COOLDOWN_MS;
+              return;
+            } else if (!this.scene.grabbedByRusalka) {
+              // Grab Omelko and try to pull him down into the Dnipro!
+              this.state = 'GRABBING';
+              this.grabStartTime = time;
+              this.grabReleaseTime = time + 900;
+              this.scene.grabbedByRusalka = this;
+              SFX.rusalkaSong();
+              this.scene.showFloatingText(player.sprite.x, player.sprite.y - 52, STRINGS.RUSALKA_GRABBED, '#ff758f');
+              player.takeDamage(CONFIG.ENEMY.RUSALKA.DAMAGE, this.sprite.x);
+              return;
+            }
+          }
+
+          // Return to water after her arc finishes
+          if ((this.sprite.body.velocity.y > 0 && this.sprite.y >= CONFIG.GROUND_Y + 10) || time >= this.stateEndTime) {
+            this.sprite.body.setAllowGravity(false);
+            this.sprite.body.setVelocity(0, 0);
+            this.sprite.y = CONFIG.GROUND_Y + 14;
+            this.state = 'SWIM';
+            this.stateEndTime = time + CONFIG.ENEMY.RUSALKA.COOLDOWN_MS;
+            this.scene.spawnWaterSplash(this.sprite.x, CONFIG.GROUND_Y, 7);
+          }
+        } else if (this.state === 'GRABBING') {
+          // Safely check player keys (space, upArrow, rollShift, attackD, throwS) and touch controls
+          const k = player.keys || {};
+          const touch = (player.scene && player.scene.ui && player.scene.ui.touchState) ? player.scene.ui.touchState : {};
+          const gracePassed = time >= (this.grabStartTime || 0) + 120;
+
+          const brokeFree = player.isRolling ||
+            Boolean(k.rollShift && Phaser.Input.Keyboard.JustDown(k.rollShift)) ||
+            Boolean(k.space && Phaser.Input.Keyboard.JustDown(k.space)) ||
+            Boolean(k.upArrow && Phaser.Input.Keyboard.JustDown(k.upArrow)) ||
+            Boolean(k.attackD && Phaser.Input.Keyboard.JustDown(k.attackD)) ||
+            Boolean(k.throwS && Phaser.Input.Keyboard.JustDown(k.throwS)) ||
+            (gracePassed && (
+              Boolean(k.rollShift && k.rollShift.isDown) ||
+              Boolean(k.space && k.space.isDown) ||
+              Boolean(k.upArrow && k.upArrow.isDown) ||
+              Boolean(k.attackD && k.attackD.isDown) ||
+              Boolean(touch.jump || touch.roll || touch.attack)
+            ));
+
+          if (brokeFree || time >= this.grabReleaseTime || this.isStunned) {
+            if (this.scene.grabbedByRusalka === this) {
+              this.scene.grabbedByRusalka = null;
+            }
+            if (brokeFree) {
+              player.sprite.body.setVelocityY(-460);
+              player.canDoubleJump = true;
+              player.invulnUntil = time + 700;
+              SFX.jump(true);
+              this.scene.showFloatingText(player.sprite.x, player.sprite.y - 48, STRINGS.RUSALKA_ESCAPED, '#ffd166');
+              this.receiveStunHit(34, player.sprite.x, true);
+            }
+            this.sprite.body.setAllowGravity(false);
+            this.sprite.body.setVelocity(0, 0);
+            this.sprite.y = CONFIG.GROUND_Y + 14;
+            this.state = 'SWIM';
+            this.stateEndTime = time + CONFIG.ENEMY.RUSALKA.COOLDOWN_MS + 500;
+            return;
+          }
+
+          // Pull Omelko gently downward toward the river while clinging to him
+          this.sprite.setPosition(player.sprite.x + (this.patrolDir * 10), player.sprite.y + 8);
+          this.sprite.body.setVelocity(0, 0);
+          player.sprite.body.setVelocityX(player.sprite.body.velocity.x * 0.55);
+          player.sprite.body.setVelocityY(CONFIG.ENEMY.RUSALKA.PULL_SPEED_Y);
+        }
+      }
+
+      triggerFinisher(fromX) {
+        if (this.scene.grabbedByRusalka === this) {
+          this.scene.grabbedByRusalka = null;
+        }
+        if (this.surfaceWreath && this.surfaceWreath.active) {
+          this.surfaceWreath.destroy();
+        }
+        super.triggerFinisher(fromX);
+      }
+    }
+
+    /**
+     * ============================================================================
+     * 9H. VODYANYK ("ВОДЯНИК ХМАРНИЙ") — ACT III CLOUD PLATFORM CASTER
+     * Patrols cloud platforms and hurls spinning whirlpool water orbs!
+     * ============================================================================
+     */
+    class VodyanykEnemy extends Enemy {
+      constructor(scene, x, y, minX, maxX) {
+        super(scene, x, y, 'enemy_vodyanyk', CONFIG.ENEMY.VODYANYK.MAX_STUN, CONFIG.ENEMY.VODYANYK.STUN_MS);
+        this.minX = minX;
+        this.maxX = maxX;
+        this.patrolDir = 1;
+        this.state = 'PATROL';
+        this.stateEndTime = scene.time.now + Phaser.Math.Between(900, 1700);
+        this.sprite.body.setSize(32, 46);
+      }
+
+      update(time, player) {
+        if (!this.updateBase(time)) return;
+
+        // Keep Vodyanyk from falling into the water if knocked off his cloud
+        if (this.sprite.y > CONFIG.GROUND_Y - 15) {
+          this.sprite.y = CONFIG.GROUND_Y - 140;
+          this.sprite.body.setVelocityY(-180);
+        }
+
+        const dist = Math.abs(player.sprite.x - this.sprite.x);
+        const dirToPlayer = player.sprite.x >= this.sprite.x ? 1 : -1;
+
+        if (this.state === 'PATROL') {
+          if (this.sprite.x <= this.minX) this.patrolDir = 1;
+          if (this.sprite.x >= this.maxX) this.patrolDir = -1;
+          this.sprite.body.setVelocityX(this.patrolDir * CONFIG.ENEMY.VODYANYK.PATROL_SPEED);
+          this.sprite.setFlipX(this.patrolDir < 0);
+
+          if (dist < 420 && time > this.stateEndTime) {
+            this.state = 'TELEGRAPH';
+            this.isTelegraphing = true;
+            this.sprite.body.setVelocityX(0);
+            this.sprite.setFlipX(dirToPlayer < 0);
+            this.telegraphLabel.setText('🌊!').setColor('#48cae4').setVisible(true);
+            this.sprite.setTint(0x48cae4);
+            this.stateEndTime = time + CONFIG.ENEMY.VODYANYK.TELEGRAPH_MS;
+            SFX.telegraph();
+          }
+        } else if (this.state === 'TELEGRAPH') {
+          this.sprite.body.setVelocityX(0);
+          if (time >= this.stateEndTime) {
+            this.isTelegraphing = false;
+            this.telegraphLabel.setVisible(false);
+            this.sprite.clearTint();
+            this.scene.spawnWaterOrb(this.sprite.x, this.sprite.y - 10, player.sprite.x, player.sprite.y - 10);
+            this.state = 'PATROL';
+            this.stateEndTime = time + CONFIG.ENEMY.VODYANYK.COOLDOWN_MS;
+          }
+        }
+      }
+    }
+
+    /**
+     * ============================================================================
+     * 9I. POTERCHA ("ПОТЕРЧА РІЧКОВЕ З КАганцем") — ACT III SKY FLYER
+     * Hovers above cloud gaps with a glowing marsh lantern and swoops at Omelko.
+     * ============================================================================
+     */
+    class PoterchaEnemy extends Enemy {
+      constructor(scene, x, y, minX, maxX) {
+        super(scene, x, y, 'enemy_potercha', CONFIG.ENEMY.POTERCHA.MAX_STUN, CONFIG.ENEMY.POTERCHA.STUN_MS);
+        this.baseY = y;
+        this.minX = minX;
+        this.maxX = maxX;
+        this.patrolDir = -1;
+        this.state = 'HOVER';
+        this.stateEndTime = scene.time.now + 1100;
+        this.sprite.body.setAllowGravity(false);
+        this.sprite.body.setSize(30, 36);
+      }
+
+      update(time, player) {
+        if (!this.updateBase(time)) return;
+
+        const dist = Phaser.Math.Distance.Between(this.sprite.x, this.sprite.y, player.sprite.x, player.sprite.y);
+        const dirToPlayer = player.sprite.x >= this.sprite.x ? 1 : -1;
+
+        if (this.state === 'HOVER') {
+          if (this.sprite.x <= this.minX) this.patrolDir = 1;
+          if (this.sprite.x >= this.maxX) this.patrolDir = -1;
+          this.sprite.body.setVelocityX(this.patrolDir * CONFIG.ENEMY.POTERCHA.FLY_SPEED);
+          this.sprite.body.setVelocityY(Math.cos(time * 0.007) * 38);
+          this.sprite.setFlipX(this.patrolDir < 0);
+
+          if (dist < 310 && time >= this.stateEndTime) {
+            this.state = 'TELEGRAPH';
+            this.isTelegraphing = true;
+            this.swoopDir = dirToPlayer;
+            this.sprite.body.setVelocity(0, 0);
+            this.sprite.setFlipX(this.swoopDir < 0);
+            this.telegraphLabel.setText('!').setColor('#ffea00').setVisible(true);
+            this.sprite.setTint(0xffea00);
+            this.stateEndTime = time + CONFIG.ENEMY.POTERCHA.TELEGRAPH_MS;
+            SFX.telegraph();
+          }
+        } else if (this.state === 'TELEGRAPH') {
+          if (time >= this.stateEndTime) {
+            this.state = 'SWOOP';
+            this.isTelegraphing = false;
+            this.telegraphLabel.setVisible(false);
+            this.sprite.clearTint();
+            const angle = Phaser.Math.Angle.Between(this.sprite.x, this.sprite.y, player.sprite.x, player.sprite.y);
+            this.sprite.body.setVelocity(
+              Math.cos(angle) * CONFIG.ENEMY.POTERCHA.SWOOP_SPEED,
+              Math.sin(angle) * CONFIG.ENEMY.POTERCHA.SWOOP_SPEED
+            );
+            this.stateEndTime = time + 520;
+          }
+        } else if (this.state === 'SWOOP') {
+          if (Phaser.Geom.Intersects.RectangleToRectangle(this.sprite.getBounds(), player.sprite.getBounds())) {
+            player.takeDamage(CONFIG.ENEMY.POTERCHA.DAMAGE, this.sprite.x);
+          }
+          if (time >= this.stateEndTime) {
+            this.state = 'RETURN';
+            this.stateEndTime = time + 650;
+          }
+        } else if (this.state === 'RETURN') {
+          const dy = this.baseY - this.sprite.y;
+          this.sprite.body.setVelocityY(Phaser.Math.Clamp(dy * 3.2, -160, 160));
+          this.sprite.body.setVelocityX(this.patrolDir * 80);
+          if (Math.abs(dy) < 16 || time >= this.stateEndTime) {
+            this.state = 'HOVER';
+            this.stateEndTime = time + CONFIG.ENEMY.POTERCHA.COOLDOWN_MS;
+          }
+        }
+      }
+    }
+
+    /**
+     * ============================================================================
+     * 9J. BOSS 3: VODYANYK TSAR OF THE DNIPRO RAPIDS ("ВОДЯНИЙ ЦАР ДНІПРОВИХ ПОРОГІВ")
+     * Guards the final Dnipro pier where the Giant River Catfish ("Річковий Сом") waits!
+     * ============================================================================
+     */
+    class VodyanykTsarBoss extends Enemy {
+      constructor(scene, x, y) {
+        super(scene, x, y, 'boss_vodyanyk_tsar', CONFIG.ENEMY.BOSS_VODYANYK_TSAR.MAX_STUN, CONFIG.ENEMY.BOSS_VODYANYK_TSAR.STUN_MS);
+        this.stage = 1;
+        this.active = false;
+        this.state = 'COOLDOWN';
+        this.stateEndTime = 0;
+        this.moveCycle = 0;
+        this.facing = -1;
+        this.hitsTakenInWindow = 0;
+        this.allowedWindowHits = 2;
+        this.lastGuardNoticeTime = 0;
+        this.sprite.body.setSize(62, 74);
+        this.sprite.body.setOffset(7, 8);
+      }
+
+      activate() {
+        if (this.active) return;
+        this.active = true;
+        this.enterCooldownWindow(this.scene.time.now, 900);
+        SFX.waterSplash();
+      }
+
+      enterCooldownWindow(now, durationMs) {
+        this.state = 'COOLDOWN';
+        this.isTelegraphing = false;
+        this.telegraphLabel.setVisible(false);
+        this.sprite.clearTint();
+        this.sprite.setAngle(0);
+        this.hitsTakenInWindow = 0;
+        this.allowedWindowHits = this.stage === 2 ? 1 : 2;
+        this.stateEndTime = now + durationMs;
+      }
+
+      startCounterAttack(now, fromX) {
+        if (this.isStunned || this.isFinished) return;
+        this.facing = fromX >= this.sprite.x ? 1 : -1;
+        this.sprite.setFlipX(this.facing < 0);
+        this.nextMove = (Math.abs(fromX - this.sprite.x) < 165) ? 'TIDAL_SLAM' : 'TRIDENT_SURGE';
+        this.state = 'TELEGRAPH';
+        this.isTelegraphing = true;
+        this.telegraphLabel.setText('🌊!').setColor('#00f5d4').setVisible(true);
+        this.sprite.setTint(0x00f5d4);
+        this.sprite.setScale(1.22, 0.84);
+        this.stateEndTime = now + 340;
+        SFX.telegraph();
+        if (now - this.lastGuardNoticeTime > 650) {
+          this.lastGuardNoticeTime = now;
+          this.scene.showFloatingText(this.sprite.x, this.sprite.y - 65, STRINGS.BOSS_COUNTER_WARN, '#48cae4');
+        }
+      }
+
+      receiveStunHit(stunAmount, fromX, isHeavy = false) {
+        if (this.isFinished) return;
+        if (!this.active) this.activate();
+
+        if (this.isStunned) {
+          this.triggerFinisher(fromX);
+          return;
+        }
+
+        const now = this.scene.time.now;
+        const inOpenWindow = (this.state === 'COOLDOWN') && (this.hitsTakenInWindow < this.allowedWindowHits);
+
+        if (inOpenWindow) {
+          this.hitsTakenInWindow++;
+          this.stun = Math.min(this.maxStun, this.stun + stunAmount);
+          SFX.panHit(isHeavy);
+          this.scene.triggerHitStop(CONFIG.FEEL.HIT_STOP_MS);
+          this.scene.cameras.main.shake(
+            isHeavy ? CONFIG.FEEL.SHAKE_HEAVY_DURATION : CONFIG.FEEL.SHAKE_LIGHT_DURATION,
+            isHeavy ? CONFIG.FEEL.SHAKE_HEAVY_INTENSITY : CONFIG.FEEL.SHAKE_LIGHT_INTENSITY
+          );
+          const dir = this.sprite.x >= fromX ? 1 : -1;
+          this.sprite.body.setVelocity(dir * 85, -25);
+          this.sprite.setScale(1.22, 0.84);
+          this.sprite.setTintFill(0xffffff);
+          this.scene.time.delayedCall(80, () => {
+            if (this.sprite && this.sprite.active && !this.isTelegraphing) this.sprite.clearTint();
+          });
+          this.scene.spawnHitParticles(this.sprite.x, this.sprite.y);
+
+          if (this.stun >= this.maxStun) {
+            this.enterStunState();
+            return;
+          }
+          if (this.hitsTakenInWindow >= this.allowedWindowHits) {
+            this.startCounterAttack(now, fromX);
+          }
+        } else {
+          const reduced = Math.max(4, Math.round(stunAmount * 0.22));
+          this.stun = Math.min(this.maxStun, this.stun + reduced);
+          SFX.shieldBlock();
+          this.scene.spawnWaterSplash(this.sprite.x, this.sprite.y, 5);
+          if (this.stun >= this.maxStun) {
+            this.enterStunState();
+            return;
+          }
+          if (this.state === 'COOLDOWN') {
+            this.startCounterAttack(now, fromX);
+          }
+        }
+      }
+
+      update(time, player) {
+        if (!this.active || !this.updateBase(time)) return;
+
+        // Keep boss on the final pier (4160..4760)
+        const minPierX = (this.scene.levelData ? this.scene.levelData.bossArenaStartX : 4160) + 45;
+        const maxPierX = (this.scene.worldWidth || 4800) - 90;
+        if (this.sprite.x < minPierX) this.sprite.x = minPierX;
+        if (this.sprite.x > maxPierX) this.sprite.x = maxPierX;
+
+        const onFloor = this.sprite.body.blocked.down || this.sprite.body.touching.down;
+        const distToPlayer = Math.abs(player.sprite.x - this.sprite.x);
+        const dirToPlayer = player.sprite.x >= this.sprite.x ? 1 : -1;
+
+        if (this.state === 'COOLDOWN') {
+          this.facing = dirToPlayer;
+          this.sprite.setFlipX(this.facing < 0);
+          if (distToPlayer > 140) {
+            this.sprite.body.setVelocityX(this.facing * CONFIG.ENEMY.BOSS_VODYANYK_TSAR.STALK_SPEED);
+          } else {
+            this.sprite.body.setVelocityX(this.sprite.body.velocity.x * 0.8);
+          }
+
+          if (time >= this.stateEndTime) {
+            const moves = ['TRIDENT_SURGE', 'TIDAL_SLAM', 'WHIRLPOOL_VOLLEY'];
+            this.nextMove = moves[this.moveCycle % moves.length];
+            this.moveCycle++;
+            this.state = 'TELEGRAPH';
+            this.isTelegraphing = true;
+            this.telegraphLabel.setText('🌊!').setColor('#00f5d4').setVisible(true);
+            this.sprite.setTint(0x48cae4);
+            this.sprite.setScale(1.2, 0.82);
+            const telMs = CONFIG.ENEMY.BOSS_VODYANYK_TSAR.TELEGRAPH_MS * (this.stage === 2 ? 0.82 : 1);
+            this.stateEndTime = time + telMs;
+            SFX.telegraph();
+          }
+        } else if (this.state === 'TELEGRAPH') {
+          this.sprite.body.setVelocityX(0);
+          if (time >= this.stateEndTime) {
+            this.isTelegraphing = false;
+            this.telegraphLabel.setVisible(false);
+            this.sprite.clearTint();
+            this.facing = dirToPlayer;
+            this.sprite.setFlipX(this.facing < 0);
+
+            if (this.nextMove === 'TRIDENT_SURGE') {
+              this.state = 'TRIDENT_SURGE';
+              this.sprite.setTint(0x00b4d8);
+              this.stateEndTime = time + 560;
+              SFX.waterSplash();
+            } else if (this.nextMove === 'TIDAL_SLAM') {
+              this.state = 'TIDAL_SLAM';
+              this.waitingForSlamLand = false;
+              const jumpVx = Phaser.Math.Clamp((player.sprite.x - this.sprite.x) * 1.15, -310, 310);
+              this.sprite.body.setVelocity(jumpVx, CONFIG.ENEMY.BOSS_VODYANYK_TSAR.JUMP_VEL_Y);
+              this.timeOutJump = time + 1450;
+              this.scene.time.delayedCall(140, () => { this.waitingForSlamLand = true; });
+            } else {
+              this.state = 'WHIRLPOOL_VOLLEY';
+              this.scene.spawnWaterOrb(this.sprite.x, this.sprite.y - 16, player.sprite.x, player.sprite.y - 12);
+              if (this.stage === 2) {
+                this.scene.time.delayedCall(220, () => {
+                  if (this.sprite && this.sprite.active && !this.isStunned) {
+                    this.scene.spawnWaterOrb(this.sprite.x, this.sprite.y - 24, player.sprite.x, player.sprite.y - 24);
+                  }
+                });
+              }
+              this.enterCooldownWindow(time, CONFIG.ENEMY.BOSS_VODYANYK_TSAR.COOLDOWN_MS * 0.85);
+            }
+          }
+        } else if (this.state === 'TRIDENT_SURGE') {
+          const speed = CONFIG.ENEMY.BOSS_VODYANYK_TSAR.SURGE_SPEED * (this.stage === 2 ? 1.18 : 1);
+          this.sprite.body.setVelocityX(this.facing * speed);
+          if (Phaser.Geom.Intersects.RectangleToRectangle(this.sprite.getBounds(), player.sprite.getBounds())) {
+            player.takeDamage(CONFIG.ENEMY.BOSS_VODYANYK_TSAR.DAMAGE_SURGE, this.sprite.x);
+          }
+          if (time >= this.stateEndTime || this.sprite.x <= minPierX + 10 || this.sprite.x >= maxPierX - 10) {
+            this.enterCooldownWindow(time, CONFIG.ENEMY.BOSS_VODYANYK_TSAR.COOLDOWN_MS * (this.stage === 2 ? 0.75 : 1));
+          }
+        } else if (this.state === 'TIDAL_SLAM') {
+          if ((this.waitingForSlamLand && onFloor) || time > this.timeOutJump) {
+            this.sprite.body.setVelocityX(0);
+            this.sprite.setScale(1.34, 0.72);
+            SFX.waterSplash();
+            this.scene.cameras.main.shake(CONFIG.FEEL.SHAKE_HEAVY_DURATION, CONFIG.FEEL.SHAKE_HEAVY_INTENSITY);
+            this.scene.spawnTidalWaves(this.sprite.x, CONFIG.GROUND_Y - 14);
+            this.enterCooldownWindow(time, CONFIG.ENEMY.BOSS_VODYANYK_TSAR.COOLDOWN_MS * (this.stage === 2 ? 0.74 : 1));
+          }
+        }
+      }
+
+      triggerFinisher(fromX) {
+        if (this.stage === 1) {
+          this.stage = 2;
+          this.isStunned = false;
+          this.stun = 0;
+          this.barFill.setFillStyle(0xe63946);
+          this.stunPrompt.setVisible(false);
+          this.stars.forEach(s => s.setVisible(false));
+
+          SFX.finisher();
+          SFX.waterSplash();
+          this.scene.triggerHitStop(CONFIG.FEEL.FINISHER_HIT_STOP_MS);
+          this.scene.cameras.main.shake(260, 0.016);
+          this.scene.spawnWaterSplash(this.sprite.x, this.sprite.y, 16);
+          this.scene.spawnLoot(this.sprite.x, this.sprite.y);
+          this.scene.showFloatingText(this.sprite.x, this.sprite.y - 70, STRINGS.BOSS_VODYANYK_STAGE_2, '#00f5d4');
+
+          this.state = 'TIDAL_SLAM';
+          this.waitingForSlamLand = false;
+          this.sprite.body.setVelocity(0, -520);
+          this.timeOutJump = this.scene.time.now + 1400;
+          this.scene.time.delayedCall(140, () => { this.waitingForSlamLand = true; });
+        } else {
+          super.triggerFinisher(fromX);
+          this.scene.time.delayedCall(1100, () => {
             this.scene.triggerVictory();
           });
         }
@@ -5212,14 +6198,20 @@
 
         // Current Level Badge in top-left under HUD panel
         const isLevel2 = this.scene.currentLevel === 2;
+        const isLevel3 = this.scene.currentLevel === 3;
+        const badgeLabel = isLevel3
+          ? `🌊 ${STRINGS.LEVEL_3_TITLE} (Шабля + Жаби)`
+          : (isLevel2 ? `🌲 ${STRINGS.LEVEL_2_TITLE} (Шабля кума)` : `🌻 ${STRINGS.LEVEL_1_TITLE}`);
+        const badgeColor = isLevel3 ? '#48cae4' : (isLevel2 ? '#ff9f1c' : '#ffd166');
+
         this.levelBadgeText = this.scene.add.text(
           16,
           92,
-          isLevel2 ? `🌲 ${STRINGS.LEVEL_2_TITLE} (Шабля кума)` : `🌻 ${STRINGS.LEVEL_1_TITLE}`,
+          badgeLabel,
           {
             fontSize: '12px',
             fontStyle: 'bold',
-            color: isLevel2 ? '#ff9f1c' : '#ffd166',
+            color: badgeColor,
             backgroundColor: '#14161fe0',
             padding: { x: 8, y: 3 }
           }
@@ -5233,7 +6225,7 @@
         this.bossTitle = this.scene.add.text(
           bx,
           by - 11,
-          isLevel2 ? STRINGS.BOSS_LISOVYK_NAME : STRINGS.BOSS_NAME,
+          isLevel3 ? STRINGS.BOSS_VODYANYK_NAME : (isLevel2 ? STRINGS.BOSS_LISOVYK_NAME : STRINGS.BOSS_NAME),
           {
             fontSize: '14px',
             fontStyle: 'bold',
@@ -5242,7 +6234,7 @@
         ).setOrigin(0.5).setScrollFactor(0).setDepth(102).setVisible(false);
         this.bossBarTrack = this.scene.add.rectangle(bx - 175, by + 10, 350, 12, 0x2b2d42)
           .setOrigin(0, 0.5).setScrollFactor(0).setDepth(102).setVisible(false);
-        this.bossBarFill = this.scene.add.rectangle(bx - 175, by + 10, 0, 12, 0xff9f1c)
+        this.bossBarFill = this.scene.add.rectangle(bx - 175, by + 10, 350, 12, 0xe63946)
           .setOrigin(0, 0.5).setScrollFactor(0).setDepth(103).setVisible(false);
         this.bossStageBadges = this.scene.add.text(bx + 185, by - 11, '●●', {
           fontSize: '16px',
@@ -5438,28 +6430,33 @@
           .setDepth(200)
           .setInteractive();
 
-        // Modal Card (taller to fit Level Switch option cleanly)
-        const card = this.scene.add.rectangle(cx, cy, 445, 435, 0x1d1e2c, 0.98)
+        // Modal Card (taller to fit Act I / Act II / Act III Level Switch options cleanly)
+        const card = this.scene.add.rectangle(cx, cy, 455, 468, 0x1d1e2c, 0.98)
           .setStrokeStyle(3, 0xffd166)
           .setScrollFactor(0)
           .setDepth(201);
 
-        const title = this.scene.add.text(cx, cy - 176, STRINGS.PAUSE_TITLE, {
-          fontSize: '25px',
+        const title = this.scene.add.text(cx, cy - 196, STRINGS.PAUSE_TITLE, {
+          fontSize: '24px',
           fontStyle: 'bold',
           color: '#ffd166'
         }).setOrigin(0.5).setScrollFactor(0).setDepth(202);
 
-        const navHint = this.scene.add.text(cx, cy + 186, STRINGS.PAUSE_NAV_HINT, {
+        const navHint = this.scene.add.text(cx, cy + 206, STRINGS.PAUSE_NAV_HINT, {
           fontSize: '12px',
           color: '#a8dadc'
         }).setOrigin(0.5).setScrollFactor(0).setDepth(202);
 
         this.pauseElements.push(overlay, card, title, navHint);
 
-        const isLvl2 = this.scene.currentLevel === 2;
+        const curLvl = this.scene.currentLevel || 1;
+        const otherLevels = [1, 2, 3].filter(l => l !== curLvl).map(l => ({
+          text: l === 1 ? STRINGS.PAUSE_LEVEL_1 : (l === 2 ? STRINGS.PAUSE_LEVEL_2 : STRINGS.PAUSE_LEVEL_3),
+          color: l === 1 ? 0x52796f : (l === 2 ? 0x3b2854 : 0x0077b6),
+          action: () => this.scene.switchLevelFromMenu(l)
+        }));
 
-        // Pause Menu Buttons (includes quick jump to Evil Forest Act II or back to Act I)
+        // Pause Menu Buttons (includes quick jump to any Act: Act I, Act II Evil Forest, or Act III Dnipro)
         const buttonConfigs = [
           {
             text: STRINGS.PAUSE_RESUME,
@@ -5476,11 +6473,7 @@
             color: 0xe76f51,
             action: () => this.scene.restartLevel()
           },
-          {
-            text: isLvl2 ? STRINGS.PAUSE_LEVEL_1 : STRINGS.PAUSE_LEVEL_2,
-            color: isLvl2 ? 0x52796f : 0x3b2854,
-            action: () => this.scene.switchLevelFromMenu(isLvl2 ? 1 : 2)
-          },
+          ...otherLevels,
           {
             text: STRINGS.PAUSE_HUT,
             color: 0x457b9d,
@@ -5494,12 +6487,12 @@
           }
         ];
 
-        const startY = cy - 122;
-        const stepY = 47;
+        const startY = cy - 148;
+        const stepY = 44;
 
         buttonConfigs.forEach((cfg, idx) => {
           const btnY = startY + idx * stepY;
-          const btnObj = this.createScreenSpaceMenuButton(cx, btnY, 340, 39, cfg.text, cfg.color, 203, () => {
+          const btnObj = this.createScreenSpaceMenuButton(cx, btnY, 350, 36, cfg.text, cfg.color, 203, () => {
             this.selectedPauseIndex = idx;
             this.refreshPauseButtonHighlight();
             cfg.action();
@@ -5889,9 +6882,9 @@
         this.bossStageBadges.setVisible(showBoss);
 
         if (showBoss) {
-          const bRatio = Phaser.Math.Clamp(boss.stun / boss.maxStun, 0, 1);
-          this.bossBarFill.width = 350 * bRatio;
-          this.bossBarFill.setFillStyle(boss.isStunned ? 0x00f5d4 : 0xff9f1c);
+          const bHpRatio = Phaser.Math.Clamp(1 - (boss.stun / boss.maxStun), 0, 1);
+          this.bossBarFill.width = 350 * bHpRatio;
+          this.bossBarFill.setFillStyle(0xe63946);
           this.bossStageBadges.setText(boss.stage === 1 ? '●●' : '●○');
         }
       }
@@ -5914,15 +6907,21 @@
         } else {
           this.currentLevel = GAME_STATE.currentLevel || 1;
         }
-        if (this.currentLevel === 2) {
+        if (this.currentLevel >= 2) {
           GAME_STATE.hasSaber = true;
+        }
+        if (this.currentLevel >= 3) {
+          GAME_STATE.hasSwampFrogs = true;
         }
         this.initialCoins = (data && data.coins !== undefined) ? data.coins : (GAME_STATE.savedCoins || 0);
       }
 
       create() {
         const isLevel2 = this.currentLevel === 2;
-        this.levelData = isLevel2 ? buildEvilForestLevelData() : LEVEL_1_DATA;
+        const isLevel3 = this.currentLevel === 3;
+        this.levelData = isLevel3
+          ? buildDniproLevelData()
+          : (isLevel2 ? buildEvilForestLevelData() : LEVEL_1_DATA);
         this.worldWidth = this.levelData.worldWidth || CONFIG.WORLD_WIDTH;
 
         this.physics.world.setBounds(0, 0, this.worldWidth, CONFIG.WORLD_HEIGHT);
@@ -5934,20 +6933,166 @@
         this.lookaheadX = 0;
         this.hasSeenPesyholovets = false;
         this.hasSeenShieldGuardian = false;
+        this.hasSeenRusalka = false;
+        this.grabbedByRusalka = null;
+        this.waterRescueCooldownUntil = 0;
+        this.lastSafePerch = { x: 140, y: CONFIG.GROUND_Y - 45 };
         this.activeSpeechBubble = null;
 
-        // 1. Create 3 Parallax Background Layers (Sunny Village Steppe vs. Dark Eerie "Злий Ліс")
+        // 1. Create 3 Parallax Background Layers (Act I Steppe vs. Act II "Злий Ліс" vs. Act III "На Дніпрі")
         this.createParallaxBackground();
 
-        // 2. Build Platforms & Wider Ground/Underground Cross-Section
+        // 2. Build Platforms & Ground / River Cross-Section
         this.platforms = this.physics.add.staticGroup();
         this.undergroundFloorGroup = this.physics.add.staticGroup();
+        this.dryGroundGroup = this.physics.add.staticGroup();
+        this.cloudPlatforms = [];
+        this.waterGeysers = [];
 
-        // Rich, wider Ground & Underground Layer (135px tall: from y = 405 to 540)
         const groundVisual = this.add.graphics();
         const groundH = CONFIG.HEIGHT - CONFIG.GROUND_Y;
 
-        if (isLevel2) {
+        if (isLevel3) {
+          // ==================================================================
+          // ACT III ("НА ДНІПРІ"): TURBULENT DNIPRO RIVER & DRY ISLAND PIERS
+          // ==================================================================
+          groundVisual.fillStyle(0x031d38, 1);
+          groundVisual.fillRect(0, CONFIG.GROUND_Y, this.worldWidth, groundH);
+          groundVisual.fillStyle(0x003566, 0.92);
+          groundVisual.fillRect(0, CONFIG.GROUND_Y, this.worldWidth, 56);
+          groundVisual.fillStyle(0x0077b6, 0.85);
+          groundVisual.fillRect(0, CONFIG.GROUND_Y, this.worldWidth, 18);
+
+          // Animated Dnipro surface foam & wave crests across the whole river
+          for (let wx = 20; wx < this.worldWidth; wx += 75) {
+            groundVisual.fillStyle(0x90e0ef, 0.65);
+            groundVisual.fillEllipse(wx, CONFIG.GROUND_Y + 4, 48, 7);
+            groundVisual.fillStyle(0x48cae4, 0.35);
+            groundVisual.fillEllipse(wx + 32, CONFIG.GROUND_Y + 26, 54, 8);
+          }
+
+          // Build the wooden Cossack bridges & piers over the Dnipro (starting bridge, 2 checkpoint bridges, final catfish pier)
+          const bridgeFg = this.add.graphics().setDepth(17);
+          (this.levelData.dryIslands || []).forEach(isl => {
+            const startX = isl.startX !== undefined ? isl.startX : (isl.x - isl.w / 2);
+            const endX = isl.endX !== undefined ? isl.endX : (isl.x + isl.w / 2);
+            const islW = endX - startX;
+            const islCenterX = startX + islW / 2;
+
+            // 1. Deep oak bridge pilings (дубові палі місточка у воді) & diagonal timber cross-braces
+            for (let px = startX + 22; px <= endX - 18; px += 58) {
+              // Diagonal cross-braces under bridge deck
+              if (px + 58 <= endX - 10) {
+                groundVisual.lineStyle(4, 0x3d2314, 0.9);
+                groundVisual.lineBetween(px + 6, CONFIG.GROUND_Y + 6, px + 56, CONFIG.GROUND_Y + 52);
+                groundVisual.lineBetween(px + 56, CONFIG.GROUND_Y + 6, px + 6, CONFIG.GROUND_Y + 52);
+              }
+              // Vertical oak piling column
+              groundVisual.fillStyle(0x4a2c11, 1);
+              groundVisual.fillRoundedRect(px - 6, CONFIG.GROUND_Y - 4, 14, groundH + 8, 3);
+              groundVisual.fillStyle(0x6f4518, 1);
+              groundVisual.fillRect(px - 3, CONFIG.GROUND_Y - 2, 5, groundH + 4);
+              // Water foam ring around each wooden piling
+              groundVisual.fillStyle(0xcaf0f8, 0.75);
+              groundVisual.fillEllipse(px + 1, CONFIG.GROUND_Y + 8, 26, 6);
+            }
+
+            // 2. Heavy horizontal oak support beam under bridge planks
+            groundVisual.fillStyle(0x583101, 1);
+            groundVisual.fillRoundedRect(startX - 4, CONFIG.GROUND_Y - 2, islW + 8, 16, 4);
+
+            // 3. Individual warm wooden boardwalk planks (дощатий настил місточка)
+            groundVisual.fillStyle(0x8a5a36, 1);
+            groundVisual.fillRoundedRect(startX, CONFIG.GROUND_Y - 10, islW, 12, 4);
+            groundVisual.fillStyle(0xb07d4f, 1);
+            groundVisual.fillRect(startX + 4, CONFIG.GROUND_Y - 10, islW - 8, 5);
+            groundVisual.lineStyle(2, 0x3d2314, 0.95);
+            for (let bx = startX + 14; bx < endX - 6; bx += 18) {
+              groundVisual.lineBetween(bx, CONFIG.GROUND_Y - 10, bx, CONFIG.GROUND_Y + 2);
+            }
+
+            // 4. Bridge handrail posts & sagging hemp ropes above deck (поручні місточка)
+            let prevPostX = null;
+            for (let postX = startX + 24; postX <= endX - 20; postX += 86) {
+              bridgeFg.fillStyle(0x583101, 1);
+              bridgeFg.fillRoundedRect(postX - 4, CONFIG.GROUND_Y - 42, 9, 34, 2);
+              bridgeFg.fillStyle(0xd4a373, 1);
+              bridgeFg.fillCircle(postX + 0.5, CONFIG.GROUND_Y - 43, 5);
+
+              if (prevPostX !== null) {
+                bridgeFg.lineStyle(2.5, 0xe9c46a, 0.9);
+                bridgeFg.beginPath();
+                bridgeFg.moveTo(prevPostX, CONFIG.GROUND_Y - 36);
+                bridgeFg.lineTo((prevPostX + postX) / 2, CONFIG.GROUND_Y - 29);
+                bridgeFg.lineTo(postX, CONFIG.GROUND_Y - 36);
+                bridgeFg.strokePath();
+              }
+              prevPostX = postX;
+            }
+
+            // On the starting wooden bridge (startX === 0), add a signpost guiding Omelko onto the first cloud!
+            if (startX === 0) {
+              bridgeFg.fillStyle(0x583101, 1);
+              bridgeFg.fillRect(205, CONFIG.GROUND_Y - 76, 8, 68);
+              bridgeFg.fillStyle(0xffd166, 1);
+              bridgeFg.fillRoundedRect(122, CONFIG.GROUND_Y - 78, 174, 26, 5);
+              bridgeFg.lineStyle(2, 0x583101, 1);
+              bridgeFg.strokeRoundedRect(122, CONFIG.GROUND_Y - 78, 174, 26, 5);
+              this.add.text(209, CONFIG.GROUND_Y - 65, 'Місточок → На хмаринки!', {
+                fontSize: '12px',
+                fontStyle: 'bold',
+                color: '#3d2314'
+              }).setOrigin(0.5).setDepth(22);
+            }
+
+            const dryBody = this.add.rectangle(islCenterX, CONFIG.GROUND_Y + 10, islW, 24, 0x000000, 0);
+            this.physics.add.existing(dryBody, true);
+            this.platforms.add(dryBody);
+            this.dryGroundGroup.add(dryBody);
+          });
+
+          // Waiting Giant River Catfish ("Річковий Сом Вусань") at the far edge of the final pier!
+          this.waitingCatfish = this.add.image(4705, CONFIG.GROUND_Y + 4, 'giant_catfish')
+            .setFlipX(true)
+            .setDepth(26);
+          this.tweens.add({
+            targets: this.waitingCatfish,
+            y: CONFIG.GROUND_Y - 2,
+            duration: 1100,
+            yoyo: true,
+            repeat: -1,
+            ease: 'Sine.easeInOut'
+          });
+          this.add.text(4695, CONFIG.GROUND_Y - 58, '🐟 Річковий Сом Вусань\n(Чекає після перемоги над Водяним Царем)', {
+            fontSize: '12px',
+            fontStyle: 'bold',
+            color: '#90e0ef',
+            align: 'center',
+            backgroundColor: '#031d38d8',
+            padding: { x: 8, y: 4 }
+          }).setOrigin(0.5).setDepth(27);
+
+          // Create Dnipro Water Geyser Traps between cloud platforms
+          (this.levelData.geysers || []).forEach((gz, idx) => {
+            const nozzle = this.add.ellipse(gz.x, CONFIG.GROUND_Y + 4, 42, 12, 0x90e0ef, 0.7).setDepth(24);
+            const column = this.add.rectangle(gz.x, CONFIG.GROUND_Y, 28, 10, 0x48cae4, 0.85)
+              .setOrigin(0.5, 1)
+              .setDepth(23)
+              .setVisible(false);
+            const cap = this.add.ellipse(gz.x, CONFIG.GROUND_Y - 120, 44, 18, 0xcaf0f8, 0.9)
+              .setDepth(24)
+              .setVisible(false);
+            this.waterGeysers.push({
+              x: gz.x,
+              phaseOffset: idx * 750,
+              period: gz.period || 2500,
+              nozzle,
+              column,
+              cap,
+              isErupting: false
+            });
+          });
+        } else if (isLevel2) {
           // Dark cursed peat & tangled root catacombs of "Злий Ліс"
           groundVisual.fillStyle(0x0b0e14, 1);
           groundVisual.fillRect(0, CONFIG.GROUND_Y, this.worldWidth, groundH);
@@ -6005,39 +7150,88 @@
           groundVisual.fillRect(0, CONFIG.GROUND_Y, this.worldWidth, 5);
         }
 
-        // One-way surface collider at CONFIG.GROUND_Y so jumping up from underground never gets blocked from below
-        this.groundBody = this.add.rectangle(
-          this.worldWidth / 2,
-          CONFIG.GROUND_Y + 12,
-          this.worldWidth,
-          24,
-          0x000000,
-          0
-        );
-        this.physics.add.existing(this.groundBody, true);
-        this.groundBody.body.checkCollision.down = false;
-        this.groundBody.body.checkCollision.left = false;
-        this.groundBody.body.checkCollision.right = false;
+        if (!isLevel3) {
+          // One-way surface collider at CONFIG.GROUND_Y for Levels 1 & 2
+          this.groundBody = this.add.rectangle(
+            this.worldWidth / 2,
+            CONFIG.GROUND_Y + 12,
+            this.worldWidth,
+            24,
+            0x000000,
+            0
+          );
+          this.physics.add.existing(this.groundBody, true);
+          this.groundBody.body.checkCollision.down = false;
+          this.groundBody.body.checkCollision.left = false;
+          this.groundBody.body.checkCollision.right = false;
 
-        // Solid bottom floor collider for the underground catacombs
-        const undergroundFloor = this.add.rectangle(
-          this.worldWidth / 2,
-          CONFIG.HEIGHT - 4,
-          this.worldWidth,
-          8,
-          0x000000,
-          0
-        );
-        this.physics.add.existing(undergroundFloor, true);
-        this.platforms.add(undergroundFloor);
-        this.undergroundFloorGroup.add(undergroundFloor);
+          // Solid bottom floor collider for the underground catacombs
+          const undergroundFloor = this.add.rectangle(
+            this.worldWidth / 2,
+            CONFIG.HEIGHT - 4,
+            this.worldWidth,
+            8,
+            0x000000,
+            0
+          );
+          this.physics.add.existing(undergroundFloor, true);
+          this.platforms.add(undergroundFloor);
+          this.undergroundFloorGroup.add(undergroundFloor);
+        } else {
+          this.groundBody = null;
+        }
 
-        // Elevated Platforms at 3 Heights
-        const platTex = isLevel2 ? 'platform_tile_dark' : 'platform_tile';
-        this.levelData.platforms.forEach(p => {
-          const tile = this.add.tileSprite(p.x, p.y, p.w, 24, platTex);
-          this.physics.add.existing(tile, true);
-          this.platforms.add(tile);
+        // Elevated Platforms (Wooden / Dark Root Platforms in Act I-II, Wooden Bridge Steps & Cloud Platforms in Act III)
+        this.levelData.platforms.forEach((p, idx) => {
+          if (isLevel3) {
+            if (p.isWoodenBridgeStep) {
+              // Raised wooden bridge step (дерев'яний трамплін місточка) for smooth jumping onto the clouds!
+              const stepLegs = this.add.graphics().setDepth(17);
+              stepLegs.fillStyle(0x4a2c11, 1);
+              stepLegs.fillRect(p.x - p.w / 2 + 12, p.y, 10, CONFIG.GROUND_Y - p.y);
+              stepLegs.fillRect(p.x + p.w / 2 - 22, p.y, 10, CONFIG.GROUND_Y - p.y);
+              stepLegs.lineStyle(3, 0x583101, 1);
+              stepLegs.lineBetween(p.x - p.w / 2 + 16, p.y + 6, p.x + p.w / 2 - 16, CONFIG.GROUND_Y - 4);
+
+              const tile = this.add.tileSprite(p.x, p.y, p.w, 22, 'platform_tile').setDepth(18);
+              this.physics.add.existing(tile, true);
+              this.platforms.add(tile);
+              return;
+            }
+
+            const isStorm = p.cloudType === 'storm';
+            const tex = isStorm ? 'platform_cloud_storm' : 'platform_cloud';
+            const tile = this.add.tileSprite(p.x, p.y, p.w, 28, tex).setDepth(18);
+            this.physics.add.existing(tile, true);
+            this.platforms.add(tile);
+
+            let stormIcon = null;
+            if (isStorm) {
+              stormIcon = this.add.text(p.x, p.y - 22, '⚡', {
+                fontSize: '15px',
+                fontStyle: 'bold',
+                color: '#ffea00'
+              }).setOrigin(0.5).setDepth(19).setAlpha(0.65);
+            }
+
+            this.cloudPlatforms.push({
+              sprite: tile,
+              baseX: p.x,
+              baseY: p.y,
+              w: p.w,
+              cloudType: p.cloudType || 'normal',
+              moveRange: p.moveRange || p.moveX || 0,
+              moveSpeed: p.moveSpeed || p.speed || 0.002,
+              phase: idx * 1.15,
+              stormIcon,
+              lastZapCycle: -1
+            });
+          } else {
+            const platTex = isLevel2 ? 'platform_tile_dark' : 'platform_tile';
+            const tile = this.add.tileSprite(p.x, p.y, p.w, 24, platTex);
+            this.physics.add.existing(tile, true);
+            this.platforms.add(tile);
+          }
         });
 
         // 3. Create Checkpoints
@@ -6048,6 +7242,8 @@
           const img = this.add.image(cp.x, cp.y - 40, tex);
           if (GAME_STATE.isHardcore()) {
             img.setTint(0x555555);
+          } else if (isLevel3) {
+            img.setTint(0x90e0ef);
           } else if (isLevel2) {
             img.setTint(0x95d5b2);
           }
@@ -6067,35 +7263,46 @@
         // Boss Arena Gate Marker
         this.add.text(
           this.levelData.bossArenaStartX + 20,
-          CONFIG.GROUND_Y - 110,
-          isLevel2 ? '⚠ ГАЛЯВИНА ЧОРНОБОРА →' : '⚠ ПТАШИНИЙ ДВІР ПІВНЯ →',
+          CONFIG.GROUND_Y - 115,
+          isLevel3
+            ? '⚠ ПОРОГИ ВОДЯНОГО ЦАРЯ ТА СОМА →'
+            : (isLevel2 ? '⚠ ГАЛЯВИНА ЧОРНОБОРА →' : '⚠ ПТАШИНИЙ ДВІР ПІВНЯ →'),
           {
             fontSize: '16px',
             fontStyle: 'bold',
-            color: isLevel2 ? '#ff6b6b' : '#ffbe0b',
-            backgroundColor: isLevel2 ? '#1a0f1e' : '#2b2d42',
+            color: isLevel3 ? '#48cae4' : (isLevel2 ? '#ff6b6b' : '#ffbe0b'),
+            backgroundColor: isLevel3 ? '#031d38' : (isLevel2 ? '#1a0f1e' : '#2b2d42'),
             padding: { x: 8, y: 4 }
           }
         );
 
-        // 4. Create Player & Platform Collisions (with Shift+Down drop-through support on groundBody)
+        // 4. Create Player & Platform Collisions
         this.player = new Player(this, this.activeCheckpoint.x, this.activeCheckpoint.y);
         this.player.coins = this.initialCoins;
-        this.physics.add.collider(this.player.sprite, this.platforms);
-        this.physics.add.collider(
-          this.player.sprite,
-          this.groundBody,
-          null,
-          (playerSprite) => {
-            if (playerSprite.body.velocity.y < 0) return false;
-            if (this.time.now < this.player.dropThroughUntil) return false;
-            const prevBottom = playerSprite.body.prev.y + playerSprite.body.height;
-            if (prevBottom <= CONFIG.GROUND_Y + 14) return true;
-            if (playerSprite.body.bottom <= CONFIG.GROUND_Y + 28) return true;
-            return false;
-          },
-          this
-        );
+        this.physics.add.collider(this.player.sprite, this.platforms, (playerSprite, platSprite) => {
+          if (isLevel3 && playerSprite.body.blocked.down) {
+            this.lastSafePerch = {
+              x: Phaser.Math.Clamp(playerSprite.x, platSprite.x - platSprite.width * 0.3, platSprite.x + platSprite.width * 0.3),
+              y: platSprite.y - 38
+            };
+          }
+        });
+        if (this.groundBody) {
+          this.physics.add.collider(
+            this.player.sprite,
+            this.groundBody,
+            null,
+            (playerSprite) => {
+              if (playerSprite.body.velocity.y < 0) return false;
+              if (this.time.now < this.player.dropThroughUntil) return false;
+              const prevBottom = playerSprite.body.prev.y + playerSprite.body.height;
+              if (prevBottom <= CONFIG.GROUND_Y + 14) return true;
+              if (playerSprite.body.bottom <= CONFIG.GROUND_Y + 28) return true;
+              return false;
+            },
+            this
+          );
+        }
 
         // 5. Setup Camera with Lookahead Target & Deadzone
         this.camTarget = this.add.zone(this.player.sprite.x, this.player.sprite.y - 25, 1, 1);
@@ -6103,54 +7310,65 @@
         this.cameras.main.startFollow(this.camTarget, true, CONFIG.CAMERA.LERP_X, CONFIG.CAMERA.LERP_Y);
         this.cameras.main.setDeadzone(CONFIG.CAMERA.DEADZONE_W, CONFIG.CAMERA.DEADZONE_H);
 
-        // 6. Create Enemies & Boss (Act I vs. Act II "Злий Ліс")
+        // 6. Create Enemies & Boss (Act I vs. Act II "Злий Ліс" vs. Act III "На Дніпрі")
         this.enemies = [];
         this.levelData.enemies.forEach(eData => {
           let enemy;
           if (eData.type === 'goose') {
             enemy = new GooseEnemy(this, eData.x, eData.y, eData.minX, eData.maxX);
             this.physics.add.collider(enemy.sprite, this.platforms);
-            this.physics.add.collider(enemy.sprite, this.groundBody);
+            if (this.groundBody) this.physics.add.collider(enemy.sprite, this.groundBody);
           } else if (eData.type === 'shield_guardian') {
             enemy = new ShieldGuardianEnemy(this, eData.x, eData.y, eData.minX, eData.maxX);
             this.physics.add.collider(enemy.sprite, this.platforms);
-            this.physics.add.collider(enemy.sprite, this.groundBody);
+            if (this.groundBody) this.physics.add.collider(enemy.sprite, this.groundBody);
           } else if (eData.type === 'nyavka') {
             enemy = new NyavkaEnemy(this, eData.x, eData.y, eData.minX, eData.maxX);
           } else if (eData.type === 'bolotyanyk') {
             enemy = new BolotyanykEnemy(this, eData.x, eData.y, eData.minX, eData.maxX);
             this.physics.add.collider(enemy.sprite, this.platforms);
-            this.physics.add.collider(enemy.sprite, this.groundBody);
+            if (this.groundBody) this.physics.add.collider(enemy.sprite, this.groundBody);
+          } else if (eData.type === 'rusalka') {
+            enemy = new RusalkaEnemy(this, eData.x, eData.y, eData.minX, eData.maxX);
+          } else if (eData.type === 'vodyanyk') {
+            enemy = new VodyanykEnemy(this, eData.x, eData.y, eData.minX, eData.maxX);
+            this.physics.add.collider(enemy.sprite, this.platforms);
+          } else if (eData.type === 'potercha') {
+            enemy = new PoterchaEnemy(this, eData.x, eData.y, eData.minX, eData.maxX);
           } else {
             // Pesyholovtsi (LeshyEnemy) move on the surface AND burrow underground to hide from Omelko!
             enemy = new LeshyEnemy(this, eData.x, eData.y, eData.minX, eData.maxX);
             this.physics.add.collider(enemy.sprite, this.platforms);
             this.physics.add.collider(enemy.sprite, this.undergroundFloorGroup);
-            this.physics.add.collider(
-              enemy.sprite,
-              this.groundBody,
-              null,
-              (enemySprite) => {
-                const ref = enemySprite.enemyRef;
-                if (ref && this.time.now < ref.burrowPassUntil) return false;
-                if (enemySprite.body.velocity.y < 0) return false;
-                const prevBottom = enemySprite.body.prev.y + enemySprite.body.height;
-                if (prevBottom <= CONFIG.GROUND_Y + 18) return true;
-                return enemySprite.body.bottom <= CONFIG.GROUND_Y + 28;
-              },
-              this
-            );
+            if (this.groundBody) {
+              this.physics.add.collider(
+                enemy.sprite,
+                this.groundBody,
+                null,
+                (enemySprite) => {
+                  const ref = enemySprite.enemyRef;
+                  if (ref && this.time.now < ref.burrowPassUntil) return false;
+                  if (enemySprite.body.velocity.y < 0) return false;
+                  const prevBottom = enemySprite.body.prev.y + enemySprite.body.height;
+                  if (prevBottom <= CONFIG.GROUND_Y + 18) return true;
+                  return enemySprite.body.bottom <= CONFIG.GROUND_Y + 28;
+                },
+                this
+              );
+            }
           }
           this.enemies.push(enemy);
         });
 
-        if (isLevel2) {
+        if (isLevel3) {
+          this.boss = new VodyanykTsarBoss(this, this.levelData.bossSpawnX, CONFIG.GROUND_Y - 58);
+        } else if (isLevel2) {
           this.boss = new DarkLisovykBoss(this, this.levelData.bossSpawnX, CONFIG.GROUND_Y - 58);
         } else {
           this.boss = new MadRoosterBoss(this, this.levelData.bossSpawnX, CONFIG.GROUND_Y - 50);
         }
         this.physics.add.collider(this.boss.sprite, this.platforms);
-        this.physics.add.collider(this.boss.sprite, this.groundBody);
+        if (this.groundBody) this.physics.add.collider(this.boss.sprite, this.groundBody);
         this.enemies.push(this.boss);
 
         // 7. Create Projectiles & Loot Physics Groups
@@ -6159,33 +7377,46 @@
           const g = this.galushkaGroup.contains(obj1) ? obj1 : obj2;
           if (g && g.active) g.destroy();
         });
-        this.physics.add.collider(this.galushkaGroup, this.groundBody, (obj1, obj2) => {
-          const g = (obj1 === this.groundBody) ? obj2 : obj1;
-          if (g && g !== this.groundBody && g.active) g.destroy();
-        });
+        if (this.groundBody) {
+          this.physics.add.collider(this.galushkaGroup, this.groundBody, (obj1, obj2) => {
+            const g = (obj1 === this.groundBody) ? obj2 : obj1;
+            if (g && g !== this.groundBody && g.active) g.destroy();
+          });
+        }
 
         this.enemyProjectiles = this.physics.add.group();
         this.physics.add.collider(this.enemyProjectiles, this.platforms, (proj) => {
-          if (proj && proj.active && (proj.texture.key === 'pinecone' || proj.texture.key === 'swamp_glob') && proj.body.velocity.y > 0) {
+          if (proj && proj.active && (proj.texture.key === 'pinecone' || proj.texture.key === 'swamp_glob' || proj.texture.key === 'water_orb') && proj.body.velocity.y > 0) {
             proj.destroy();
           }
         });
-        this.physics.add.collider(this.enemyProjectiles, this.groundBody, (obj1, obj2) => {
-          const proj = (obj1 === this.groundBody) ? obj2 : obj1;
-          if (proj && proj !== this.groundBody && proj.active && proj.texture && proj.texture.key === 'swamp_glob' && proj.body.velocity.y > 0) {
-            proj.destroy();
-          }
-        });
+        if (this.groundBody) {
+          this.physics.add.collider(this.enemyProjectiles, this.groundBody, (obj1, obj2) => {
+            const proj = (obj1 === this.groundBody) ? obj2 : obj1;
+            if (proj && proj !== this.groundBody && proj.active && proj.texture && proj.texture.key === 'swamp_glob' && proj.body.velocity.y > 0) {
+              proj.destroy();
+            }
+          });
+        }
 
         this.lootGroup = this.physics.add.group();
         this.physics.add.collider(this.lootGroup, this.platforms);
-        this.physics.add.collider(this.lootGroup, this.groundBody);
+        if (this.groundBody) this.physics.add.collider(this.lootGroup, this.groundBody);
 
         // 8. UI & Pause / Menu Keyboard Shortcuts
         this.ui = new UI(this, false);
         this.pauseStartedAt = 0;
 
-        if (isLevel2) {
+        if (isLevel3) {
+          this.isControlsModalOpen = false;
+          this.ui.setControlsModalVisible(false);
+          this.cameras.main.fadeIn(450, 8, 24, 44);
+          SFX.waterSplash();
+          this.showFloatingText(this.player.sprite.x + 80, this.player.sprite.y - 85, `🌊 ${STRINGS.LEVEL_3_TITLE} — ${STRINGS.LEVEL_3_SUBTITLE}`, '#48cae4');
+          this.time.delayedCall(450, () => {
+            this.showOmelkoSpeech(STRINGS.OMELKO_REMARK_DNIPRO, 5200);
+          });
+        } else if (isLevel2) {
           // In Act II ("Злий Ліс"), start immediately with atmospheric intro banner & Omelko's remark
           this.isControlsModalOpen = false;
           this.ui.setControlsModalVisible(false);
@@ -6346,6 +7577,66 @@
 
       createParallaxBackground() {
         const gY = CONFIG.GROUND_Y; // 405
+
+        if (this.currentLevel === 3) {
+          // ====================================================================
+          // ACT III: «НА ДНІПРІ» — WIDE DNIPRO RIVER RAPIDS, GRANITE CLIFFS & CLOUDS
+          // ====================================================================
+          const sky = this.add.graphics().setScrollFactor(0);
+          sky.fillGradientStyle(0x071a33, 0x0d2b52, 0x1d4e89, 0x48cae4, 1);
+          sky.fillRect(0, 0, CONFIG.WIDTH, gY + 10);
+
+          // Glowing golden-amber sun reflecting over the Dnipro horizon
+          sky.fillStyle(0xffd166, 0.22);
+          sky.fillCircle(740, 102, 74);
+          sky.fillStyle(0xffea00, 0.88);
+          sky.fillCircle(740, 102, 42);
+
+          // Layer 1 (Far, scrollFactor 0.16): Distant Dnipro Granite Cliffs (Пороги) & Cossack Watchtowers
+          const layer1 = this.add.graphics().setScrollFactor(0.16);
+          for (let x = 0; x < 2400; x += 260) {
+            layer1.fillStyle(0x16324f, 1);
+            layer1.fillTriangle(x, gY, x + 110, gY - 190, x + 235, gY);
+            layer1.fillStyle(0x1d3f5e, 1);
+            layer1.fillTriangle(x + 90, gY, x + 185, gY - 150, x + 275, gY);
+            // Cossack wooden signal tower (фігура/вежа) on every second cliff
+            if (x % 520 === 0) {
+              layer1.lineStyle(3, 0x0b1d2e, 0.9);
+              layer1.lineBetween(x + 102, gY - 185, x + 94, gY - 220);
+              layer1.lineBetween(x + 118, gY - 185, x + 126, gY - 220);
+              layer1.fillStyle(0xff9f1c, 0.85);
+              layer1.fillCircle(x + 110, gY - 222, 5);
+            }
+          }
+
+          // Layer 2 (Mid, scrollFactor 0.4): Granite Boulders in the Dnipro Rapids & Weeping Willows
+          const layer2 = this.add.graphics().setScrollFactor(0.4);
+          for (let x = 60; x < 3400; x += 210) {
+            // River granite boulder (дніпровський поріг)
+            layer2.fillStyle(0x2a475e, 0.95);
+            layer2.fillEllipse(x + 40, gY - 10, 120, 74);
+            layer2.fillStyle(0x3d5a73, 0.9);
+            layer2.fillEllipse(x + 32, gY - 20, 82, 46);
+            // White water spray at boulder base
+            layer2.fillStyle(0xcaf0f8, 0.65);
+            layer2.fillEllipse(x + 40, gY - 2, 130, 12);
+          }
+
+          // Layer 3 (Near, scrollFactor 0.72): Cattails / Reeds (очерет) & Drifting River Mist
+          const layer3 = this.add.graphics().setScrollFactor(0.72);
+          for (let x = 30; x < 4800; x += 145) {
+            layer3.fillStyle(0x90e0ef, 0.12);
+            layer3.fillEllipse(x + 65, gY - 16, 165, 28);
+            // Tall Dnipro reeds (очерет і рогіз)
+            layer3.lineStyle(2.5, 0x1b4332, 0.9);
+            layer3.lineBetween(x, gY, x - 6, gY - 46);
+            layer3.lineBetween(x + 12, gY, x + 18, gY - 52);
+            layer3.fillStyle(0x583101, 1);
+            layer3.fillEllipse(x - 6, gY - 42, 5, 14);
+            layer3.fillEllipse(x + 18, gY - 48, 5, 14);
+          }
+          return;
+        }
 
         if (this.currentLevel === 2) {
           // ====================================================================
@@ -6523,6 +7814,13 @@
 
         this.player.update(time, delta);
 
+        // ====================================================================
+        // ACT III ("НА ДНІПРІ"): CLOUD TRAPS, WATER GEYSERS & RIVER HAZARD
+        // ====================================================================
+        if (this.currentLevel === 3) {
+          this.updateDniproCloudsAndTraps(time, delta);
+        }
+
         // Keep Omelko's active speech bubble centered above his head & clamped inside camera view
         if (this.activeSpeechBubble && this.activeSpeechBubble.active) {
           const cam = this.cameras.main;
@@ -6539,6 +7837,17 @@
         const targetOffset = this.player.facing * CONFIG.CAMERA.LOOKAHEAD_X;
         this.lookaheadX = Phaser.Math.Linear(this.lookaheadX, targetOffset, CONFIG.CAMERA.LOOKAHEAD_LERP);
         this.camTarget.setPosition(this.player.sprite.x + this.lookaheadX, this.player.sprite.y - 25);
+
+        // Trigger Omelko's remark when encountering the first Rusalka in Level 3 ("На Дніпрі")
+        if (this.currentLevel === 3 && !this.hasSeenRusalka) {
+          const firstRusalka = this.enemies.find(
+            e => (e instanceof RusalkaEnemy) && !e.isFinished && Math.abs(e.sprite.x - this.player.sprite.x) < 340
+          );
+          if (firstRusalka) {
+            this.hasSeenRusalka = true;
+            this.showOmelkoSpeech(STRINGS.OMELKO_REMARK_RUSALKA, 4800);
+          }
+        }
 
         // Trigger Omelko's tactical remark when encountering the first Shielded Moss Guardian in Level 2
         if (this.currentLevel === 2 && !this.hasSeenShieldGuardian) {
@@ -6570,6 +7879,7 @@
               this.showFloatingText(cp.x, cp.y - 125, STRINGS.CHECKPOINT_DISABLED_HARDCORE, '#ff6b6b');
             } else {
               this.activeCheckpoint = { x: cp.x, y: cp.y - 40, id: cp.id };
+              this.lastSafePerch = { x: cp.x, y: cp.y - 42 };
               cp.label.setText('★ Чекпоїнт активний!').setColor('#ffd166');
               this.player.stamina = CONFIG.PLAYER.MAX_STAMINA;
               this.player.uzvarCharges = CONFIG.PLAYER.UZVAR_CHARGES;
@@ -6582,7 +7892,10 @@
         // Activate Boss when Player enters Boss Arena
         if (!this.boss.active && this.player.sprite.x >= this.levelData.bossArenaStartX) {
           this.boss.activate();
-          if (this.currentLevel === 2) {
+          if (this.currentLevel === 3) {
+            this.showFloatingText(this.boss.sprite.x - 80, 195, STRINGS.BOSS_VODYANYK_NAME, '#48cae4');
+            this.showOmelkoSpeech(STRINGS.OMELKO_REMARK_VODYANYK_BOSS, 5200);
+          } else if (this.currentLevel === 2) {
             this.showFloatingText(this.boss.sprite.x - 80, 195, STRINGS.BOSS_LISOVYK_NAME, '#52b788');
             this.showOmelkoSpeech(STRINGS.OMELKO_REMARK_LISOVYK, 5200);
           } else {
@@ -6610,7 +7923,7 @@
           });
         });
 
-        // Update Enemy Projectiles (Pinecones, Swamp Globs, Will-o'-the-Wisps & Boss Shockwaves)
+        // Update Enemy Projectiles (Pinecones, Swamp Globs, Water Orbs, Will-o'-the-Wisps & Boss Shockwaves)
         this.enemyProjectiles.getChildren().forEach(proj => {
           if (proj.isSpinning) proj.angle += 12;
           if (proj.active && Phaser.Geom.Intersects.RectangleToRectangle(proj.getBounds(), this.player.sprite.getBounds())) {
@@ -6649,8 +7962,146 @@
         this.ui.updateHUD(this.player, this.boss);
       }
 
+      updateDniproCloudsAndTraps(time, delta) {
+        const px = this.player.sprite.x;
+        const py = this.player.sprite.y;
+
+        // 1. Update Moving Cloud Platforms & Electric Storm Cloud Traps
+        this.cloudPlatforms.forEach(cp => {
+          if (cp.cloudType === 'moving' && cp.moveRange > 0) {
+            const prevX = cp.sprite.x;
+            const newX = cp.baseX + Math.sin(time * cp.moveSpeed + cp.phase) * cp.moveRange;
+            const dx = newX - prevX;
+            cp.sprite.x = newX;
+            cp.sprite.body.updateFromGameObject();
+
+            // Carry Omelko horizontally if he is standing on this moving cloud
+            if (
+              this.player.sprite.body.blocked.down &&
+              Math.abs(this.player.sprite.y + 24 - (cp.sprite.y - 14)) < 14 &&
+              Math.abs(this.player.sprite.x - prevX) <= cp.w * 0.54
+            ) {
+              this.player.sprite.x += dx;
+              this.lastSafePerch = { x: this.player.sprite.x, y: cp.sprite.y - 38 };
+            }
+          } else if (cp.cloudType === 'storm') {
+            // Storm clouds cycle every 2800ms: 0..1700 calm, 1700..2350 charging warning, 2350..2800 lightning strike!
+            const cycleMs = (time + Math.round(cp.phase * 600)) % 2800;
+            const cycleIndex = Math.floor((time + Math.round(cp.phase * 600)) / 2800);
+
+            if (cycleMs < 1700) {
+              cp.sprite.clearTint();
+              if (cp.stormIcon) cp.stormIcon.setText('⚡').setAlpha(0.55).setScale(1);
+            } else if (cycleMs < 2350) {
+              // Warning phase: flash yellow-amber
+              cp.sprite.setTint((Math.floor(time / 90) % 2 === 0) ? 0xffea00 : 0x90e0ef);
+              if (cp.stormIcon) cp.stormIcon.setText('⚡!').setAlpha(1).setScale(1.25);
+            } else {
+              // Strike phase!
+              cp.sprite.setTint(0xffea00);
+              if (cp.lastZapCycle !== cycleIndex) {
+                cp.lastZapCycle = cycleIndex;
+                if (Math.abs(px - cp.sprite.x) < 380) {
+                  SFX.lightningZap();
+                }
+              }
+              if (
+                Math.abs(px - cp.sprite.x) < cp.w * 0.5 &&
+                Math.abs(py + 22 - (cp.sprite.y - 14)) < 22
+              ) {
+                if (this.player.takeDamage(18, cp.sprite.x)) {
+                  this.showFloatingText(px, py - 48, STRINGS.STORM_CLOUD_WARN, '#ffea00');
+                }
+              }
+            }
+          }
+        });
+
+        // 2. Update Dnipro Water Geyser Traps (Водяні вири)
+        this.waterGeysers.forEach(gz => {
+          const cycle = (time + gz.phaseOffset) % gz.period;
+          const activeStart = gz.period * 0.62;
+          const warnStart = gz.period * 0.44;
+
+          if (cycle < warnStart) {
+            gz.isErupting = false;
+            gz.column.setVisible(false);
+            gz.cap.setVisible(false);
+            gz.nozzle.setScale(1, 1).setAlpha(0.55);
+          } else if (cycle < activeStart) {
+            // Bubbling warning on water surface
+            gz.isErupting = false;
+            gz.column.setVisible(false);
+            gz.cap.setVisible(false);
+            const pulse = 1 + Math.sin(time * 0.03) * 0.28;
+            gz.nozzle.setScale(pulse, pulse).setAlpha(0.95);
+          } else {
+            // High-pressure water jet erupts upward!
+            gz.isErupting = true;
+            const jetHeight = 165;
+            gz.column.setSize(28, jetHeight).setPosition(gz.x, CONFIG.GROUND_Y).setVisible(true);
+            gz.cap.setPosition(gz.x, CONFIG.GROUND_Y - jetHeight).setVisible(true);
+            if (Math.abs(px - gz.x) < 22 && py > CONFIG.GROUND_Y - jetHeight - 16 && py < CONFIG.GROUND_Y + 20) {
+              this.player.sprite.body.setVelocityY(-460);
+              this.player.takeDamage(15, gz.x);
+            }
+          }
+        });
+
+        // 3. Check if Omelko is standing on a wooden bridge / dry island to update lastSafePerch
+        const currentIsland = (this.levelData.dryIslands || []).find(isl => {
+          const sx = isl.startX !== undefined ? isl.startX : (isl.x - isl.w / 2);
+          const ex = isl.endX !== undefined ? isl.endX : (isl.x + isl.w / 2);
+          return px >= sx - 8 && px <= ex + 8;
+        });
+        const onDryIsland = Boolean(currentIsland);
+        if (currentIsland && this.player.sprite.body.blocked.down && py <= CONFIG.GROUND_Y) {
+          const sx = currentIsland.startX !== undefined ? currentIsland.startX : (currentIsland.x - currentIsland.w / 2);
+          const ex = currentIsland.endX !== undefined ? currentIsland.endX : (currentIsland.x + currentIsland.w / 2);
+          this.lastSafePerch = {
+            x: Phaser.Math.Clamp(px, sx + 32, ex - 32),
+            y: CONFIG.GROUND_Y - 42
+          };
+        }
+
+        // 4. Non-swimmable Dnipro Water Hazard: Omelko cannot fall into the river!
+        if (!onDryIsland && py >= CONFIG.GROUND_Y - 6 && time >= this.waterRescueCooldownUntil) {
+          this.waterRescueCooldownUntil = time + 650;
+          if (this.grabbedByRusalka) {
+            this.grabbedByRusalka.state = 'SWIM';
+            this.grabbedByRusalka.stateEndTime = time + 1600;
+            this.grabbedByRusalka = null;
+          }
+
+          SFX.waterSplash();
+          this.spawnWaterSplash(px, CONFIG.GROUND_Y, 14);
+          this.cameras.main.shake(180, 0.012);
+
+          if (GAME_STATE.isHardcore()) {
+            this.player.stamina = 0;
+            this.handlePlayerTired();
+            return;
+          }
+
+          this.player.stamina -= 26;
+          if (this.player.stamina <= 0) {
+            this.player.stamina = 0;
+            this.handlePlayerTired();
+            return;
+          }
+
+          // Rescue Omelko back onto his last safe cloud or pier with a dramatic upward splash!
+          const safeX = this.lastSafePerch ? this.lastSafePerch.x : this.activeCheckpoint.x;
+          const safeY = this.lastSafePerch ? this.lastSafePerch.y : (this.activeCheckpoint.y - 20);
+          this.player.sprite.setPosition(safeX, safeY - 12);
+          this.player.sprite.body.setVelocity(0, -180);
+          this.player.invulnUntil = time + 1100;
+          this.showFloatingText(safeX, safeY - 45, STRINGS.WATER_HAZARD_MSG, '#48cae4');
+        }
+      }
+
       handlePlayerMeleeHit(comboStep, isCounterAttack) {
-        const usingSaber = GAME_STATE.hasSaber || this.currentLevel === 2;
+        const usingSaber = GAME_STATE.hasSaber || this.currentLevel >= 2;
         const rangeX = usingSaber ? CONFIG.PLAYER.ATTACK_RANGE_X + 12 : CONFIG.PLAYER.ATTACK_RANGE_X;
         const hitX = this.player.sprite.x + this.player.facing * (rangeX * 0.55);
         const hitY = this.player.sprite.y;
@@ -6743,6 +8194,41 @@
         glob.damageAmount = CONFIG.ENEMY.BOLOTYANYK.DAMAGE;
       }
 
+      spawnWaterOrb(fromX, fromY, targetX, targetY) {
+        const orb = this.enemyProjectiles.create(fromX, fromY, 'water_orb');
+        const dir = targetX >= fromX ? 1 : -1;
+        const dist = Math.min(420, Math.abs(targetX - fromX));
+        orb.body.setVelocity(dir * (dist * 0.85 + 95), CONFIG.ENEMY.VODYANYK.THROW_SPEED_Y);
+        orb.isSpinning = true;
+        orb.damageAmount = CONFIG.ENEMY.VODYANYK.DAMAGE;
+      }
+
+      spawnTidalWaves(x, y) {
+        [-1, 1].forEach(dir => {
+          const wave = this.enemyProjectiles.create(x + dir * 28, y, 'tidal_wave');
+          wave.body.setAllowGravity(false);
+          wave.body.setVelocityX(dir * CONFIG.ENEMY.BOSS_VODYANYK_TSAR.WAVE_SPEED);
+          wave.damageAmount = CONFIG.ENEMY.BOSS_VODYANYK_TSAR.DAMAGE_WAVE;
+        });
+      }
+
+      spawnWaterSplash(x, y, count = 8) {
+        for (let i = 0; i < count; i++) {
+          const drop = this.add.circle(x + Phaser.Math.Between(-16, 16), y, Phaser.Math.Between(3, 6), 0x90e0ef, 0.9).setDepth(65);
+          const vx = Phaser.Math.Between(-95, 95);
+          const vy = Phaser.Math.Between(-140, -45);
+          this.tweens.add({
+            targets: drop,
+            x: drop.x + vx * 0.45,
+            y: drop.y + vy * 0.45 + 18,
+            alpha: 0,
+            scale: 0.25,
+            duration: 340,
+            onComplete: () => drop.destroy()
+          });
+        }
+      }
+
       spawnWillOWisp(fromX, fromY, targetX, targetY) {
         const wisp = this.enemyProjectiles.create(fromX, fromY, 'willowisp');
         wisp.body.setAllowGravity(false);
@@ -6773,7 +8259,7 @@
           const leshy = new LeshyEnemy(this, spawnX2, CONFIG.GROUND_Y - 40, arenaMin, arenaMax);
           this.physics.add.collider(leshy.sprite, this.platforms);
           this.physics.add.collider(leshy.sprite, this.undergroundFloorGroup);
-          this.physics.add.collider(leshy.sprite, this.groundBody);
+          if (this.groundBody) this.physics.add.collider(leshy.sprite, this.groundBody);
           this.enemies.push(leshy);
         }
       }
@@ -6793,7 +8279,7 @@
           const spawnX = Phaser.Math.Clamp(bossX + (i === 0 ? -90 : 90), this.levelData.bossArenaStartX + 50, this.worldWidth - 50);
           const chick = new ChickEnemy(this, spawnX, CONFIG.GROUND_Y - 35);
           this.physics.add.collider(chick.sprite, this.platforms);
-          this.physics.add.collider(chick.sprite, this.groundBody);
+          if (this.groundBody) this.physics.add.collider(chick.sprite, this.groundBody);
           this.enemies.push(chick);
         }
       }
@@ -6905,6 +8391,7 @@
         this.player.uzvarCharges = CONFIG.PLAYER.UZVAR_CHARGES;
         this.player.invulnUntil = this.time.now + 1000;
         this.player.isTiredRespawning = false;
+        this.lastSafePerch = { x: this.activeCheckpoint.x, y: this.activeCheckpoint.y };
 
         this.physics.world.resume();
         SFX.checkpoint();
@@ -6971,6 +8458,7 @@
         this.player.sprite.body.setVelocity(0, 0);
         this.player.stamina = CONFIG.PLAYER.MAX_STAMINA;
         this.player.uzvarCharges = CONFIG.PLAYER.UZVAR_CHARGES;
+        this.lastSafePerch = { x: this.activeCheckpoint.x, y: this.activeCheckpoint.y };
         SFX.checkpoint();
         this.showFloatingText(this.player.sprite.x, this.player.sprite.y - 45, STRINGS.TIRED_MESSAGE, '#00f5d4');
       }
@@ -6982,8 +8470,11 @@
         }
         this.isPaused = false;
         GAME_STATE.currentLevel = targetLevel;
-        if (targetLevel === 2) {
+        if (targetLevel >= 2) {
           GAME_STATE.hasSaber = true;
+        }
+        if (targetLevel >= 3) {
+          GAME_STATE.hasSwampFrogs = true;
         }
         this.scene.restart({ level: targetLevel, coins: this.player ? this.player.coins : 0 });
       }
@@ -7032,10 +8523,18 @@
               enemiesStunned: this.enemiesStunnedCount
             });
           });
-        } else {
+        } else if (this.currentLevel === 2) {
           // Act II ("Злий Ліс") Finale: Omelko approaches Baba Yaga's Hut on Chicken Legs!
           this.time.delayedCall(520, () => {
             this.scene.start('BabaYagaScene', {
+              coins: this.player.coins,
+              enemiesStunned: this.enemiesStunnedCount
+            });
+          });
+        } else {
+          // Act III ("На Дніпрі") Finale: Giant River Catfish ("Річковий Сом Вусань") carries Omelko on his back across the Dnipro!
+          this.time.delayedCall(520, () => {
+            this.scene.start('CatfishScene', {
               coins: this.player.coins,
               enemiesStunned: this.enemiesStunnedCount
             });
@@ -8175,12 +9674,12 @@
           }
         ).setOrigin(0.5);
 
-        // Button 1: Replay Evil Forest with Swamp Frogs & Saber equipped
-        const btn1Bg = this.add.rectangle(cx - 165, cy + 126, 390, 48, 0x2d6a4f, 1)
+        // Button 1: Proceed to Act III ("На Дніпрі") with Swamp Frogs & Saber equipped!
+        const btn1Bg = this.add.rectangle(cx - 165, cy + 126, 390, 48, 0x0077b6, 1)
           .setStrokeStyle(2.5, 0xffea00)
           .setInteractive({ useHandCursor: true });
 
-        const btn1Lbl = this.add.text(cx - 165, cy + 126, STRINGS.REPLAY_WITH_FROGS_BTN, {
+        const btn1Lbl = this.add.text(cx - 165, cy + 126, STRINGS.ENTER_DNIPRO_ACT3, {
           fontFamily: "'Cormorant Infant', Georgia, serif",
           fontSize: '19px',
           fontStyle: 'bold',
@@ -8198,7 +9697,7 @@
         });
         btn1Bg.on('pointerdown', (pointer, lx, ly, event) => {
           if (event && event.stopPropagation) event.stopPropagation();
-          this.replayEvilForestWithFrogs();
+          this.launchDniproAct3();
         });
 
         // Button 2: Return to Title Screen
@@ -8260,16 +9759,527 @@
           this.showAct2VictoryModal();
         } else if (this.stage === 'VICTORY_MODAL') {
           if (this.time.now < this.modalReadyTime) return;
-          this.replayEvilForestWithFrogs();
+          this.launchDniproAct3();
         }
       }
 
-      replayEvilForestWithFrogs() {
-        SFX.throwFrog();
-        GAME_STATE.currentLevel = 2;
+      launchDniproAct3() {
+        SFX.waterSplash();
+        GAME_STATE.currentLevel = 3;
         GAME_STATE.hasSaber = true;
         GAME_STATE.hasSwampFrogs = true;
-        this.scene.start('GameScene', { level: 2, coins: this.finalCoins });
+        GAME_STATE.savedCoins = this.finalCoins;
+        this.scene.start('GameScene', { level: 3, coins: this.finalCoins });
+      }
+
+      restartWholeGame() {
+        SFX.pickup();
+        GAME_STATE.currentLevel = 1;
+        GAME_STATE.hasSaber = false;
+        GAME_STATE.hasSwampFrogs = false;
+        GAME_STATE.savedCoins = 0;
+        this.scene.start('TitleScene');
+      }
+    }
+
+    /**
+     * ============================================================================
+     * 11D. ACT 3 FINALE SCENE: GIANT RIVER CATFISH ("РІЧКОВИЙ СОМ ВУСАНЬ")
+     * Omelko hops onto the broad back of the Giant Dnipro Catfish, who carries him
+     * across the rapids to the far bank where Chumak salt wagons pass!
+     * ============================================================================
+     */
+    class CatfishScene extends Phaser.Scene {
+      constructor() {
+        super('CatfishScene');
+      }
+
+      init(data) {
+        this.finalCoins = (data && data.coins !== undefined) ? data.coins : (GAME_STATE.savedCoins || 0);
+        this.finalStunned = (data && data.enemiesStunned !== undefined) ? data.enemiesStunned : 0;
+      }
+
+      create() {
+        this.cameras.main.fadeIn(450, 8, 22, 42);
+        this.lineIndex = 0;
+        this.stage = 'MOUNT_AND_SWIM'; // MOUNT_AND_SWIM -> DIALOGUE -> SCALE_MODAL -> VICTORY_MODAL
+        this.modalReadyTime = 0;
+
+        // 1. Draw the Wide Dnipro River Crossing & Far Shore Pier
+        this.drawDniproCrossingBackdrop();
+
+        // 2. Create Giant River Catfish ("Річковий Сом Вусань") & Omelko riding on his back!
+        this.catfishRiderGroup = this.add.container(190, 398).setDepth(30);
+        this.catfishSprite = this.add.image(0, 12, 'giant_catfish').setScale(1.18);
+        this.omelkoSprite = this.add.image(-8, -32, 'cossack').setScale(1.24);
+        this.wakeFoam = this.add.ellipse(-92, 22, 58, 14, 0xcaf0f8, 0.85);
+        this.catfishRiderGroup.add([this.wakeFoam, this.catfishSprite, this.omelkoSprite]);
+
+        // Gentle swimming bob of the Giant Catfish & Omelko on his back
+        this.tweens.add({
+          targets: this.catfishRiderGroup,
+          y: 390,
+          angle: { from: -1.8, to: 1.8 },
+          duration: 680,
+          yoyo: true,
+          repeat: -1,
+          ease: 'Sine.easeInOut'
+        });
+
+        this.tweens.add({
+          targets: this.wakeFoam,
+          scaleX: 1.35,
+          alpha: 0.4,
+          duration: 380,
+          yoyo: true,
+          repeat: -1
+        });
+
+        // Top Header & Skip Hint
+        this.add.text(24, 16, STRINGS.CATFISH_HEADER, {
+          fontSize: '18px',
+          fontStyle: 'bold',
+          color: '#90e0ef',
+          stroke: '#031d38',
+          strokeThickness: 4
+        }).setDepth(60);
+
+        this.skipHint = this.add.text(CONFIG.WIDTH - 24, 16, STRINGS.CATFISH_SKIP_HINT, {
+          fontSize: '14px',
+          color: '#f5ebe0',
+          stroke: '#031d38',
+          strokeThickness: 3
+        }).setOrigin(1, 0).setDepth(60);
+
+        // 3. Speech Bubble Container
+        this.bubbleContainer = this.add.container(480, 225).setDepth(55).setVisible(false);
+        this.bubbleBg = this.add.graphics();
+        this.speakerText = this.add.text(-295, -52, '', {
+          fontSize: '16px',
+          fontStyle: 'bold',
+          color: '#0077b6'
+        });
+        this.dialogueText = this.add.text(-295, -24, '', {
+          fontSize: '18px',
+          color: '#1d1e2c',
+          wordWrap: { width: 590 },
+          lineSpacing: 5
+        });
+        this.bubbleContainer.add([this.bubbleBg, this.speakerText, this.dialogueText]);
+
+        // 4. Create Silver Catfish Scale & Crimean Salt Trophy Modal
+        this.createCatfishScaleModal();
+
+        // 5. Create Act 3 Finale Victory Modal
+        this.createAct3VictoryModal();
+
+        // 6. Input Listeners
+        this.input.keyboard.on('keydown-ENTER', () => this.onAdvance());
+        this.input.keyboard.on('keydown-SPACE', () => this.onAdvance());
+        this.input.keyboard.on('keydown-D', () => this.onAdvance());
+        this.input.on('pointerdown', () => {
+          if (this.stage !== 'VICTORY_MODAL') {
+            this.onAdvance();
+          }
+        });
+
+        // Swim from left rapids toward mid-river, then start dialogue while swimming to the far shore!
+        SFX.waterSplash();
+        this.tweens.add({
+          targets: this.catfishRiderGroup,
+          x: 420,
+          duration: 1350,
+          ease: 'Quad.easeOut',
+          onComplete: () => {
+            if (this.stage === 'MOUNT_AND_SWIM') {
+              this.stage = 'DIALOGUE';
+              this.bubbleContainer.setVisible(true);
+              this.showDialogueLine(0);
+            }
+          }
+        });
+      }
+
+      drawDniproCrossingBackdrop() {
+        const bg = this.add.graphics();
+
+        // Golden-blue sunset over the wide Dnipro
+        bg.fillGradientStyle(0x071a33, 0x1d4e89, 0x0077b6, 0xf4a261, 1);
+        bg.fillRect(0, 0, CONFIG.WIDTH, 390);
+
+        // Glowing golden sun over the far bank
+        bg.fillStyle(0xffd166, 0.3);
+        bg.fillCircle(480, 175, 88);
+        bg.fillStyle(0xffea00, 0.88);
+        bg.fillCircle(480, 175, 52);
+
+        // Distant Dnipro granite cliffs & Cossack hills
+        bg.fillStyle(0x16324f, 1);
+        for (let cx = 0; cx <= 960; cx += 190) {
+          bg.fillTriangle(cx - 40, 365, cx + 65, 225, cx + 180, 365);
+        }
+
+        // Left bank departure pier (behind Omelko)
+        bg.fillStyle(0x3d405b, 1);
+        bg.fillRoundedRect(-10, 355, 145, 95, 8);
+        bg.fillStyle(0x7f4f24, 1);
+        bg.fillRect(0, 350, 130, 12);
+
+        // Far bank arrival shore on the right (where Chumak salt trail begins!)
+        bg.fillStyle(0x2d6a4f, 1);
+        bg.fillRoundedRect(755, 340, 220, 110, 12);
+        bg.fillStyle(0x7f4f24, 1);
+        bg.fillRect(735, 356, 85, 12);
+        // Waypost on the far shore: "Чумацький Шлях по сіль →"
+        bg.fillStyle(0x583101, 1);
+        bg.fillRect(855, 282, 10, 72);
+        bg.fillStyle(0xffd166, 1);
+        bg.fillRoundedRect(788, 290, 148, 28, 5);
+        this.add.text(862, 304, 'Чумацький Шлях →', {
+          fontSize: '12px',
+          fontStyle: 'bold',
+          color: '#3d2314'
+        }).setOrigin(0.5).setDepth(20);
+
+        // Deep Dnipro river water
+        bg.fillStyle(0x031d38, 1);
+        bg.fillRect(0, 375, CONFIG.WIDTH, 165);
+        bg.fillStyle(0x003566, 0.92);
+        bg.fillRect(0, 375, CONFIG.WIDTH, 65);
+        bg.fillStyle(0x0077b6, 0.85);
+        bg.fillRect(0, 375, CONFIG.WIDTH, 22);
+
+        // Animated scrolling wave crests to convey the Catfish swimming across the Dnipro
+        this.waveStrips = [];
+        for (let i = 0; i < 12; i++) {
+          const wv = this.add.ellipse(i * 90 + 30, 392 + (i % 3) * 28, 62, 8, 0x90e0ef, 0.55).setDepth(25);
+          this.tweens.add({
+            targets: wv,
+            x: wv.x - 75,
+            duration: 950 + (i % 3) * 180,
+            yoyo: true,
+            repeat: -1,
+            ease: 'Sine.easeInOut'
+          });
+          this.waveStrips.push(wv);
+        }
+      }
+
+      showDialogueLine(index) {
+        if (index >= STRINGS.CATFISH_LINES.length) {
+          // Swim the rest of the way to the far right shore pier before showing the Trophy Modal!
+          this.bubbleContainer.setVisible(false);
+          SFX.waterSplash();
+          this.tweens.add({
+            targets: this.catfishRiderGroup,
+            x: 650,
+            duration: 900,
+            ease: 'Quad.easeInOut',
+            onComplete: () => {
+              this.showCatfishScaleModal();
+            }
+          });
+          return;
+        }
+
+        this.lineIndex = index;
+        const line = STRINGS.CATFISH_LINES[index];
+        SFX.speechBlip();
+
+        // Advance catfish slightly rightward with each dialogue exchange across the river
+        this.tweens.add({
+          targets: this.catfishRiderGroup,
+          x: 420 + index * 52,
+          duration: 500,
+          ease: 'Sine.easeOut'
+        });
+
+        const isCatfish = line.speaker.includes('Сом');
+        this.bubbleContainer.setVisible(true);
+        this.bubbleContainer.setPosition(480, 222);
+        this.bubbleBg.clear();
+        this.bubbleBg.fillStyle(0xfefae0, 0.98);
+        this.bubbleBg.lineStyle(4, isCatfish ? 0x0077b6 : 0xc1121f, 1);
+        this.bubbleBg.fillRoundedRect(-315, -66, 630, 138, 16);
+        this.bubbleBg.strokeRoundedRect(-315, -66, 630, 138, 16);
+        this.bubbleBg.fillTriangle(-14, 72, 14, 72, 0, 96);
+
+        this.speakerText.setText(line.speaker + ':');
+        this.speakerText.setColor(isCatfish ? '#0077b6' : '#c1121f');
+        this.dialogueText.setText('«' + line.text + '»');
+
+        this.bubbleContainer.setScale(0.86);
+        this.tweens.add({
+          targets: this.bubbleContainer,
+          scale: 1,
+          duration: 180,
+          ease: 'Back.easeOut'
+        });
+
+        if (this.autoTimer) this.autoTimer.remove();
+        this.autoTimer = this.time.delayedCall(5600, () => {
+          if (this.stage === 'DIALOGUE') {
+            this.showDialogueLine(this.lineIndex + 1);
+          }
+        });
+      }
+
+      createCatfishScaleModal() {
+        const cx = CONFIG.WIDTH / 2;
+        const cy = CONFIG.HEIGHT / 2;
+
+        this.scaleModal = this.add.container(0, 0).setDepth(150).setVisible(false);
+
+        const dim = this.add.rectangle(cx, cy, CONFIG.WIDTH, CONFIG.HEIGHT, 0x06101e, 0.85);
+
+        const card = this.add.graphics();
+        card.fillStyle(0x0f2537, 0.98);
+        card.fillRoundedRect(cx - 310, cy - 195, 620, 390, 18);
+        card.lineStyle(4, 0x48cae4, 1);
+        card.strokeRoundedRect(cx - 310, cy - 195, 620, 390, 18);
+        card.lineStyle(2, 0xffd166, 0.9);
+        card.strokeRoundedRect(cx - 298, cy - 183, 596, 366, 14);
+
+        const headerTxt = this.add.text(cx, cy - 156, STRINGS.ITEM_ACQUIRED_HEADER, {
+          fontFamily: "'Cormorant Infant', Georgia, serif",
+          fontSize: '18px',
+          fontStyle: 'bold',
+          color: '#ffd166',
+          letterSpacing: 2
+        }).setOrigin(0.5);
+
+        const titleTxt = this.add.text(cx, cy - 106, STRINGS.ITEM_CATFISH_SCALE_TITLE, {
+          fontFamily: "'Cormorant Infant', Georgia, serif",
+          fontSize: '26px',
+          fontStyle: 'bold',
+          color: '#ffffff',
+          align: 'center'
+        }).setOrigin(0.5);
+
+        const glow = this.add.circle(cx, cy + 2, 66, 0x48cae4, 0.22)
+          .setStrokeStyle(2.5, 0x90e0ef, 0.7);
+        this.tweens.add({
+          targets: glow,
+          scaleX: 1.09,
+          scaleY: 1.09,
+          alpha: 0.36,
+          duration: 780,
+          yoyo: true,
+          repeat: -1
+        });
+
+        // Custom illustration: Silver Catfish Scale & Chumak Bag of White Crimean Salt!
+        const art = this.add.graphics();
+        // Ornate shield-shaped silver scale on left
+        art.fillStyle(0x90e0ef, 1);
+        art.fillCircle(cx - 28, cy + 4, 30);
+        art.lineStyle(3, 0xffffff, 0.95);
+        art.strokeCircle(cx - 28, cy + 4, 30);
+        art.fillStyle(0x48cae4, 1);
+        art.fillCircle(cx - 28, cy + 4, 18);
+
+        // Chumak linen pouch with sparkling white Crimean salt crystals on right
+        art.fillStyle(0xd4a373, 1);
+        art.fillRoundedRect(cx + 6, cy - 18, 48, 50, 14);
+        art.lineStyle(3, 0xc1121f, 1);
+        art.lineBetween(cx + 12, cy - 6, cx + 48, cy - 6);
+        // Sparkling white salt crystals mound
+        art.fillStyle(0xffffff, 1);
+        art.fillEllipse(cx + 30, cy - 16, 34, 16);
+        art.fillStyle(0xffea00, 1);
+        art.fillCircle(cx + 22, cy - 22, 3);
+        art.fillCircle(cx + 38, cy - 20, 2.5);
+
+        const badgeTxt = this.add.text(cx, cy + 84, STRINGS.ITEM_CATFISH_SCALE_BADGE, {
+          fontSize: '15px',
+          fontStyle: 'bold',
+          color: '#90e0ef',
+          backgroundColor: '#031d38',
+          padding: { x: 14, y: 5 }
+        }).setOrigin(0.5);
+
+        const descTxt = this.add.text(cx, cy + 134, STRINGS.ITEM_CATFISH_SCALE_DESC, {
+          fontFamily: "'Cormorant Infant', Georgia, serif",
+          fontSize: '20px',
+          fontStyle: 'italic bold',
+          color: '#f6e4b5',
+          align: 'center',
+          lineSpacing: 5
+        }).setOrigin(0.5);
+
+        this.scaleModal.add([dim, card, glow, headerTxt, titleTxt, art, badgeTxt, descTxt]);
+      }
+
+      showCatfishScaleModal() {
+        if (this.autoTimer) this.autoTimer.remove();
+        this.bubbleContainer.setVisible(false);
+        this.skipHint.setVisible(false);
+        this.stage = 'SCALE_MODAL';
+        this.modalReadyTime = this.time.now + 240;
+
+        this.scaleModal.setVisible(true);
+        this.scaleModal.setScale(0.9);
+        SFX.itemFanfare();
+
+        this.tweens.add({
+          targets: this.scaleModal,
+          scale: 1,
+          duration: 210,
+          ease: 'Back.easeOut'
+        });
+      }
+
+      createAct3VictoryModal() {
+        const cx = CONFIG.WIDTH / 2;
+        const cy = CONFIG.HEIGHT / 2;
+
+        this.victoryModal = this.add.container(0, 0).setDepth(210).setVisible(false);
+
+        const overlay = this.add.rectangle(cx, cy, CONFIG.WIDTH, CONFIG.HEIGHT, 0x050b14, 0.86)
+          .setInteractive();
+
+        const card = this.add.graphics();
+        card.fillStyle(0x0f2537, 0.98);
+        card.fillRoundedRect(cx - 415, cy - 195, 830, 390, 18);
+        card.lineStyle(4, 0xffd166, 1);
+        card.strokeRoundedRect(cx - 415, cy - 195, 830, 390, 18);
+        card.lineStyle(2, 0x48cae4, 0.9);
+        card.strokeRoundedRect(cx - 403, cy - 183, 806, 366, 14);
+
+        const title = this.add.text(cx, cy - 134, STRINGS.VICTORY_ACT3_TITLE, {
+          fontFamily: "'Cormorant Infant', Georgia, serif",
+          fontSize: '34px',
+          fontStyle: 'bold',
+          color: '#ffd166'
+        }).setOrigin(0.5);
+
+        const msg = this.add.text(cx, cy - 58, STRINGS.VICTORY_ACT3_TEXT, {
+          fontFamily: "'Cormorant Infant', Georgia, serif",
+          fontSize: '21px',
+          fontStyle: 'bold',
+          color: '#ffffff',
+          align: 'center',
+          wordWrap: { width: 760 },
+          lineSpacing: 7
+        }).setOrigin(0.5);
+
+        const sub = this.add.text(cx, cy + 8, STRINGS.VICTORY_ACT3_SUBTEXT, {
+          fontFamily: "'Cormorant Infant', Georgia, serif",
+          fontSize: '18px',
+          fontStyle: 'italic bold',
+          color: '#90e0ef',
+          align: 'center',
+          wordWrap: { width: 760 }
+        }).setOrigin(0.5);
+
+        const stats = this.add.text(
+          cx,
+          cy + 52,
+          `✦ Зібрано червінців: ${this.finalCoins}   |   Ошелешено водяної нечисті: ${this.finalStunned} ✦`,
+          {
+            fontSize: '16px',
+            fontStyle: 'bold',
+            color: '#a8dadc',
+            backgroundColor: '#031d38',
+            padding: { x: 16, y: 6 }
+          }
+        ).setOrigin(0.5);
+
+        // Button 1: Replay Act III ("На Дніпрі")
+        const btn1Bg = this.add.rectangle(cx - 165, cy + 126, 390, 48, 0x0077b6, 1)
+          .setStrokeStyle(2.5, 0xffea00)
+          .setInteractive({ useHandCursor: true });
+
+        const btn1Lbl = this.add.text(cx - 165, cy + 126, STRINGS.REPLAY_DNIPRO_BTN, {
+          fontFamily: "'Cormorant Infant', Georgia, serif",
+          fontSize: '19px',
+          fontStyle: 'bold',
+          color: '#ffffff'
+        }).setOrigin(0.5);
+
+        btn1Bg.on('pointerover', () => {
+          btn1Bg.setScale(1.04);
+          btn1Lbl.setScale(1.04);
+          SFX.speechBlip();
+        });
+        btn1Bg.on('pointerout', () => {
+          btn1Bg.setScale(1);
+          btn1Lbl.setScale(1);
+        });
+        btn1Bg.on('pointerdown', (pointer, lx, ly, event) => {
+          if (event && event.stopPropagation) event.stopPropagation();
+          this.replayDniproAct3();
+        });
+
+        // Button 2: Return to Title Screen
+        const btn2Bg = this.add.rectangle(cx + 215, cy + 126, 310, 48, 0x3d405b, 1)
+          .setStrokeStyle(2, 0xf5ebe0)
+          .setInteractive({ useHandCursor: true });
+
+        const btn2Lbl = this.add.text(cx + 215, cy + 126, STRINGS.PLAY_AGAIN, {
+          fontFamily: "'Cormorant Infant', Georgia, serif",
+          fontSize: '19px',
+          fontStyle: 'bold',
+          color: '#ffffff'
+        }).setOrigin(0.5);
+
+        btn2Bg.on('pointerover', () => {
+          btn2Bg.setScale(1.04);
+          btn2Lbl.setScale(1.04);
+          SFX.speechBlip();
+        });
+        btn2Bg.on('pointerout', () => {
+          btn2Bg.setScale(1);
+          btn2Lbl.setScale(1);
+        });
+        btn2Bg.on('pointerdown', (pointer, lx, ly, event) => {
+          if (event && event.stopPropagation) event.stopPropagation();
+          this.restartWholeGame();
+        });
+
+        this.victoryModal.add([overlay, card, title, msg, sub, stats, btn1Bg, btn1Lbl, btn2Bg, btn2Lbl]);
+      }
+
+      showAct3VictoryModal() {
+        this.scaleModal.setVisible(false);
+        this.stage = 'VICTORY_MODAL';
+        this.modalReadyTime = this.time.now + 240;
+
+        this.victoryModal.setVisible(true);
+        this.victoryModal.setScale(0.9);
+        SFX.banduraStart();
+
+        this.tweens.add({
+          targets: this.victoryModal,
+          scale: 1,
+          duration: 220,
+          ease: 'Back.easeOut'
+        });
+      }
+
+      onAdvance() {
+        if (this.stage === 'MOUNT_AND_SWIM') {
+          this.catfishRiderGroup.x = 420;
+          this.stage = 'DIALOGUE';
+          this.bubbleContainer.setVisible(true);
+          this.showDialogueLine(0);
+        } else if (this.stage === 'DIALOGUE') {
+          this.showDialogueLine(this.lineIndex + 1);
+        } else if (this.stage === 'SCALE_MODAL') {
+          if (this.time.now < this.modalReadyTime) return;
+          this.showAct3VictoryModal();
+        } else if (this.stage === 'VICTORY_MODAL') {
+          if (this.time.now < this.modalReadyTime) return;
+          this.replayDniproAct3();
+        }
+      }
+
+      replayDniproAct3() {
+        SFX.waterSplash();
+        GAME_STATE.currentLevel = 3;
+        GAME_STATE.hasSaber = true;
+        GAME_STATE.hasSwampFrogs = true;
+        this.scene.start('GameScene', { level: 3, coins: this.finalCoins });
       }
 
       restartWholeGame() {
@@ -8287,7 +10297,8 @@
      * 12. PHASER 3 INITIALIZATION (960x540, Scale.FIT, CENTER_BOTH)
      * ============================================================================
      */
-    window.onload = function () {
+    function initPhaserGame() {
+      if (window.gameInstance) return;
       const gameConfig = {
         type: Phaser.AUTO,
         parent: 'game-container',
@@ -8308,7 +10319,7 @@
             debug: false
           }
         },
-        scene: [BootScene, TitleScene, HutScene, GameScene, HrytskoScene, BabaYagaScene]
+        scene: [BootScene, TitleScene, HutScene, GameScene, HrytskoScene, BabaYagaScene, CatfishScene]
       };
 
       const game = new Phaser.Game(gameConfig);
@@ -8437,14 +10448,21 @@
         const { vw, vh } = getViewportSize();
         if (vw !== lastVw || vh !== lastVh) {
           checkOrientationAndScale();
-        } else if (game && game.canvas && game.scale) {
+        } else if (game && game.canvas && game.scale && game.scale.canvasBounds) {
           const rect = game.canvas.getBoundingClientRect();
           if (Math.abs(rect.left - game.scale.canvasBounds.x) > 2 || Math.abs(rect.width - game.scale.canvasBounds.width) > 2) {
             game.scale.refresh();
           }
         }
       }, 250);
-    };
+    }
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', initPhaserGame);
+      window.addEventListener('load', initPhaserGame);
+    } else {
+      initPhaserGame();
+    }
   </script>
 </body>
 </html>
