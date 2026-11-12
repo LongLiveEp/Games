@@ -748,6 +748,9 @@
         this.ui = new UI(this, false);
         this.pauseStartedAt = 0;
 
+        // Play the Act's exploration soundtrack (switches to Boss theme when entering Boss Arena)
+        this.playLevelExplorationMusic();
+
         if (isLevel4) {
           this.isControlsModalOpen = false;
           this.ui.setControlsModalVisible(false);
@@ -849,6 +852,18 @@
         this.input.keyboard.on('keydown-M', () => {
           this.toggleSoundMute();
         });
+      }
+
+      playLevelExplorationMusic() {
+        if (this.currentLevel === 4) {
+          SFX.playMusic('mus_act4', { volume: 0.42 });
+        } else if (this.currentLevel === 3) {
+          SFX.playMusic('mus_act3', { volume: 0.40 });
+        } else if (this.currentLevel === 2) {
+          SFX.playMusic('mus_act2', { volume: 0.40 });
+        } else {
+          SFX.playMusic('mus_act1', { volume: 0.40 });
+        }
       }
 
       closeControlsModal() {
@@ -1269,6 +1284,7 @@
         if (this.boss && !this.boss.active && this.player.sprite.x >= this.levelData.bossArenaStartX) {
           this.boss.activate();
           if (this.currentLevel === 4) {
+            SFX.playMusic('mus_boss_zmiy', { volume: 0.46 });
             // Lock camera within the Salt Mountain Arena bounds (6240 .. 7200)
             this.cameras.main.setBounds(
               this.levelData.bossArenaStartX,
@@ -1280,12 +1296,15 @@
             this.showFloatingText(this.levelData.bossArenaStartX + 460, 175, STRINGS.BOSS_ZMIY_NAME, '#ffd166');
             this.showOmelkoSpeech(STRINGS.OMELKO_REMARK_ZMIY_BOSS, 5400);
           } else if (this.currentLevel === 3) {
+            SFX.playMusic('mus_boss_vodyanyk', { volume: 0.46 });
             this.showFloatingText(this.boss.sprite.x - 80, 195, STRINGS.BOSS_VODYANYK_NAME, '#48cae4');
             this.showOmelkoSpeech(STRINGS.OMELKO_REMARK_VODYANYK_BOSS, 5200);
           } else if (this.currentLevel === 2) {
+            SFX.playMusic('mus_boss_chornobor', { volume: 0.46 });
             this.showFloatingText(this.boss.sprite.x - 80, 195, STRINGS.BOSS_LISOVYK_NAME, '#52b788');
             this.showOmelkoSpeech(STRINGS.OMELKO_REMARK_LISOVYK, 5200);
           } else {
+            SFX.playMusic('mus_boss_rooster', { volume: 0.45 });
             this.showFloatingText(this.boss.sprite.x - 80, 200, STRINGS.BOSS_NAME, '#ffbe0b');
             this.showOmelkoSpeech(STRINGS.OMELKO_REMARK_BOSS, 5200);
           }

@@ -170,6 +170,7 @@
       // ======================================================================
       startState1Offended() {
         this.sceneLayer.removeAll(true);
+        SFX.playMusic('mus_boss_zmiy', { volume: 0.28 });
         const bg = this.add.graphics();
 
         // Warm golden-crimson sunset over the pink salt lake
@@ -427,6 +428,7 @@
         this.sceneLayer.setVisible(false);
         this.flightLayer.setVisible(true);
         this.flightLayer.removeAll(true);
+        SFX.playMusic('mus_title', { volume: 0.44 });
 
         this.stage = 'FLIGHT';
         this.flightElapsedMs = 0;
@@ -740,6 +742,7 @@
         this.sceneLayer.setVisible(true);
         this.sceneLayer.removeAll(true);
         this.bubbleContainer.setVisible(false);
+        SFX.playMusic('mus_hut', { volume: 0.40 });
 
         this.stage = 'ARRIVAL';
         this.lineIndex = 0;
@@ -835,6 +838,7 @@
       startState5Feast() {
         this.sceneLayer.removeAll(true);
         this.bubbleContainer.setVisible(false);
+        SFX.playMusic('mus_hut', { volume: 0.42 });
 
         this.stage = 'FEAST';
         this.feastSubStage = 'BEFORE';
@@ -1058,6 +1062,7 @@
       startState6Credits() {
         this.bubbleContainer.setVisible(false);
         this.trophyModal.setVisible(false);
+        SFX.playMusic('mus_title', { volume: 0.42 });
         this.flightLayer.setVisible(false);
         this.sceneLayer.setVisible(false);
         this.creditsLayer.setVisible(true);

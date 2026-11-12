@@ -8,6 +8,38 @@
       constructor() {
         this.ctx = null;
         this.muted = false;
+        this.tracks = {
+          mus_title: 'music/m_01_Steps_Through_the_Rye.mp3',
+          mus_hut: 'music/m_02_Evening_at_the_Hearth.mp3',
+          mus_act1: 'music/m_03_Sunny_Neighbourhood.mp3',
+          mus_boss_rooster: 'music/m_04_Panic_in_the_Poultry_Yard.mp3',
+          mus_act2: 'music/m_05_Old_Forest.mp3',
+          mus_boss_chornobor: 'music/m_06_The_Iron_Root.mp3',
+          mus_yaga: 'music/m_07_Where_the_Water_Stands.mp3',
+          mus_act3: 'music/m_08_Where_the_River_Bends.mp3',
+          mus_boss_vodyanyk: 'music/m_09_King_of_the_Rising_Tide.mp3',
+          mus_catfish: 'music/m_10_The_Whiskered_Crossing.mp3',
+          mus_act4: 'music/m_11_Where_the_Wind_Rests.mp3',
+          mus_boss_zmiy: 'music/m_12Beneath_the_Salt_Throne.mp3'
+        };
+        this.audioCache = {};
+        this.currentTrackKey = null;
+        this.currentMusicAudio = null;
+        this.currentMusicVolume = 0.4;
+        this._setupAutoplayUnlock();
+      }
+
+      _setupAutoplayUnlock() {
+        if (typeof window === 'undefined') return;
+        const unlock = () => {
+          this.init();
+          if (!this.muted && this.currentMusicAudio && this.currentMusicAudio.paused) {
+            this.currentMusicAudio.play().catch(() => {});
+          }
+        };
+        ['pointerdown', 'keydown', 'touchstart'].forEach(evt => {
+          window.addEventListener(evt, unlock, { passive: true });
+        });
       }
 
       init() {
@@ -24,7 +56,82 @@
 
       toggleMute() {
         this.muted = !this.muted;
+        if (this.currentMusicAudio) {
+          this.currentMusicAudio.muted = this.muted;
+          if (this.muted) {
+            this.currentMusicAudio.pause();
+          } else {
+            this.currentMusicAudio.volume = this.currentMusicVolume;
+            this.currentMusicAudio.play().catch(() => {});
+          }
+        }
         return this.muted;
+      }
+
+      playMusic(trackKey, options = {}) {
+        const src = this.tracks[trackKey];
+        if (!src) return;
+
+        const loop = options.loop !== undefined ? Boolean(options.loop) : true;
+        const volume = options.volume !== undefined ? options.volume : 0.4;
+        const restart = Boolean(options.restart);
+
+        this.currentMusicVolume = volume;
+
+        // If the requested track is already active, just update its volume/loop state
+        if (this.currentTrackKey === trackKey && this.currentMusicAudio) {
+          this.currentMusicAudio.loop = loop;
+          this.currentMusicAudio.volume = volume;
+          this.currentMusicAudio.muted = this.muted;
+          if (restart) {
+            try {
+              this.currentMusicAudio.currentTime = 0;
+            } catch (e) {}
+          }
+          if (!this.muted && this.currentMusicAudio.paused) {
+            this.currentMusicAudio.play().catch(() => {});
+          }
+          return;
+        }
+
+        // Stop previous track
+        if (this.currentMusicAudio) {
+          try {
+            this.currentMusicAudio.pause();
+            this.currentMusicAudio.currentTime = 0;
+          } catch (e) {}
+        }
+
+        this.currentTrackKey = trackKey;
+        let audio = this.audioCache[trackKey];
+        if (!audio) {
+          audio = new Audio(src);
+          audio.preload = 'auto';
+          this.audioCache[trackKey] = audio;
+        }
+
+        audio.loop = loop;
+        audio.volume = volume;
+        audio.muted = this.muted;
+        try {
+          audio.currentTime = 0;
+        } catch (e) {}
+
+        this.currentMusicAudio = audio;
+        if (!this.muted) {
+          audio.play().catch(() => {});
+        }
+      }
+
+      stopMusic() {
+        if (this.currentMusicAudio) {
+          try {
+            this.currentMusicAudio.pause();
+            this.currentMusicAudio.currentTime = 0;
+          } catch (e) {}
+        }
+        this.currentTrackKey = null;
+        this.currentMusicAudio = null;
       }
 
       playTone(freqStart, freqEnd, duration, type = 'sine', gainVal = 0.15) {

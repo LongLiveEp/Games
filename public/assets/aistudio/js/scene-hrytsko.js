@@ -20,6 +20,7 @@
         this.lineIndex = 0;
         this.stage = 'DIALOGUE'; // DIALOGUE -> SABER_MODAL -> VICTORY_MODAL
         this.modalReadyTime = 0;
+        SFX.playMusic('mus_hut', { volume: 0.38 });
 
         // 1. Draw Outskirts Courtyard & Kum Hrytsko's Khata
         this.drawOutskirtsCourtyard();

@@ -15,6 +15,7 @@
         this.transitionFastForward = false;
         this.difficultyModalOpen = false;
         this.selectedDiffIndex = GAME_STATE.difficulty === 'hardcore' ? 1 : 0;
+        SFX.playMusic('mus_title', { volume: 0.40 });
 
         // 1. Paint Rich Pastoral Ukrainian Landscape (inspired by reference painting)
         this.drawPastoralLandscape();

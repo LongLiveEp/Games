@@ -21,6 +21,7 @@
         this.lineIndex = 0;
         this.stage = 'MOUNT_AND_SWIM'; // MOUNT_AND_SWIM -> DIALOGUE -> SCALE_MODAL -> VICTORY_MODAL
         this.modalReadyTime = 0;
+        SFX.playMusic('mus_catfish', { volume: 0.42 });
 
         // 1. Draw the Wide Dnipro River Crossing & Far Shore Pier
         this.drawDniproCrossingBackdrop();

@@ -14,6 +14,7 @@
         this.currentLineIndex = 0;
         this.itemPopupStep = -1; // -1 = dialogue, 0 = frying pan popup, 1 = galushkas popup
         this.popupInputReadyTime = 0;
+        SFX.playMusic('mus_hut', { volume: 0.38 });
 
         // Draw cozy Ukrainian Khata (hut interior)
         const bg = this.add.graphics();

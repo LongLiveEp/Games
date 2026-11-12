@@ -21,6 +21,7 @@
         this.lineIndex = 0;
         this.stage = 'WALK_IN'; // WALK_IN -> DIALOGUE -> FROG_MODAL -> VICTORY_MODAL
         this.modalReadyTime = 0;
+        SFX.playMusic('mus_yaga', { volume: 0.40 });
 
         // 1. Draw the Eerie Glade & Hut on Chicken Legs (Хатка на курячих ніжках)
         this.drawChickenLegGlade();
