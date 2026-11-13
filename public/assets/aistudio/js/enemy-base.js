@@ -79,6 +79,11 @@
         return true;
       }
 
+      update(time, player) {
+        this.updateBase(time);
+        void player;
+      }
+
       receiveStunHit(stunAmount, fromX, isHeavy = false) {
         if (this.isFinished) return;
 
@@ -187,6 +192,7 @@
             duration: 750,
             ease: 'Quad.easeIn',
             onComplete: () => {
+              if (!this.scene || !this.scene.sys || !this.scene.sys.isActive()) return;
               // Twinkle star in the sky
               const twinkle = this.scene.add.image(this.sprite.x, 55, 'particle_star').setScale(2.8);
               this.scene.tweens.add({
@@ -194,9 +200,11 @@
                 scale: 0,
                 angle: 180,
                 duration: 450,
-                onComplete: () => twinkle.destroy()
+                onComplete: () => {
+                  if (twinkle && twinkle.active) twinkle.destroy();
+                }
               });
-              this.sprite.destroy();
+              if (this.sprite && this.sprite.active) this.sprite.destroy();
             }
           });
         }

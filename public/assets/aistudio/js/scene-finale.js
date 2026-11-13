@@ -102,14 +102,41 @@
         this.input.on('pointerdown', (pointer) => {
           if (pointer.y < 48 && pointer.x > CONFIG.WIDTH - 140) return;
           if (this.stage === 'FLIGHT') {
+            if (Math.abs(pointer.x - (CONFIG.WIDTH - 115)) <= 100 && Math.abs(pointer.y - 58) <= 20) {
+              this.startState4Arrival();
+              return;
+            }
             if (pointer.x < CONFIG.WIDTH * 0.65) {
               this.touchFlightDirY = pointer.y < CONFIG.HEIGHT * 0.5 ? -1 : 1;
             }
             return;
           }
-          if (this.stage !== 'CREDITS' && this.stage !== 'POST_CREDITS_END') {
-            this.onAdvance();
+          if (this.stage === 'CREDITS') {
+            const btnY = CONFIG.HEIGHT - 44;
+            if (Math.abs(pointer.y - btnY) <= 24) {
+              if (Math.abs(pointer.x - 200) <= 156) {
+                this.restartWholeGame();
+              } else if (Math.abs(pointer.x - 515) <= 132) {
+                this.replayFinalBoss();
+              } else if (Math.abs(pointer.x - 805) <= 126) {
+                this.startState7PostCredits();
+              }
+            }
+            return;
           }
+          if (this.stage === 'POST_CREDITS_END') {
+            const cx = CONFIG.WIDTH / 2;
+            const cy = CONFIG.HEIGHT / 2;
+            if (Math.abs(pointer.y - (cy + 85)) <= 25) {
+              if (Math.abs(pointer.x - (cx - 175)) <= 162) {
+                this.restartWholeGame();
+              } else if (Math.abs(pointer.x - (cx + 175)) <= 147) {
+                this.replayFinalBoss();
+              }
+            }
+            return;
+          }
+          this.onAdvance();
         });
         this.input.on('pointermove', (pointer) => {
           if (this.stage === 'FLIGHT' && pointer.isDown && pointer.x < CONFIG.WIDTH * 0.7) {
@@ -1135,6 +1162,10 @@
             if (ev && ev.stopPropagation) ev.stopPropagation();
             onClick();
           });
+          btnBg.on('pointerup', (p, lx, ly, ev) => {
+            if (ev && ev.stopPropagation) ev.stopPropagation();
+            onClick();
+          });
           return [btnBg, btnLbl];
         };
 
@@ -1227,7 +1258,14 @@
           fontStyle: 'bold',
           color: '#ffffff'
         }).setOrigin(0.5).setDepth(192);
-        btn1Bg.on('pointerdown', () => this.restartWholeGame());
+        btn1Bg.on('pointerdown', (p, lx, ly, ev) => {
+          if (ev && ev.stopPropagation) ev.stopPropagation();
+          this.restartWholeGame();
+        });
+        btn1Bg.on('pointerup', (p, lx, ly, ev) => {
+          if (ev && ev.stopPropagation) ev.stopPropagation();
+          this.restartWholeGame();
+        });
 
         const btn2Bg = this.add.rectangle(cx + 175, cy + 85, 290, 46, 0xc9184a, 1)
           .setStrokeStyle(2, 0xf5ebe0)
@@ -1239,7 +1277,14 @@
           fontStyle: 'bold',
           color: '#ffffff'
         }).setOrigin(0.5).setDepth(192);
-        btn2Bg.on('pointerdown', () => this.replayFinalBoss());
+        btn2Bg.on('pointerdown', (p, lx, ly, ev) => {
+          if (ev && ev.stopPropagation) ev.stopPropagation();
+          this.replayFinalBoss();
+        });
+        btn2Bg.on('pointerup', (p, lx, ly, ev) => {
+          if (ev && ev.stopPropagation) ev.stopPropagation();
+          this.replayFinalBoss();
+        });
 
         this.postCreditsLayer.add([blackout, endTitle, btn1Bg, btn1Lbl, btn2Bg, btn2Lbl]);
 
@@ -1301,6 +1346,8 @@
       }
 
       replayFinalBoss() {
+        if (this.transitioningOut) return;
+        this.transitioningOut = true;
         SFX.pickup();
         GAME_STATE.currentLevel = 4;
         GAME_STATE.hasSaber = true;
@@ -1314,6 +1361,8 @@
       }
 
       restartWholeGame() {
+        if (this.transitioningOut) return;
+        this.transitioningOut = true;
         SFX.pickup();
         GAME_STATE.currentLevel = 1;
         GAME_STATE.hasSaber = false;

@@ -32,8 +32,8 @@
         this.sprite.body.setAllowGravity(false);
         this.sprite.body.setImmovable(true);
         this.sprite.setCollideWorldBounds(false);
-        this.sprite.setSize(68, 62);
-        this.sprite.setOffset(10, 10);
+        this.sprite.body.setSize(68, 62);
+        this.sprite.body.setOffset(10, 10);
         this.sprite.setDepth(28);
         this.uiContainer.setDepth(48);
 
@@ -82,6 +82,12 @@
         }).setOrigin(0.5).setDepth(49).setVisible(false);
       }
 
+      update(time, player) {
+        // ZmiyHead visuals and state are updated by SalyonohorychBoss.update()
+        void time;
+        void player;
+      }
+
       isHeadActiveInCurrentPhase() {
         if (!this.boss || !this.boss.active || this.boss.isDefeated) return false;
         if (this.boss.phase === 1) return this.headType === 'hungry';
@@ -105,6 +111,9 @@
           this.reviveEndTime = this.stunEndTime;
           this.stunPrompt.setText('ОГЛУШЕНА!').setVisible(true);
           this.boss.checkAllHeadsDownInPhase4();
+        } else {
+          // Give player a generous 6.5s window in Phases 1–3 to land the Finisher blow
+          this.stunEndTime = this.scene.time.now + 6500;
         }
       }
 
@@ -338,7 +347,7 @@
           this.sleepText.setPosition(this.sprite.x, this.sprite.y - 46 + Math.sin(time * 0.004) * 5);
         }
 
-        // Phase 4 Revive Countdown (~9s)
+        // Phase 4 Revive Countdown (~9s), or Phase 1-3 stun timeout recovery
         if (this.boss.phase === 4 && (this.isStunned || this.isPhase4Down) && !this.boss.isDefeated) {
           const remSec = Math.max(0, Math.ceil((this.reviveEndTime - time) / 1000));
           this.reviveTimerText
@@ -351,6 +360,9 @@
           }
         } else {
           this.reviveTimerText.setVisible(false);
+          if (this.boss.phase < 4 && this.isStunned && !this.boss.isDefeated && time >= this.stunEndTime) {
+            this.recoverFromStun();
+          }
         }
 
         // Orbiting dizzy stars when stunned
@@ -608,6 +620,8 @@
         this.mirrorBeamState = null;
         this.vortexActiveUntil = 0;
         this.effectsGraphics.clear();
+        if (this.scene.enemyProjectiles) this.scene.enemyProjectiles.clear(true, true);
+        if (this.scene.player) this.scene.player.invulnUntil = this.scene.time.now + 6000;
 
         SFX.finisher();
         if (SFX.zmiyRoar) SFX.zmiyRoar();
@@ -661,7 +675,9 @@
           if (quoteBox && quoteBox.active) quoteBox.destroy();
           this.isFinished = true;
           this.active = false;
-          this.scene.triggerVictory();
+          if (this.scene && this.scene.sys && this.scene.sys.isActive()) {
+            this.scene.triggerVictory();
+          }
         });
       }
 

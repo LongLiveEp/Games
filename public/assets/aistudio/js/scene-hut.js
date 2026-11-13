@@ -545,13 +545,18 @@
       }
 
       update(time, delta) {
-        if (!this.cutsceneActive) {
+        if (!this.cutsceneActive && !this.transitioningOut) {
           this.player.update(time, delta);
 
           // Check if Cossack walked to the door on the right
           if (this.player.sprite.x >= this.doorX - 35) {
+            this.transitioningOut = true;
+            GAME_STATE.currentLevel = 1;
+            GAME_STATE.hasSaber = false;
+            GAME_STATE.hasSwampFrogs = false;
+            GAME_STATE.savedCoins = 0;
             SFX.checkpoint();
-            this.scene.start('GameScene');
+            this.scene.start('GameScene', { level: 1, coins: 0 });
           }
         }
       }

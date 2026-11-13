@@ -527,6 +527,7 @@
         this.activeCheckpoint = (this.startAtBoss && this.levelData.bossArenaStartX)
           ? { x: this.levelData.bossArenaStartX - 65, y: CONFIG.GROUND_Y - 45, id: 99 }
           : { x: 120, y: CONFIG.GROUND_Y - 45, id: 0 };
+        this.lastSafePerch = { x: this.activeCheckpoint.x, y: this.activeCheckpoint.y };
         this.checkpointObjects = [];
         const checkpointTextureMap = {
           well: 'checkpoint_well',
@@ -1312,7 +1313,7 @@
 
         // Update all active Enemies & Boss
         this.enemies.forEach(enemy => {
-          if (!enemy.isFinished) {
+          if (!enemy.isFinished && typeof enemy.update === 'function') {
             enemy.update(time, this.player);
           }
         });
@@ -1737,7 +1738,7 @@
       }
 
       handlePlayerTired() {
-        if (this.player.isTiredRespawning || this.isDeathModalOpen) return;
+        if (this.player.isTiredRespawning || this.isDeathModalOpen || this.isVictory) return;
         this.player.isTiredRespawning = true;
         this.player.isRolling = false;
         this.player.sprite.setTexture('cossack');
@@ -1776,6 +1777,7 @@
 
         // Open the Death / Exhaustion Modal after the collapse animation
         this.time.delayedCall(800, () => {
+          if (this.isVictory) return;
           this.isDeathModalOpen = true;
           this.physics.world.pause();
           this.ui.setDeathModalVisible(true);
@@ -1852,7 +1854,9 @@
             if (e.timeOutJump) e.timeOutJump += pausedDuration;
             if (e.turnReadyTime) e.turnReadyTime += pausedDuration;
             if (e.reviveAtTime) e.reviveAtTime += pausedDuration;
+            if (e.reviveEndTime) e.reviveEndTime += pausedDuration;
             if (e.stuckUntilTime) e.stuckUntilTime += pausedDuration;
+            if (e.stuckUntil) e.stuckUntil += pausedDuration;
             if (e.mouthOpenUntil) e.mouthOpenUntil += pausedDuration;
             if (e.crownGlowUntil) e.crownGlowUntil += pausedDuration;
           });
@@ -1886,6 +1890,8 @@
           this.hitStopTimeout = null;
         }
         this.isPaused = false;
+        if (this.physics && this.physics.world) this.physics.world.resume();
+        if (this.tweens) this.tweens.resumeAll();
         GAME_STATE.currentLevel = targetLevel;
         if (targetLevel >= 2) {
           GAME_STATE.hasSaber = true;
@@ -1902,6 +1908,8 @@
           this.hitStopTimeout = null;
         }
         this.isPaused = false;
+        if (this.physics && this.physics.world) this.physics.world.resume();
+        if (this.tweens) this.tweens.resumeAll();
         this.scene.restart({ level: this.currentLevel, coins: this.initialCoins });
       }
 
@@ -2017,11 +2025,12 @@
           { top: 0x10002b, bottom: 0x7b2cbf, sun: 0xff6b6b, kurhanTint: 0x9d4edd }
         ];
 
-        const scaled = Phaser.Math.Clamp(progress, 0, 0.9999) * 3;
+        const safeProgress = Number.isFinite(progress) ? progress : 0;
+        const scaled = Phaser.Math.Clamp(safeProgress, 0, 0.9999) * 3;
         const idx = Math.floor(scaled);
         const frac = scaled - idx;
-        const sA = stages[idx];
-        const sB = stages[Math.min(3, idx + 1)];
+        const sA = stages[idx] || stages[0];
+        const sB = stages[Math.min(3, idx + 1)] || stages[0];
 
         const topCol = this.lerpColorHex(sA.top, sB.top, frac);
         const botCol = this.lerpColorHex(sA.bottom, sB.bottom, frac);

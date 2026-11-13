@@ -223,8 +223,12 @@
           this.scene.time.delayedCall(140, () => { this.waitingForSlamLand = true; });
         } else {
           super.triggerFinisher(fromX);
+          if (this.scene.enemyProjectiles) this.scene.enemyProjectiles.clear(true, true);
+          if (this.scene.player) this.scene.player.invulnUntil = this.scene.time.now + 5000;
           this.scene.time.delayedCall(1100, () => {
-            this.scene.triggerVictory();
+            if (this.scene && this.scene.sys && this.scene.sys.isActive()) {
+              this.scene.triggerVictory();
+            }
           });
         }
       }

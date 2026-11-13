@@ -62,8 +62,23 @@
             this.startGame();
           }
         });
-        this.input.on('pointerdown', () => {
-          if (!this.difficultyModalOpen) {
+        this.input.on('pointerdown', (pointer) => {
+          if (pointer && pointer.x > 840 && pointer.y < 105) return;
+          if (this.difficultyModalOpen) {
+            const cx = CONFIG.WIDTH / 2;
+            const cy = CONFIG.HEIGHT / 2;
+            if (Math.abs(pointer.x - cx) <= 286) {
+              if (Math.abs(pointer.y - (cy - 38)) <= 56) {
+                this.selectedDiffIndex = 0;
+                this.refreshDifficultyHighlight();
+                this.confirmDifficultySelection();
+              } else if (Math.abs(pointer.y - (cy + 88)) <= 56) {
+                this.selectedDiffIndex = 1;
+                this.refreshDifficultyHighlight();
+                this.confirmDifficultySelection();
+              }
+            }
+          } else {
             this.startGame();
           }
         });
@@ -808,6 +823,12 @@
             this.refreshDifficultyHighlight();
             this.confirmDifficultySelection();
           });
+          box.on('pointerup', (pointer, lx, ly, event) => {
+            if (event && event.stopPropagation) event.stopPropagation();
+            this.selectedDiffIndex = idx;
+            this.refreshDifficultyHighlight();
+            this.confirmDifficultySelection();
+          });
 
           this.diffOptionCards.push({ box, optTitle, optDesc, mode: opt.mode });
           this.diffModal.add([box, optTitle, optDesc]);
@@ -824,16 +845,25 @@
         if (this.difficultyModalOpen) return;
         this.difficultyModalOpen = true;
         this.transitionFastForward = true;
+
+        // Clean up any active intro walk timers/bubbles if the player skipped the intro walk
+        if (this.pipeSmokeTimer) this.pipeSmokeTimer.remove();
+        if (this.introWalkBob) this.introWalkBob.stop();
+        if (this.introDustEvent) this.introDustEvent.remove();
+        if (this.introCallBubble && this.introCallBubble.active) this.introCallBubble.destroy();
+        if (this.introReplyBubble && this.introReplyBubble.active) this.introReplyBubble.destroy();
+
+        this.diffModal.setScale(1);
+        this.diffModal.setAlpha(0);
         this.diffModal.setVisible(true);
-        this.diffModal.setScale(0.9);
         this.refreshDifficultyHighlight();
         SFX.itemFanfare();
 
         this.tweens.add({
           targets: this.diffModal,
-          scale: 1,
-          duration: 200,
-          ease: 'Back.easeOut'
+          alpha: 1,
+          duration: 180,
+          ease: 'Sine.easeOut'
         });
       }
 
@@ -849,11 +879,9 @@
           const active = idx === this.selectedDiffIndex;
           if (active) {
             item.box.setStrokeStyle(4, 0xffea00);
-            item.box.setScale(1.02);
             item.optTitle.setColor('#ffea00');
           } else {
             item.box.setStrokeStyle(2, 0x8d99ae);
-            item.box.setScale(1);
             item.optTitle.setColor('#ffffff');
           }
         });
@@ -901,6 +929,7 @@
         });
 
         const callBubble = this.add.container(620, 214);
+        this.introCallBubble = callBubble;
         const cbBg = this.add.graphics();
         cbBg.fillStyle(0xfefae0, 0.98);
         cbBg.lineStyle(3, 0xc1121f, 1);
@@ -954,6 +983,7 @@
 
           // Omelko's excited reply bubble with comfortable width & reading time
           const replyBubble = this.add.container(this.hayX + 10, this.hayY - 68);
+          this.introReplyBubble = replyBubble;
           const rbBg = this.add.graphics();
           rbBg.fillStyle(0xfefae0, 0.98);
           rbBg.lineStyle(2.5, 0x1d3557, 1);
@@ -997,13 +1027,14 @@
               yoyo: true,
               repeat: -1
             });
+            this.introWalkBob = walkBob;
 
             // Dust puffs while walking to the door
             const dustEvent = this.time.addEvent({
               delay: 180,
               repeat: 7,
               callback: () => {
-                if (!this.walkingOmelko.visible) return;
+                if (this.transitionFastForward || !this.walkingOmelko.visible) return;
                 const d = this.add.image(this.walkingOmelko.x - 8, this.walkingOmelko.y + 18, 'particle_dust')
                   .setScale(0.7);
                 this.tweens.add({
@@ -1015,6 +1046,7 @@
                 });
               }
             });
+            this.introDustEvent = dustEvent;
 
             this.tweens.add({
               targets: this.walkingOmelko,

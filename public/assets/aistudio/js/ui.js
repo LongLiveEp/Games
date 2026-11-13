@@ -658,18 +658,22 @@
           this.refreshPauseButtonHighlight();
         });
 
-        bg.on('pointerdown', (pointer, lx, ly, event) => {
+        let lastActivatedAt = 0;
+        const triggerOnce = (event) => {
           if (event && event.stopPropagation) event.stopPropagation();
-          bg.setScale(0.97);
-          lbl.setScale(0.97);
+          const now = Date.now();
+          if (now - lastActivatedAt < 250) return;
+          lastActivatedAt = now;
+          SFX.pickup();
+          onActivate();
+        };
+
+        bg.on('pointerdown', (pointer, lx, ly, event) => {
+          triggerOnce(event);
         });
 
         bg.on('pointerup', (pointer, lx, ly, event) => {
-          if (event && event.stopPropagation) event.stopPropagation();
-          bg.setScale(1.03);
-          lbl.setScale(1.03);
-          SFX.pickup();
-          onActivate();
+          triggerOnce(event);
         });
 
         return btnObj;
@@ -817,7 +821,7 @@
             boss.heads.forEach((h, idx) => {
               const seg = this.bossSegFills[idx];
               if (!seg) return;
-              const hRatio = (h.isPhaseDone && boss.phase < 4) || h.isPhase4Down
+              const hRatio = ((h.isPhase1To3Defeated || h.isPhaseDone) && boss.phase < 4) || h.isPhase4Down
                 ? 0
                 : Phaser.Math.Clamp(1 - (h.stun / h.maxStun), 0, 1);
               seg.width = 114 * hRatio;
