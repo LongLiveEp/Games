@@ -314,7 +314,7 @@
           this.headProud.setFlipX(false).setAngle(-2).setPosition(-10, -14);
         }
 
-        const isZmiy = line.speaker.includes('Змій');
+        const isZmiy = line.speaker.includes('Змій') || line.speaker.includes('Dragon') || line.speaker.includes('Salyonohorych');
         this.renderSpeechBubble(
           isZmiy ? 535 : 375,
           195,
@@ -482,7 +482,7 @@
           strokeThickness: 4
         }).setOrigin(0.5);
 
-        this.flightCoinHud = this.add.text(24, 48, `🪙 Червінці: ${this.finalCoins}`, {
+        this.flightCoinHud = this.add.text(24, 48, `🪙 ${STRINGS.HUD_COINS}: ${this.finalCoins}`, {
           fontSize: '16px',
           fontStyle: 'bold',
           color: '#ffd166',
@@ -494,7 +494,7 @@
         const skipFlightBtn = this.add.rectangle(CONFIG.WIDTH - 115, 58, 195, 30, 0x3c096c, 0.92)
           .setStrokeStyle(1.5, 0xffd166)
           .setInteractive({ useHandCursor: true });
-        const skipFlightLbl = this.add.text(CONFIG.WIDTH - 115, 58, 'Пропустити політ ⏭', {
+        const skipFlightLbl = this.add.text(CONFIG.WIDTH - 115, 58, STRINGS.FINALE_SKIP_FLIGHT_BTN, {
           fontSize: '13px',
           fontStyle: 'bold',
           color: '#ffffff'
@@ -649,7 +649,7 @@
             c.setVisible(false);
             this.finalCoins += 1;
             GAME_STATE.savedCoins = this.finalCoins;
-            this.flightCoinHud.setText(`🪙 Червінці: ${this.finalCoins}`);
+            this.flightCoinHud.setText(`🪙 ${STRINGS.HUD_COINS}: ${this.finalCoins}`);
             SFX.pickup();
           }
         });
@@ -848,7 +848,7 @@
         const line = lines[index];
         SFX.speechBlip();
 
-        const isMarichka = line.speaker.includes('Марічка');
+        const isMarichka = line.speaker.includes('Марічка') || line.speaker.includes('Marichka');
         this.renderSpeechBubble(
           isMarichka ? 360 : 480,
           190,
@@ -981,7 +981,7 @@
           if (this.lineIndex < lines.length) {
             const line = lines[this.lineIndex];
             SFX.speechBlip();
-            const isZmiy = line.speaker.includes('Змій');
+            const isZmiy = line.speaker.includes('Змій') || line.speaker.includes('Dragon') || line.speaker.includes('Salyonohorych');
             if (isZmiy && this.zmiyHappyTear) {
               this.zmiyHappyTear.setVisible(true);
             }
@@ -1013,7 +1013,7 @@
           if (this.lineIndex < lines.length) {
             const line = lines[this.lineIndex];
             SFX.speechBlip();
-            const isMarichka = line.speaker.includes('Марічка');
+            const isMarichka = line.speaker.includes('Марічка') || line.speaker.includes('Marichka');
             this.renderSpeechBubble(
               430,
               175,
@@ -1052,7 +1052,7 @@
         this.renderSpeechBubble(
           520,
           175,
-          'Змій Соляногорич',
+          STRINGS.SPEAKER_ZMIY,
           STRINGS.FINALE_SNEEZE_CAPTION,
           0xffbe0b,
           80
@@ -1064,7 +1064,7 @@
         this.renderSpeechBubble(
           480,
           175,
-          'Усі гості разом',
+          STRINGS.SPEAKER_ALL_GUESTS,
           STRINGS.FINALE_LAUGH_CAPTION,
           0x2a9d8f,
           0
@@ -1130,7 +1130,7 @@
 
         addCreditText(STRINGS.CREDITS_STATS_HEADER, 24, '#48cae4', 'bold', 18);
         addCreditText(
-          `Зібрано червінців: ${this.finalCoins}   |   Ошелешено ворогів: ${this.finalStunned}`,
+          `${STRINGS.STATS_COINS}: ${this.finalCoins}   |   ${STRINGS.STATS_STUNNED_ENEMIES}: ${this.finalStunned}`,
           22,
           '#ffd166',
           'bold',
@@ -1201,7 +1201,7 @@
         this.stage = 'POST_CREDITS';
         this.lineIndex = 0;
         this.headerText.setText(STRINGS.FINALE_HEADER_7);
-        this.skipHint.setVisible(true).setText('[Пробіл / Enter / Клік] — Далі');
+        this.skipHint.setVisible(true).setText(STRINGS.BABA_YAGA_SKIP_HINT);
 
         const cx = CONFIG.WIDTH / 2;
         const bg = this.add.rectangle(cx, CONFIG.HEIGHT / 2, CONFIG.WIDTH, CONFIG.HEIGHT, 0x0e0f18, 1);
@@ -1222,7 +1222,7 @@
         const line = lines[index];
         SFX.speechBlip();
 
-        const isMarichka = line.speaker.includes('Марічка');
+        const isMarichka = line.speaker.includes('Марічка') || line.speaker.includes('Marichka');
         this.renderSpeechBubble(
           CONFIG.WIDTH / 2,
           205,

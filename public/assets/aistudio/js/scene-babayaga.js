@@ -320,7 +320,7 @@
         const line = STRINGS.BABA_YAGA_LINES[index];
         SFX.speechBlip();
 
-        const isYaga = line.speaker.includes('Яга');
+        const isYaga = line.speaker.includes('Яга') || line.speaker.includes('Yaga');
         const targetX = isYaga ? 500 : 365;
         const tailX = isYaga ? 45 : -45;
 
@@ -551,7 +551,7 @@
         const stats = this.add.text(
           cx,
           cy + 52,
-          `✦ Зібрано червінців: ${this.finalCoins}   |   Подолано лісової нечисті: ${this.finalStunned} ✦`,
+          `✦ ${STRINGS.STATS_COINS}: ${this.finalCoins}   |   ${STRINGS.STATS_STUNNED_FOREST}: ${this.finalStunned} ✦`,
           {
             fontSize: '16px',
             fontStyle: 'bold',

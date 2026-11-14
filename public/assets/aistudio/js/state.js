@@ -5,6 +5,7 @@
      * 'hardcore' -> One life (no checkpoints), 2x enemy HP & 1.5x enemy damage
      */
     const GAME_STATE = {
+      language: 'uk',
       difficulty: 'casual',
       currentLevel: 1,
       hasSaber: false,
@@ -69,9 +70,12 @@
       ].join(';');
 
       const textSpan = document.createElement('div');
-      textSpan.innerHTML =
-        '<strong style="color:#ffd166;">📱 Повний екран на iPhone:</strong> Apple обмежує авто-повний екран у браузері. ' +
-        'Натисніть <b>«Аа»</b> (або меню адреси) → <b>«Сховати панель інструментів»</b>, або <b>«Поділитися» → «На початковий екран»</b>!';
+      const isEn = GAME_STATE.language === 'en';
+      textSpan.innerHTML = isEn
+        ? '<strong style="color:#ffd166;">📱 Fullscreen on iPhone:</strong> Apple restricts auto-fullscreen in Safari. ' +
+          'Tap <b>"AA"</b> (in the address bar) → <b>"Hide Toolbar"</b>, or <b>"Share" → "Add to Home Screen"</b>!'
+        : '<strong style="color:#ffd166;">📱 Повний екран на iPhone:</strong> Apple обмежує авто-повний екран у браузері. ' +
+          'Натисніть <b>«Аа»</b> (або меню адреси) → <b>«Сховати панель інструментів»</b>, або <b>«Поділитися» → «На початковий екран»</b>!';
 
       const closeBtn = document.createElement('button');
       closeBtn.type = 'button';

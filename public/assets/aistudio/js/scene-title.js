@@ -1,6 +1,277 @@
 
     /**
      * ============================================================================
+     * 5A. PRE-TITLE LANGUAGE SELECTION SCENE ("ОБЕРІТЬ МОВУ / CHOOSE LANGUAGE")
+     * Displays the Ukrainian Flag ("Українська") and British Union Jack Flag ("English")
+     * before entering the main TitleScene.
+     * ============================================================================
+     */
+    class LanguageScene extends Phaser.Scene {
+      constructor() {
+        super('LanguageScene');
+      }
+
+      create() {
+        const cx = CONFIG.WIDTH / 2;
+        const cy = CONFIG.HEIGHT / 2;
+        this.selectedLangIndex = (GAME_STATE.language === 'en') ? 1 : 0; // 0 = 'uk', 1 = 'en'
+        this.confirming = false;
+
+        // 1. Deep Cossack Night & Parchment Backdrop
+        const bg = this.add.graphics();
+        bg.fillGradientStyle(0x111522, 0x161b2e, 0x1f2438, 0x141726, 1);
+        bg.fillRect(0, 0, CONFIG.WIDTH, CONFIG.HEIGHT);
+
+        // Traditional Ukrainian Rushnyk embroidery borders on left & right edges
+        const tileSize = 48;
+        const marginY = 14;
+        const drawOrnamentTile = (x, y, colorHex) => {
+          bg.fillStyle(0xf8f3e6, 0.92);
+          bg.fillRect(x, y, tileSize, tileSize);
+          bg.lineStyle(2, colorHex, 1);
+          bg.strokeRect(x + 2, y + 2, tileSize - 4, tileSize - 4);
+          bg.strokeRect(x + 6, y + 6, tileSize - 12, tileSize - 12);
+          const mx = x + tileSize / 2;
+          const my = y + tileSize / 2;
+          bg.lineBetween(mx, y + 6, x + tileSize - 6, my);
+          bg.lineBetween(x + tileSize - 6, my, mx, y + tileSize - 6);
+          bg.lineBetween(mx, y + tileSize - 6, x + 6, my);
+          bg.lineBetween(x + 6, my, mx, y + 6);
+          bg.lineBetween(mx, y + 2, mx, y + tileSize - 2);
+          bg.lineBetween(x + 2, my, x + tileSize - 2, my);
+          bg.fillStyle(colorHex, 1);
+          bg.fillRect(mx - 4, my - 4, 8, 8);
+        };
+        for (let row = 0; row < 10; row++) {
+          const y = marginY + row * (tileSize + 3);
+          const color = (row % 2 === 0) ? 0xc1121f : 0x1d1e2c;
+          drawOrnamentTile(10, y, color);
+          drawOrnamentTile(CONFIG.WIDTH - 10 - tileSize, y, color);
+        }
+
+        // Central Ornate Frame
+        const panel = this.add.graphics();
+        panel.fillStyle(0x1a1d2e, 0.96);
+        panel.fillRoundedRect(cx - 350, cy - 185, 700, 370, 20);
+        panel.lineStyle(4, 0xffd166, 1);
+        panel.strokeRoundedRect(cx - 350, cy - 185, 700, 370, 20);
+        panel.lineStyle(2, 0xc1121f, 0.95);
+        panel.strokeRoundedRect(cx - 338, cy - 173, 676, 346, 16);
+
+        // Two Flag Cards: Left = Українська (Ukraine Flag), Right = English (UK Union Jack Flag)
+        this.langCards = [];
+        const cardSpecs = [
+          {
+            lang: 'uk',
+            x: cx - 165,
+            y: cy,
+            title: 'Українська'
+          },
+          {
+            lang: 'en',
+            x: cx + 165,
+            y: cy,
+            title: 'English'
+          }
+        ];
+
+        cardSpecs.forEach((spec, idx) => {
+          const cardW = 280;
+          const cardH = 230;
+
+          const cardBg = this.add.rectangle(spec.x, spec.y, cardW, cardH, 0x24283b, 0.96)
+            .setStrokeStyle(3, 0x8d99ae)
+            .setInteractive({ useHandCursor: true });
+
+          // Draw crisp procedural Flag at top of card (196 x 122)
+          const flagW = 196;
+          const flagH = 122;
+          const fx = spec.x - flagW / 2;
+          const fy = spec.y - 86;
+
+          const flagGfx = this.add.graphics();
+          // Drop shadow under flag
+          flagGfx.fillStyle(0x000000, 0.45);
+          flagGfx.fillRoundedRect(fx + 4, fy + 5, flagW, flagH, 6);
+
+          if (spec.lang === 'uk') {
+            // FLAG OF UKRAINE (Blue #0057B7 top half, Yellow #FFD700 bottom half)
+            flagGfx.fillStyle(0x0057b7, 1);
+            flagGfx.fillRect(fx, fy, flagW, flagH / 2);
+            flagGfx.fillStyle(0xffd700, 1);
+            flagGfx.fillRect(fx, fy + flagH / 2, flagW, flagH / 2);
+          } else {
+            // FLAG OF THE UNITED KINGDOM (Union Jack)
+            // 1. Royal Navy Blue field (#012169)
+            flagGfx.fillStyle(0x012169, 1);
+            flagGfx.fillRect(fx, fy, flagW, flagH);
+
+            // 2. White diagonals of St Andrew (clipped to flag rectangle via corner polygons)
+            flagGfx.fillStyle(0xffffff, 1);
+            flagGfx.beginPath();
+            flagGfx.moveTo(fx, fy);
+            flagGfx.lineTo(fx + 26, fy);
+            flagGfx.lineTo(fx + flagW, fy + flagH - 16);
+            flagGfx.lineTo(fx + flagW, fy + flagH);
+            flagGfx.lineTo(fx + flagW - 26, fy + flagH);
+            flagGfx.lineTo(fx, fy + 16);
+            flagGfx.closePath();
+            flagGfx.fillPath();
+
+            flagGfx.beginPath();
+            flagGfx.moveTo(fx, fy + flagH);
+            flagGfx.lineTo(fx, fy + flagH - 16);
+            flagGfx.lineTo(fx + flagW - 26, fy);
+            flagGfx.lineTo(fx + flagW, fy);
+            flagGfx.lineTo(fx + flagW, fy + 16);
+            flagGfx.lineTo(fx + 26, fy + flagH);
+            flagGfx.closePath();
+            flagGfx.fillPath();
+
+            // 3. Red diagonals of St Patrick (#C8102E)
+            flagGfx.fillStyle(0xc8102e, 1);
+            flagGfx.beginPath();
+            flagGfx.moveTo(fx, fy);
+            flagGfx.lineTo(fx + 12, fy);
+            flagGfx.lineTo(fx + flagW, fy + flagH - 8);
+            flagGfx.lineTo(fx + flagW, fy + flagH);
+            flagGfx.lineTo(fx + flagW - 12, fy + flagH);
+            flagGfx.lineTo(fx, fy + 8);
+            flagGfx.closePath();
+            flagGfx.fillPath();
+
+            flagGfx.beginPath();
+            flagGfx.moveTo(fx, fy + flagH);
+            flagGfx.lineTo(fx, fy + flagH - 8);
+            flagGfx.lineTo(fx + flagW - 12, fy);
+            flagGfx.lineTo(fx + flagW, fy);
+            flagGfx.lineTo(fx + flagW, fy + 8);
+            flagGfx.lineTo(fx + 12, fy + flagH);
+            flagGfx.closePath();
+            flagGfx.fillPath();
+
+            // 4. White St George Cross fimbriation
+            const crossWhiteW = 36;
+            const crossWhiteH = 36;
+            flagGfx.fillStyle(0xffffff, 1);
+            flagGfx.fillRect(spec.x - crossWhiteW / 2, fy, crossWhiteW, flagH);
+            flagGfx.fillRect(fx, fy + (flagH - crossWhiteH) / 2, flagW, crossWhiteH);
+
+            // 5. Red St George Cross (#C8102E)
+            const crossRedW = 22;
+            const crossRedH = 22;
+            flagGfx.fillStyle(0xc8102e, 1);
+            flagGfx.fillRect(spec.x - crossRedW / 2, fy, crossRedW, flagH);
+            flagGfx.fillRect(fx, fy + (flagH - crossRedH) / 2, flagW, crossRedH);
+          }
+
+          // Subtle fabric sheen & golden frame around the flag
+          flagGfx.fillStyle(0xffffff, 0.08);
+          flagGfx.fillRect(fx, fy, flagW, flagH / 3);
+          flagGfx.lineStyle(3, 0xffd166, 1);
+          flagGfx.strokeRect(fx, fy, flagW, flagH);
+
+          // Main Caption ("Українська" / "English")
+          const titleTxt = this.add.text(spec.x, spec.y + 72, spec.title, {
+            fontFamily: "'Cormorant Infant', Georgia, serif",
+            fontSize: '36px',
+            fontStyle: 'bold',
+            color: '#ffffff',
+            stroke: '#000000',
+            strokeThickness: 3,
+            padding: { top: 4, bottom: 4 }
+          }).setOrigin(0.5);
+
+          cardBg.on('pointerover', () => {
+            if (this.confirming) return;
+            this.selectedLangIndex = idx;
+            SFX.speechBlip();
+            this.refreshCardHighlight();
+          });
+
+          const onSelectCard = (pointer, lx, ly, event) => {
+            if (event && event.stopPropagation) event.stopPropagation();
+            this.tryMobileFullscreen(pointer);
+            this.selectedLangIndex = idx;
+            this.refreshCardHighlight();
+            this.confirmLanguage();
+          };
+
+          cardBg.on('pointerdown', onSelectCard);
+
+          this.langCards.push({
+            lang: spec.lang,
+            cardBg,
+            titleTxt
+          });
+        });
+
+        this.refreshCardHighlight();
+
+        // Keyboard controls
+        this.input.keyboard.on('keydown-LEFT', () => this.moveSelection(-1));
+        this.input.keyboard.on('keydown-RIGHT', () => this.moveSelection(1));
+        this.input.keyboard.on('keydown-A', () => this.moveSelection(-1));
+        this.input.keyboard.on('keydown-D', () => this.moveSelection(1));
+        this.input.keyboard.on('keydown-UP', () => this.moveSelection(-1));
+        this.input.keyboard.on('keydown-DOWN', () => this.moveSelection(1));
+        this.input.keyboard.on('keydown-ENTER', () => this.confirmLanguage());
+        this.input.keyboard.on('keydown-SPACE', () => this.confirmLanguage());
+      }
+
+      tryMobileFullscreen(pointer) {
+        const isMobileOrTouch = ('ontouchstart' in window) ||
+          (navigator.maxTouchPoints > 0) ||
+          (window.innerWidth <= 1024) ||
+          Boolean(pointer && pointer.wasTouch);
+        if (isMobileOrTouch && typeof requestAppFullscreen === 'function') {
+          requestAppFullscreen();
+        }
+      }
+
+      moveSelection(delta) {
+        if (this.confirming) return;
+        const len = this.langCards.length;
+        this.selectedLangIndex = (this.selectedLangIndex + delta + len) % len;
+        SFX.speechBlip();
+        this.refreshCardHighlight();
+      }
+
+      refreshCardHighlight() {
+        this.langCards.forEach((c, idx) => {
+          const active = (idx === this.selectedLangIndex);
+          if (active) {
+            c.cardBg.setStrokeStyle(4, 0xffea00);
+            c.cardBg.setFillStyle(0x2d334a, 0.98);
+            c.titleTxt.setColor('#ffea00');
+          } else {
+            c.cardBg.setStrokeStyle(2.5, 0x6c757d);
+            c.cardBg.setFillStyle(0x202436, 0.92);
+            c.titleTxt.setColor('#ffffff');
+          }
+        });
+      }
+
+      confirmLanguage() {
+        if (this.confirming) return;
+        this.confirming = true;
+        const chosen = this.langCards[this.selectedLangIndex];
+        const lang = chosen ? chosen.lang : 'uk';
+        if (typeof setGameLanguage === 'function') {
+          setGameLanguage(lang);
+        } else {
+          GAME_STATE.language = lang;
+        }
+        SFX.checkpoint();
+        this.cameras.main.fadeOut(280, 18, 19, 26);
+        this.time.delayedCall(300, () => {
+          this.scene.start('TitleScene');
+        });
+      }
+    }
+
+    /**
+     * ============================================================================
      * 5B. TITLE SCENE: PASTORAL UKRAINIAN LANDSCAPE & COSSACK CALLIGRAPHY COVER
      * Inspired by traditional Ukrainian village oil painting & Cossack baroque initials
      * ============================================================================
@@ -63,7 +334,7 @@
           }
         });
         this.input.on('pointerdown', (pointer) => {
-          if (pointer && pointer.x > 840 && pointer.y < 105) return;
+          if (pointer && pointer.x > 840 && pointer.y < 145) return;
           if (this.difficultyModalOpen) {
             const cx = CONFIG.WIDTH / 2;
             const cy = CONFIG.HEIGHT / 2;
@@ -127,6 +398,11 @@
         const titleMute = makeTitleTopBtn(873, 80, 48, SFX.muted ? '🔇' : '🔊', () => {
           const muted = SFX.toggleMute();
           titleMute.txt.setText(muted ? '🔇' : '🔊');
+        });
+
+        makeTitleTopBtn(873, 118, 48, GAME_STATE.language === 'en' ? 'UA' : 'EN', () => {
+          SFX.speechBlip();
+          this.scene.start('LanguageScene');
         });
       }
 
@@ -946,23 +1222,24 @@
           repeat: 2
         });
 
-        const callBubble = this.add.container(620, 214);
+        const callBubble = this.add.container(600, 214);
         this.introCallBubble = callBubble;
         const cbBg = this.add.graphics();
         cbBg.fillStyle(0xfefae0, 0.98);
         cbBg.lineStyle(3, 0xc1121f, 1);
-        cbBg.fillRoundedRect(-230, -44, 460, 84, 14);
-        cbBg.strokeRoundedRect(-230, -44, 460, 84, 14);
+        cbBg.fillRoundedRect(-260, -48, 520, 92, 14);
+        cbBg.strokeRoundedRect(-260, -48, 520, 92, 14);
         // Pointer toward Khata doorway
-        cbBg.fillTriangle(72, 40, 92, 40, 88, 60);
+        cbBg.fillTriangle(86, 44, 106, 44, 102, 64);
 
         const cbText = this.add.text(0, -2, STRINGS.TITLE_WIFE_CALL, {
           fontFamily: "'Cormorant Infant', Georgia, serif",
-          fontSize: '19px',
+          fontSize: '18px',
           fontStyle: 'bold',
           color: '#2b1810',
           align: 'center',
-          lineSpacing: 5
+          wordWrap: { width: 492 },
+          lineSpacing: 4
         }).setOrigin(0.5);
 
         callBubble.add([cbBg, cbText]);
@@ -1005,15 +1282,17 @@
           const rbBg = this.add.graphics();
           rbBg.fillStyle(0xfefae0, 0.98);
           rbBg.lineStyle(2.5, 0x1d3557, 1);
-          rbBg.fillRoundedRect(-175, -26, 350, 48, 12);
-          rbBg.strokeRoundedRect(-175, -26, 350, 48, 12);
-          rbBg.fillTriangle(-10, 22, 10, 22, 0, 34);
+          rbBg.fillRoundedRect(-195, -28, 390, 52, 12);
+          rbBg.strokeRoundedRect(-195, -28, 390, 52, 12);
+          rbBg.fillTriangle(-10, 24, 10, 24, 0, 36);
 
           const rbText = this.add.text(0, -2, STRINGS.TITLE_OMELKO_REPLY, {
             fontFamily: "'Cormorant Infant', Georgia, serif",
             fontSize: '18px',
             fontStyle: 'bold',
-            color: '#1d3557'
+            color: '#1d3557',
+            align: 'center',
+            wordWrap: { width: 366 }
           }).setOrigin(0.5);
           replyBubble.add([rbBg, rbText]);
           replyBubble.setScale(0.75);

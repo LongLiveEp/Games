@@ -206,7 +206,7 @@
         bg.fillRect(72, 330, 10, 95);
         bg.fillStyle(0xe9c46a, 1);
         bg.fillRoundedRect(18, 342, 128, 28, 5);
-        this.add.text(82, 356, '← Ліс і Дніпро', {
+        this.add.text(82, 356, STRINGS.HRYTSKO_WAYPOST, {
           fontSize: '13px',
           fontStyle: 'bold',
           color: '#3d2314'
@@ -223,7 +223,7 @@
         const line = STRINGS.HRYTSKO_LINES[index];
         SFX.speechBlip();
 
-        const isHrytsko = line.speaker.includes('Грицько');
+        const isHrytsko = line.speaker.includes('Грицько') || line.speaker.includes('Hrytsko');
         const targetX = isHrytsko ? 515 : 375;
         const tailX = isHrytsko ? 45 : -45;
 
@@ -524,7 +524,7 @@
         const stats = this.add.text(
           cx,
           cy + 52,
-          `✦ Зібрано червінців: ${this.finalCoins}   |   Ошелешено ворогів: ${this.finalStunned} ✦`,
+          `✦ ${STRINGS.STATS_COINS}: ${this.finalCoins}   |   ${STRINGS.STATS_STUNNED_ENEMIES}: ${this.finalStunned} ✦`,
           {
             fontSize: '16px',
             fontStyle: 'bold',

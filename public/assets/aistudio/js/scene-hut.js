@@ -138,15 +138,15 @@
         // Speech Bubble Container
         this.bubbleContainer = this.add.container(480, 180);
         this.bubbleBg = this.add.graphics();
-        this.speakerText = this.add.text(-250, -42, '', {
+        this.speakerText = this.add.text(-272, -50, '', {
           fontSize: '16px',
           fontStyle: 'bold',
           color: '#d62828'
         });
-        this.dialogueText = this.add.text(-250, -14, '', {
-          fontSize: '19px',
+        this.dialogueText = this.add.text(-272, -22, '', {
+          fontSize: '18px',
           color: '#1d1e2c',
-          wordWrap: { width: 500 },
+          wordWrap: { width: 544 },
           lineSpacing: 4
         });
         this.bubbleContainer.add([this.bubbleBg, this.speakerText, this.dialogueText]);
@@ -172,7 +172,7 @@
           .setScrollFactor(0)
           .setDepth(120)
           .setInteractive({ useHandCursor: true });
-        this.skipBtnTxt = this.add.text(CONFIG.WIDTH - 95, 48, 'До дверей ⏭ [Tab]', {
+        this.skipBtnTxt = this.add.text(CONFIG.WIDTH - 95, 48, STRINGS.HUT_SKIP_BTN, {
           fontSize: '13px',
           fontStyle: 'bold',
           color: '#ffd166'
@@ -216,11 +216,11 @@
         // Position bubble above the active speaker
         let targetX = 480;
         let tailX = 0;
-        if (line.speaker.includes('Дружина')) {
+        if (line.speaker.includes('Дружина') || line.speaker.includes('Marichka') || line.speaker.includes('Wife')) {
           targetX = 390;
           tailX = -60;
           this.tweens.add({ targets: this.wife, scaleY: 1.35, duration: 120, yoyo: true });
-        } else if (line.speaker.includes('Діти')) {
+        } else if (line.speaker.includes('Діти') || line.speaker.includes('Children')) {
           targetX = 465;
           tailX = 0;
           this.tweens.add({ targets: [this.kid1, this.kid2], y: '-=10', duration: 120, yoyo: true });
@@ -230,14 +230,14 @@
           this.tweens.add({ targets: this.player.sprite, scaleY: 1.18, duration: 120, yoyo: true });
         }
 
-        this.bubbleContainer.setPosition(targetX, 265);
+        this.bubbleContainer.setPosition(targetX, 260);
         this.bubbleBg.clear();
         this.bubbleBg.fillStyle(0xffffff, 0.97);
         this.bubbleBg.lineStyle(4, 0x2b2d42, 1);
-        this.bubbleBg.fillRoundedRect(-270, -56, 540, 115, 16);
-        this.bubbleBg.strokeRoundedRect(-270, -56, 540, 115, 16);
+        this.bubbleBg.fillRoundedRect(-295, -64, 590, 134, 16);
+        this.bubbleBg.strokeRoundedRect(-295, -64, 590, 134, 16);
         // Speech bubble pointer triangle
-        this.bubbleBg.fillTriangle(tailX - 14, 59, tailX + 14, 59, tailX, 82);
+        this.bubbleBg.fillTriangle(tailX - 14, 70, tailX + 14, 70, tailX, 92);
 
         this.speakerText.setText(line.speaker + ':');
         this.dialogueText.setText('«' + line.text + '»');

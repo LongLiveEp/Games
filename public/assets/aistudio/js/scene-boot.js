@@ -1303,7 +1303,7 @@
           if (titleLaunched) return;
           titleLaunched = true;
           if (this.scene && this.scene.start) {
-            this.scene.start('TitleScene');
+            this.scene.start('LanguageScene');
           }
         };
 

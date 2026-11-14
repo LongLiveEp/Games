@@ -179,7 +179,7 @@
         bg.fillRect(855, 282, 10, 72);
         bg.fillStyle(0xffd166, 1);
         bg.fillRoundedRect(788, 290, 148, 28, 5);
-        this.add.text(862, 304, 'Чумацький Шлях →', {
+        this.add.text(862, 304, STRINGS.CATFISH_WAYPOST, {
           fontSize: '12px',
           fontStyle: 'bold',
           color: '#3d2314'
@@ -247,7 +247,7 @@
           ease: 'Sine.easeOut'
         });
 
-        const isCatfish = line.speaker.includes('Сом');
+        const isCatfish = line.speaker.includes('Сом') || line.speaker.includes('Catfish') || line.speaker.includes('Vusan');
         this.bubbleContainer.setVisible(true);
         this.bubbleContainer.setPosition(480, 222);
         this.bubbleBg.clear();
@@ -427,7 +427,7 @@
         const stats = this.add.text(
           cx,
           cy + 52,
-          `✦ Зібрано червінців: ${this.finalCoins}   |   Ошелешено водяної нечисті: ${this.finalStunned} ✦`,
+          `✦ ${STRINGS.STATS_COINS}: ${this.finalCoins}   |   ${STRINGS.STATS_STUNNED_WATER}: ${this.finalStunned} ✦`,
           {
             fontSize: '16px',
             fontStyle: 'bold',

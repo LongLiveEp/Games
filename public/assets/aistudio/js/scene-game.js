@@ -1531,16 +1531,16 @@
             SFX.pickup();
             if (item.lootType === 'coin') {
               this.player.coins += 1;
-              this.showFloatingText(item.x, item.y - 15, '+1 Червінець', '#ffd166');
+              this.showFloatingText(item.x, item.y - 15, STRINGS.FLOAT_COIN, '#ffd166');
             } else if (item.lootType === 'food') {
               this.player.stamina = Math.min(CONFIG.PLAYER.MAX_STAMINA, this.player.stamina + 20);
-              this.showFloatingText(item.x, item.y - 15, '+20 Сили', '#2ec4b6');
+              this.showFloatingText(item.x, item.y - 15, STRINGS.FLOAT_HEAL, '#2ec4b6');
             } else if (item.lootType === 'galushka') {
               this.player.galushkas = Math.min(CONFIG.PLAYER.MAX_GALUSHKAS, this.player.galushkas + 2);
               this.showFloatingText(
                 item.x,
                 item.y - 15,
-                GAME_STATE.hasSwampFrogs ? '+2 Болотні жаби' : '+2 Галушки',
+                GAME_STATE.hasSwampFrogs ? STRINGS.FLOAT_FROGS : STRINGS.FLOAT_GALUSHKAS,
                 GAME_STATE.hasSwampFrogs ? '#80ed99' : '#f6e4b5'
               );
             }
@@ -1912,7 +1912,7 @@
         this.player.uzvarCharges--;
         this.player.stamina = Math.min(CONFIG.PLAYER.MAX_STAMINA, this.player.stamina + CONFIG.PLAYER.UZVAR_HEAL_AMOUNT);
         SFX.drinkUzvar();
-        this.showFloatingText(this.player.sprite.x, this.player.sprite.y - 40, `+${CONFIG.PLAYER.UZVAR_HEAL_AMOUNT} Сили (Кисіль)`, '#00f5d4');
+        this.showFloatingText(this.player.sprite.x, this.player.sprite.y - 40, `+${CONFIG.PLAYER.UZVAR_HEAL_AMOUNT} ${STRINGS.FLOAT_UZVAR_SUFFIX}`, '#00f5d4');
       }
 
       spawnPinecone(fromX, fromY, targetX, targetY) {
@@ -2147,7 +2147,7 @@
 
         this.physics.world.resume();
         SFX.checkpoint();
-        this.showFloatingText(this.player.sprite.x, this.player.sprite.y - 45, 'Силу відновлено біля чекпоїнта!', '#00f5d4');
+        this.showFloatingText(this.player.sprite.x, this.player.sprite.y - 45, STRINGS.FLOAT_CHECKPOINT_HEAL, '#00f5d4');
       }
 
       showFloatingText(x, y, message, color = '#ffffff') {
@@ -2296,8 +2296,8 @@
           const item = (lines && lines[lineIndex]) ? lines[lineIndex] : null;
           if (!item) return;
           let badgeColor = '#ffd166';
-          if (item.speaker.indexOf('Сом') !== -1) badgeColor = '#90e0ef';
-          else if (item.speaker.indexOf('Водяний') !== -1) badgeColor = '#00f5d4';
+          if (item.speaker.indexOf('Сом') !== -1 || item.speaker.indexOf('Catfish') !== -1 || item.speaker.indexOf('Vusan') !== -1) badgeColor = '#90e0ef';
+          else if (item.speaker.indexOf('Водяний') !== -1 || item.speaker.indexOf('Water') !== -1) badgeColor = '#00f5d4';
           speakerBadge.setText(item.speaker + ':').setColor(badgeColor);
           lineText.setText('«' + item.text + '»');
           SFX.jump();
@@ -2851,7 +2851,7 @@
 
       showSteppeCliffhangerModal() {
         this.ui.victoryStats.setText(
-          `✦ Зібрано червінців: ${this.player.coins}   |   Ошелешено степової нечисті: ${this.enemiesStunnedCount} ✦`
+          `✦ ${STRINGS.STATS_COINS}: ${this.player.coins}   |   ${STRINGS.STATS_STUNNED_STEPPE}: ${this.enemiesStunnedCount} ✦`
         );
         this.ui.setVictoryModalVisible(true);
         SFX.banduraStart();

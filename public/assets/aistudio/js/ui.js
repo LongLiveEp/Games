@@ -38,25 +38,25 @@
       }
 
       createGameHUD() {
-        // Stamina ("Сила козака") Panel (wider so Galushkas/Frogs and Uzvar counters never touch)
+        // Stamina ("Сила козака") Panel (wider so Galushkas/Frogs and Uzvar counters never touch in any language)
         const hudBg = this.scene.add.graphics().setScrollFactor(0).setDepth(100);
         hudBg.fillStyle(0x14161f, 0.88);
         hudBg.lineStyle(2, 0xd4a373, 1);
-        hudBg.fillRoundedRect(16, 14, 316, 74, 10);
-        hudBg.strokeRoundedRect(16, 14, 316, 74, 10);
+        hudBg.fillRoundedRect(16, 14, 332, 74, 10);
+        hudBg.strokeRoundedRect(16, 14, 332, 74, 10);
 
-        const modeLabel = GAME_STATE.isHardcore() ? '🔥 ХАРДКОРАКТЕРНИК (1 ЖИТТЯ)' : STRINGS.STAMINA_LABEL;
+        const modeLabel = GAME_STATE.isHardcore() ? STRINGS.HUD_HARDCORE_MODE : STRINGS.STAMINA_LABEL;
         this.scene.add.text(28, 20, modeLabel, {
           fontSize: '12px',
           fontStyle: 'bold',
           color: GAME_STATE.isHardcore() ? '#ff6b6b' : '#ffd166'
         }).setScrollFactor(0).setDepth(101);
 
-        this.staminaBarBg = this.scene.add.rectangle(28, 44, 232, 14, 0x2b2d42)
+        this.staminaBarBg = this.scene.add.rectangle(28, 44, 242, 14, 0x2b2d42)
           .setOrigin(0, 0.5).setScrollFactor(0).setDepth(101);
-        this.staminaBarFill = this.scene.add.rectangle(28, 44, 232, 14, 0xe63946)
+        this.staminaBarFill = this.scene.add.rectangle(28, 44, 242, 14, 0xe63946)
           .setOrigin(0, 0.5).setScrollFactor(0).setDepth(102);
-        this.staminaValueText = this.scene.add.text(268, 44, '100%', {
+        this.staminaValueText = this.scene.add.text(278, 44, '100%', {
           fontSize: '13px',
           fontStyle: 'bold',
           color: '#ffffff'
@@ -64,13 +64,13 @@
 
         // Counters: Chervintsi, Galushkas/Frogs, Kissel (Heal)
         this.coinsText = this.scene.add.text(28, 63, '🪙 0', {
-          fontSize: '14px', fontStyle: 'bold', color: '#ffd166'
+          fontSize: '13px', fontStyle: 'bold', color: '#ffd166'
         }).setScrollFactor(0).setDepth(101);
-        this.galushkaText = this.scene.add.text(94, 63, '🥟 Галушки [S]: 5', {
-          fontSize: '14px', fontStyle: 'bold', color: '#f6e4b5'
+        this.galushkaText = this.scene.add.text(88, 63, `${STRINGS.HUD_GALUSHKAS_LABEL}: 5`, {
+          fontSize: '13px', fontStyle: 'bold', color: '#f6e4b5'
         }).setScrollFactor(0).setDepth(101);
-        this.uzvarText = this.scene.add.text(248, 63, '🍒 [A]: 2', {
-          fontSize: '14px', fontStyle: 'bold', color: '#ff758f'
+        this.uzvarText = this.scene.add.text(262, 63, '🍒 [A]: 2', {
+          fontSize: '13px', fontStyle: 'bold', color: '#ff758f'
         }).setScrollFactor(0).setDepth(101);
 
         // Current Level Badge in top-left under HUD panel
@@ -78,10 +78,10 @@
         const isLevel3 = this.scene.currentLevel === 3;
         const isLevel4 = this.scene.currentLevel === 4;
         const badgeLabel = isLevel4
-          ? `🌾 ${STRINGS.LEVEL_4_TITLE} (Шабля + Жаби)`
+          ? `🌾 ${STRINGS.LEVEL_4_TITLE} ${STRINGS.LEVEL_4_WEAPON_TAG}`
           : (isLevel3
-            ? `🌊 ${STRINGS.LEVEL_3_TITLE} (Шабля + Жаби)`
-            : (isLevel2 ? `🌲 ${STRINGS.LEVEL_2_TITLE} (Шабля кума)` : `🌻 ${STRINGS.LEVEL_1_TITLE}`));
+            ? `🌊 ${STRINGS.LEVEL_3_TITLE} ${STRINGS.LEVEL_3_WEAPON_TAG}`
+            : (isLevel2 ? `🌲 ${STRINGS.LEVEL_2_TITLE} ${STRINGS.LEVEL_2_WEAPON_TAG}` : `🌻 ${STRINGS.LEVEL_1_TITLE}`));
         const badgeColor = isLevel4 ? '#f4a261' : (isLevel3 ? '#48cae4' : (isLevel2 ? '#ff9f1c' : '#ffd166'));
 
         this.levelBadgeText = this.scene.add.text(
@@ -97,42 +97,43 @@
           }
         ).setScrollFactor(0).setDepth(101);
 
-        // Boss Stun Bar (Direct screen-space elements, hidden until entering Boss Arena)
-        const bx = CONFIG.WIDTH / 2;
-        const by = 52;
-        this.bossBg = this.scene.add.rectangle(bx, by, 410, 48, 0x14161f, 0.92)
+        // Boss Stun Bar positioned at bx=556, by=68 (x: 366..746, y: 46..90)
+        // so it sits cleanly to the right of the Stamina HUD (x<=348) and below the Top-Right buttons (y<=42)
+        const bx = 556;
+        const by = 68;
+        this.bossBg = this.scene.add.rectangle(bx, by, 380, 44, 0x14161f, 0.92)
           .setStrokeStyle(2, 0xff4d4d).setScrollFactor(0).setDepth(101).setVisible(false);
         this.bossTitle = this.scene.add.text(
-          bx,
-          by - 11,
+          bx - 10,
+          by - 10,
           isLevel4 ? STRINGS.BOSS_ZMIY_NAME : (isLevel3 ? STRINGS.BOSS_VODYANYK_NAME : (isLevel2 ? STRINGS.BOSS_LISOVYK_NAME : STRINGS.BOSS_NAME)),
           {
-            fontSize: '14px',
+            fontSize: '12px',
             fontStyle: 'bold',
             color: '#ffbe0b'
           }
         ).setOrigin(0.5).setScrollFactor(0).setDepth(102).setVisible(false);
-        this.bossBarTrack = this.scene.add.rectangle(bx - 175, by + 10, 350, 12, 0x2b2d42)
+        this.bossBarTrack = this.scene.add.rectangle(bx - 170, by + 9, 340, 11, 0x2b2d42)
           .setOrigin(0, 0.5).setScrollFactor(0).setDepth(102).setVisible(false);
-        this.bossBarFill = this.scene.add.rectangle(bx - 175, by + 10, 350, 12, 0xe63946)
+        this.bossBarFill = this.scene.add.rectangle(bx - 170, by + 9, 340, 11, 0xe63946)
           .setOrigin(0, 0.5).setScrollFactor(0).setDepth(103).setVisible(false);
         // Three-segment Boss Bar for Three-Headed Dragon Salyonohorych (Level 4)
         this.bossSegFills = [
-          this.scene.add.rectangle(bx - 175, by + 10, 114, 12, 0xe63946)
+          this.scene.add.rectangle(bx - 170, by + 9, 110, 11, 0xe63946)
             .setOrigin(0, 0.5).setScrollFactor(0).setDepth(103).setVisible(false),
-          this.scene.add.rectangle(bx - 57, by + 10, 114, 12, 0xe63946)
+          this.scene.add.rectangle(bx - 55, by + 9, 110, 11, 0xe63946)
             .setOrigin(0, 0.5).setScrollFactor(0).setDepth(103).setVisible(false),
-          this.scene.add.rectangle(bx + 61, by + 10, 114, 12, 0xe63946)
+          this.scene.add.rectangle(bx + 60, by + 9, 110, 11, 0xe63946)
             .setOrigin(0, 0.5).setScrollFactor(0).setDepth(103).setVisible(false)
         ];
         this.bossSegDividers = [
-          this.scene.add.rectangle(bx - 59, by + 10, 4, 14, 0x14161f)
+          this.scene.add.rectangle(bx - 57, by + 9, 4, 13, 0x14161f)
             .setOrigin(0, 0.5).setScrollFactor(0).setDepth(104).setVisible(false),
-          this.scene.add.rectangle(bx + 59, by + 10, 4, 14, 0x14161f)
+          this.scene.add.rectangle(bx + 58, by + 9, 4, 13, 0x14161f)
             .setOrigin(0, 0.5).setScrollFactor(0).setDepth(104).setVisible(false)
         ];
-        this.bossStageBadges = this.scene.add.text(bx + 185, by - 11, '●●', {
-          fontSize: '16px',
+        this.bossStageBadges = this.scene.add.text(bx + 178, by - 10, '●●', {
+          fontSize: '14px',
           color: '#ff4d4d'
         }).setOrigin(1, 0.5).setScrollFactor(0).setDepth(102).setVisible(false);
       }
@@ -792,13 +793,13 @@
         if (this.isHut) return;
 
         const ratio = Phaser.Math.Clamp(player.stamina / CONFIG.PLAYER.MAX_STAMINA, 0, 1);
-        this.staminaBarFill.width = 232 * ratio;
+        this.staminaBarFill.width = 242 * ratio;
         this.staminaValueText.setText(`${Math.ceil(player.stamina)}%`);
         this.coinsText.setText(`🪙 ${player.coins}`);
         this.galushkaText.setText(
           GAME_STATE.hasSwampFrogs
-            ? `🐸 Жаби [S]: ${player.galushkas}`
-            : `🥟 Галушки [S]: ${player.galushkas}`
+            ? `${STRINGS.HUD_FROGS_LABEL}: ${player.galushkas}`
+            : `${STRINGS.HUD_GALUSHKAS_LABEL}: ${player.galushkas}`
         );
         this.uzvarText.setText(`🍒 [A]: ${player.uzvarCharges}`);
 
@@ -824,7 +825,7 @@
               const hRatio = (h.isKnockedOut || h.isPhase1To3Defeated || h.isPhase4Down)
                 ? 0
                 : Phaser.Math.Clamp(1 - (h.stun / h.maxStun), 0, 1);
-              seg.width = 114 * hRatio;
+              seg.width = 110 * hRatio;
               seg.setFillStyle(0xe63946);
             });
             this.bossStageBadges.setText(
@@ -832,7 +833,7 @@
             );
           } else {
             const bHpRatio = Phaser.Math.Clamp(1 - (boss.stun / boss.maxStun), 0, 1);
-            this.bossBarFill.width = 350 * bHpRatio;
+            this.bossBarFill.width = 340 * bHpRatio;
             this.bossBarFill.setFillStyle(0xe63946);
             if (boss.stagesRequired === 3) {
               this.bossStageBadges.setText(

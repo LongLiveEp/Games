@@ -231,7 +231,7 @@
             debug: false
           }
         },
-        scene: [BootScene, TitleScene, HutScene, GameScene, HrytskoScene, BabaYagaScene, CatfishScene, ZmiyFinaleScene]
+        scene: [BootScene, LanguageScene, TitleScene, HutScene, GameScene, HrytskoScene, BabaYagaScene, CatfishScene, ZmiyFinaleScene]
       };
 
       const game = new Phaser.Game(gameConfig);
