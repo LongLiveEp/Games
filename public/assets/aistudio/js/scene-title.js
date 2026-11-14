@@ -79,6 +79,24 @@
               }
             }
           } else {
+            if (!this.startingGame) {
+              const isMobileOrTouch = ('ontouchstart' in window) ||
+                (navigator.maxTouchPoints > 0) ||
+                (window.innerWidth <= 1024) ||
+                Boolean(pointer && pointer.wasTouch);
+              if (isMobileOrTouch && typeof requestAppFullscreen === 'function') {
+                requestAppFullscreen();
+                const retryFsOnRelease = () => {
+                  requestAppFullscreen();
+                  window.removeEventListener('touchend', retryFsOnRelease);
+                  window.removeEventListener('pointerup', retryFsOnRelease);
+                  window.removeEventListener('click', retryFsOnRelease);
+                };
+                window.addEventListener('touchend', retryFsOnRelease, { once: true, passive: true });
+                window.addEventListener('pointerup', retryFsOnRelease, { once: true, passive: true });
+                window.addEventListener('click', retryFsOnRelease, { once: true, passive: true });
+              }
+            }
             this.startGame();
           }
         });

@@ -1,0 +1,10 @@
+{
+  "name": "В пошуках солі — Козак Омелько",
+  "short_name": "В пошуках солі",
+  "description": "Як козак Омелько смачний борщ рятував — український пригодницький платформер",
+  "start_url": "/",
+  "display": "fullscreen",
+  "orientation": "landscape",
+  "background_color": "#0e1017",
+  "theme_color": "#0e1017"
+}

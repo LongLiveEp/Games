@@ -765,6 +765,41 @@
         g.lineBetween(50, 14, 45, 20);
         g.generateTexture('platform_cloud_storm', 64, 24);
 
+        // Crumbling Cloud Platform ('platform_cloud_crumbling'): warm sandy-amber cloud with fracture cracks & loose puffs
+        g.clear();
+        g.fillStyle(0xb08968, 0.92);
+        g.fillRoundedRect(3, 10, 58, 12, 6);
+        g.fillStyle(0xfefae0, 0.98);
+        g.fillRoundedRect(2, 5, 60, 13, 7);
+        g.fillCircle(14, 9, 8.5);
+        g.fillCircle(32, 8, 9.5);
+        g.fillCircle(50, 9, 8.5);
+        // Visible fracture cracks & loose crumbling droplets below
+        g.lineStyle(2, 0x9c6644, 0.9);
+        g.lineBetween(21, 5, 18, 13);
+        g.lineBetween(18, 13, 24, 19);
+        g.lineBetween(43, 5, 46, 13);
+        g.lineBetween(46, 13, 41, 19);
+        g.fillStyle(0xe9c46a, 0.9);
+        g.fillCircle(15, 21, 2.2);
+        g.fillCircle(32, 22, 2.5);
+        g.fillCircle(48, 21, 2.2);
+        g.generateTexture('platform_cloud_crumbling', 64, 24);
+
+        // Fading Mist Cloud Platform ('platform_cloud_fading'): ethereal cyan-turquoise mist cloud with soft rings
+        g.clear();
+        g.fillStyle(0x48cae4, 0.48);
+        g.fillRoundedRect(2, 9, 60, 12, 7);
+        g.fillStyle(0xcaf0f8, 0.88);
+        g.fillRoundedRect(4, 5, 56, 12, 6);
+        g.fillCircle(16, 10, 8);
+        g.fillCircle(32, 8, 9);
+        g.fillCircle(48, 10, 8);
+        g.lineStyle(1.8, 0x90e0ef, 0.95);
+        g.strokeEllipse(20, 11, 16, 7);
+        g.strokeEllipse(44, 11, 16, 7);
+        g.generateTexture('platform_cloud_fading', 64, 24);
+
         // 27. Act III: Дніпрова Русалка ('enemy_rusalka') & Water-Lily Surface Wreath ('rusalka_wreath')
         g.clear();
         // Shimmering turquoise water ripple & flower wreath on water surface
@@ -868,35 +903,102 @@
         g.fillCircle(18, 7, 5);
         g.generateTexture('tidal_wave', 34, 26);
 
-        // Boss of Act III: Водяний Цар Дніпрових Порогів ('boss_vodyanyk_tsar')
+        // Thrown Aqua-Gold Trident Projectile ('vodyanyk_trident_proj')
         g.clear();
-        // Swirling whirlpool base & royal river cloak
-        g.fillStyle(0x03045e, 0.95);
-        g.fillRoundedRect(16, 26, 60, 62, 14);
+        g.fillStyle(0x00b4d8, 0.45);
+        g.fillEllipse(19, 8, 34, 10);
+        g.lineStyle(3, 0xffd166, 1);
+        g.lineBetween(3, 8, 30, 8);
+        g.lineBetween(26, 3, 26, 13);
+        g.lineBetween(26, 3, 35, 4);
+        g.lineBetween(26, 8, 37, 8);
+        g.lineBetween(26, 13, 35, 12);
+        g.fillStyle(0x00f5d4, 1);
+        g.fillCircle(24, 8, 3);
+        g.generateTexture('vodyanyk_trident_proj', 38, 16);
+
+        // Boss of Act III: Водяний Цар Дніпрових Порогів ('boss_vodyanyk_tsar' — 150x150)
+        g.clear();
+        // 1. Foaming Dnipro whirlpool pedestal at base
+        g.fillStyle(0x023e8a, 0.9);
+        g.fillEllipse(75, 136, 98, 22);
+        g.lineStyle(3, 0x90e0ef, 0.85);
+        g.strokeEllipse(75, 136, 86, 16);
+        g.fillStyle(0xcaf0f8, 0.8);
+        g.fillEllipse(52, 138, 22, 8);
+        g.fillEllipse(98, 138, 22, 8);
+
+        // 2. Royal deep-river scale mantle & armored cloak
+        g.fillStyle(0x03045e, 0.98);
+        g.fillRoundedRect(28, 44, 88, 92, 22);
         g.fillStyle(0x0077b6, 1);
-        g.fillRoundedRect(22, 28, 48, 44, 10);
-        // Flowing sea-foam & emerald beard
-        g.fillStyle(0x80ffdb, 0.95);
-        g.fillTriangle(24, 34, 68, 34, 46, 76);
-        // Head & Golden Shell/Reed Crown
+        g.fillRoundedRect(36, 48, 72, 76, 16);
+        // Scale pattern on chest armor
+        g.lineStyle(2, 0x00b4d8, 0.75);
+        for (let row = 0; row < 3; row++) {
+          for (let col = 0; col < 3; col++) {
+            g.strokeCircle(54 + col * 18, 66 + row * 16, 7);
+          }
+        }
+
+        // 3. River-shell & reed pauldrons (наплічники з річкових мушель)
+        g.fillStyle(0x1d3557, 1);
+        g.fillEllipse(34, 56, 28, 20);
+        g.fillEllipse(110, 56, 28, 20);
+        g.lineStyle(2.5, 0xffd166, 0.9);
+        g.strokeEllipse(34, 56, 28, 20);
+        g.strokeEllipse(110, 56, 28, 20);
+
+        // 4. Lush cascading sea-foam & duckweed beard with river pearls
+        g.fillStyle(0x52b788, 0.95);
+        g.fillTriangle(38, 52, 106, 52, 72, 124);
+        g.fillStyle(0x80ffdb, 0.92);
+        g.fillTriangle(44, 54, 100, 54, 72, 114);
+        g.fillStyle(0xffea00, 0.95);
+        g.fillCircle(62, 82, 3);
+        g.fillCircle(82, 86, 3);
+        g.fillCircle(72, 100, 3.5);
+
+        // 5. Broad river-spirit head, gill fins & fierce glowing eyes
+        g.fillStyle(0x0096c7, 1);
+        g.fillTriangle(30, 36, 44, 28, 44, 46);
+        g.fillTriangle(114, 36, 100, 28, 100, 46);
         g.fillStyle(0x00b4d8, 1);
-        g.fillRoundedRect(28, 12, 36, 24, 8);
-        g.fillStyle(0xffd166, 1);
-        g.fillTriangle(28, 13, 34, 2, 40, 13);
-        g.fillTriangle(40, 13, 46, 0, 52, 13);
-        g.fillTriangle(52, 13, 58, 2, 64, 13);
-        // Glowing golden-cyan eyes
+        g.fillRoundedRect(42, 22, 60, 36, 12);
+        // Thick turquoise eyebrows
+        g.lineStyle(4, 0x03045e, 1);
+        g.lineBetween(48, 32, 66, 35);
+        g.lineBetween(96, 32, 78, 35);
+        // Glowing golden-cyan Tsar eyes
         g.fillStyle(0xffea00, 1);
-        g.fillCircle(39, 23, 4);
-        g.fillCircle(53, 23, 4);
-        // Golden River Trident (Тризуб Водяного Царя)
-        g.lineStyle(4, 0xffd166, 1);
-        g.lineBetween(74, 14, 74, 86);
-        g.lineBetween(66, 16, 82, 16);
-        g.lineBetween(66, 16, 66, 5);
-        g.lineBetween(74, 16, 74, 2);
-        g.lineBetween(82, 16, 82, 5);
-        g.generateTexture('boss_vodyanyk_tsar', 92, 92);
+        g.fillCircle(58, 39, 5.5);
+        g.fillCircle(86, 39, 5.5);
+        g.fillStyle(0x00f5d4, 1);
+        g.fillCircle(59, 39, 2.5);
+        g.fillCircle(87, 39, 2.5);
+
+        // 6. Tall Golden Shell & Reed Crown (Корона Водяного Царя)
+        g.fillStyle(0xffd166, 1);
+        g.fillRoundedRect(44, 18, 56, 7, 3);
+        g.fillTriangle(44, 20, 53, 5, 62, 20);
+        g.fillTriangle(60, 20, 72, 1, 84, 20);
+        g.fillTriangle(82, 20, 91, 5, 100, 20);
+        g.fillStyle(0x00f5d4, 1);
+        g.fillCircle(72, 12, 4.5);
+        g.fillCircle(53, 14, 3);
+        g.fillCircle(91, 14, 3);
+
+        // 7. Mighty Golden River Trident (Тризуб Славутича) held on the right
+        g.lineStyle(5, 0xffd166, 1);
+        g.lineBetween(124, 22, 124, 142);
+        g.lineBetween(110, 28, 138, 28);
+        g.lineBetween(110, 28, 110, 8);
+        g.lineBetween(124, 28, 124, 2);
+        g.lineBetween(138, 28, 138, 8);
+        // Glowing cyan orb at trident crossguard
+        g.fillStyle(0x00f5d4, 1);
+        g.fillCircle(124, 28, 6);
+        g.generateTexture('boss_vodyanyk_tsar', 150, 150);
 
         // Giant River Catfish ('giant_catfish' — Річковий Сом Вусань)
         g.clear();

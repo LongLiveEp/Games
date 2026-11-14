@@ -53,6 +53,8 @@
         this.waterRescueCooldownUntil = 0;
         this.lastSafePerch = { x: 140, y: CONFIG.GROUND_Y - 45 };
         this.activeSpeechBubble = null;
+        this.isBossIntroPlaying = false;
+        this.bossIntroTriggered = false;
 
         // Steppe Wind & Coastal Wave state for Act IV
         this.isWindGustActive = false;
@@ -74,6 +76,7 @@
         this.dryGroundGroup = this.physics.add.staticGroup();
         this.cloudPlatforms = [];
         this.waterGeysers = [];
+        this.dniproWhirlpools = [];
         this.coastalWavePlatforms = [];
         this.crystalPlatforms = [];
         this.isSaltMountainCracked = false;
@@ -100,78 +103,119 @@
             groundVisual.fillEllipse(wx + 32, CONFIG.GROUND_Y + 26, 54, 8);
           }
 
-          // Build the wooden Cossack bridges & piers over the Dnipro (starting bridge, 2 checkpoint bridges, final catfish pier)
+          // Build the wooden Cossack bridges, side log-rafts & Boss Deck over the Dnipro
           const bridgeFg = this.add.graphics().setDepth(17);
+          const arenaStartX = this.levelData.bossArenaStartX || 7100;
+
+          // Dark storm clouds & background maelstrom vortex in the Boss Arena (x: 7100..8400)
+          const arenaSkyClouds = this.add.graphics().setDepth(6);
+          for (let cx = arenaStartX + 60; cx < this.worldWidth - 40; cx += 165) {
+            arenaSkyClouds.fillStyle(0x0b192c, 0.82);
+            arenaSkyClouds.fillEllipse(cx, 54 + (cx % 2) * 12, 195, 54);
+            arenaSkyClouds.fillStyle(0x162a45, 0.72);
+            arenaSkyClouds.fillEllipse(cx + 36, 44 + (cx % 3) * 8, 145, 42);
+            arenaSkyClouds.fillStyle(0x48cae4, 0.16);
+            arenaSkyClouds.fillEllipse(cx - 12, 68, 120, 18);
+          }
+
+          const deckCenterX = (CONFIG.DNIPRO.BOSS_DECK_START_X + CONFIG.DNIPRO.BOSS_DECK_END_X) / 2;
+          this.bossArenaWhirlpoolBg = this.add.graphics({ x: deckCenterX, y: CONFIG.GROUND_Y + 24 }).setDepth(15);
+          this.bossArenaWhirlpoolBg.fillStyle(0x011126, 0.85);
+          this.bossArenaWhirlpoolBg.fillEllipse(0, 0, 560, 44);
+          this.bossArenaWhirlpoolBg.lineStyle(3, 0x00b4d8, 0.45);
+          this.bossArenaWhirlpoolBg.strokeEllipse(0, 0, 490, 36);
+          this.bossArenaWhirlpoolBg.lineStyle(2.5, 0x90e0ef, 0.6);
+          this.bossArenaWhirlpoolBg.strokeEllipse(0, 0, 340, 24);
+          this.bossArenaWhirlpoolBg.lineStyle(2, 0xcaf0f8, 0.75);
+          this.bossArenaWhirlpoolBg.strokeEllipse(0, 0, 190, 14);
+          this.bossArenaVortexPhase = 0;
+
           (this.levelData.dryIslands || []).forEach(isl => {
             const startX = isl.startX !== undefined ? isl.startX : (isl.x - isl.w / 2);
             const endX = isl.endX !== undefined ? isl.endX : (isl.x + isl.w / 2);
             const islW = endX - startX;
             const islCenterX = startX + islW / 2;
 
-            // 1. Deep oak bridge pilings (дубові палі місточка у воді) & diagonal timber cross-braces
-            for (let px = startX + 22; px <= endX - 18; px += 58) {
-              // Diagonal cross-braces under bridge deck
-              if (px + 58 <= endX - 10) {
-                groundVisual.lineStyle(4, 0x3d2314, 0.9);
-                groundVisual.lineBetween(px + 6, CONFIG.GROUND_Y + 6, px + 56, CONFIG.GROUND_Y + 52);
-                groundVisual.lineBetween(px + 56, CONFIG.GROUND_Y + 6, px + 6, CONFIG.GROUND_Y + 52);
+            if (isl.isRaft) {
+              // Side Log-Rafts (бічні колоди-плоти на воді в арені Водяного Царя)
+              groundVisual.fillStyle(0xcaf0f8, 0.55);
+              groundVisual.fillEllipse(islCenterX, CONFIG.GROUND_Y + 6, islW + 22, 16);
+
+              for (let lx = startX + 10; lx <= endX - 14; lx += 26) {
+                groundVisual.fillStyle(0x4a2c11, 1);
+                groundVisual.fillRoundedRect(lx - 8, CONFIG.GROUND_Y - 8, 24, 22, 7);
+                groundVisual.fillStyle(0x7f4f24, 1);
+                groundVisual.fillRoundedRect(lx - 6, CONFIG.GROUND_Y - 7, 20, 10, 4);
+                groundVisual.fillStyle(0x3d2314, 1);
+                groundVisual.fillCircle(lx + 4, CONFIG.GROUND_Y + 2, 4);
               }
-              // Vertical oak piling column
-              groundVisual.fillStyle(0x4a2c11, 1);
-              groundVisual.fillRoundedRect(px - 6, CONFIG.GROUND_Y - 4, 14, groundH + 8, 3);
-              groundVisual.fillStyle(0x6f4518, 1);
-              groundVisual.fillRect(px - 3, CONFIG.GROUND_Y - 2, 5, groundH + 4);
-              // Water foam ring around each wooden piling
-              groundVisual.fillStyle(0xcaf0f8, 0.75);
-              groundVisual.fillEllipse(px + 1, CONFIG.GROUND_Y + 8, 26, 6);
-            }
-
-            // 2. Heavy horizontal oak support beam under bridge planks
-            groundVisual.fillStyle(0x583101, 1);
-            groundVisual.fillRoundedRect(startX - 4, CONFIG.GROUND_Y - 2, islW + 8, 16, 4);
-
-            // 3. Individual warm wooden boardwalk planks (дощатий настил місточка)
-            groundVisual.fillStyle(0x8a5a36, 1);
-            groundVisual.fillRoundedRect(startX, CONFIG.GROUND_Y - 10, islW, 12, 4);
-            groundVisual.fillStyle(0xb07d4f, 1);
-            groundVisual.fillRect(startX + 4, CONFIG.GROUND_Y - 10, islW - 8, 5);
-            groundVisual.lineStyle(2, 0x3d2314, 0.95);
-            for (let bx = startX + 14; bx < endX - 6; bx += 18) {
-              groundVisual.lineBetween(bx, CONFIG.GROUND_Y - 10, bx, CONFIG.GROUND_Y + 2);
-            }
-
-            // 4. Bridge handrail posts & sagging hemp ropes above deck (поручні місточка)
-            let prevPostX = null;
-            for (let postX = startX + 24; postX <= endX - 20; postX += 86) {
-              bridgeFg.fillStyle(0x583101, 1);
-              bridgeFg.fillRoundedRect(postX - 4, CONFIG.GROUND_Y - 42, 9, 34, 2);
-              bridgeFg.fillStyle(0xd4a373, 1);
-              bridgeFg.fillCircle(postX + 0.5, CONFIG.GROUND_Y - 43, 5);
-
-              if (prevPostX !== null) {
-                bridgeFg.lineStyle(2.5, 0xe9c46a, 0.9);
-                bridgeFg.beginPath();
-                bridgeFg.moveTo(prevPostX, CONFIG.GROUND_Y - 36);
-                bridgeFg.lineTo((prevPostX + postX) / 2, CONFIG.GROUND_Y - 29);
-                bridgeFg.lineTo(postX, CONFIG.GROUND_Y - 36);
-                bridgeFg.strokePath();
+              // Hemp rope lashings binding the logs together
+              bridgeFg.fillStyle(0xe9c46a, 0.95);
+              bridgeFg.fillRoundedRect(startX + 6, CONFIG.GROUND_Y - 5, islW - 12, 4, 2);
+              bridgeFg.fillRoundedRect(startX + 6, CONFIG.GROUND_Y + 2, islW - 12, 4, 2);
+            } else {
+              // 1. Deep oak bridge pilings (дубові палі місточка / помосту у воді) & diagonal timber cross-braces
+              const pilingColor = isl.isBossDeck ? 0x2b1d14 : 0x4a2c11;
+              const highlightColor = isl.isBossDeck ? 0x4a3525 : 0x6f4518;
+              for (let px = startX + 22; px <= endX - 18; px += 58) {
+                if (px + 58 <= endX - 10) {
+                  groundVisual.lineStyle(4, 0x2b1810, 0.9);
+                  groundVisual.lineBetween(px + 6, CONFIG.GROUND_Y + 6, px + 56, CONFIG.GROUND_Y + 52);
+                  groundVisual.lineBetween(px + 56, CONFIG.GROUND_Y + 6, px + 6, CONFIG.GROUND_Y + 52);
+                }
+                groundVisual.fillStyle(pilingColor, 1);
+                groundVisual.fillRoundedRect(px - 6, CONFIG.GROUND_Y - 4, 14, groundH + 8, 3);
+                groundVisual.fillStyle(highlightColor, 1);
+                groundVisual.fillRect(px - 3, CONFIG.GROUND_Y - 2, 5, groundH + 4);
+                groundVisual.fillStyle(0xcaf0f8, 0.75);
+                groundVisual.fillEllipse(px + 1, CONFIG.GROUND_Y + 8, 26, 6);
               }
-              prevPostX = postX;
-            }
 
-            // On the starting wooden bridge (startX === 0), add a signpost guiding Omelko onto the first cloud!
-            if (startX === 0) {
-              bridgeFg.fillStyle(0x583101, 1);
-              bridgeFg.fillRect(205, CONFIG.GROUND_Y - 76, 8, 68);
-              bridgeFg.fillStyle(0xffd166, 1);
-              bridgeFg.fillRoundedRect(122, CONFIG.GROUND_Y - 78, 174, 26, 5);
-              bridgeFg.lineStyle(2, 0x583101, 1);
-              bridgeFg.strokeRoundedRect(122, CONFIG.GROUND_Y - 78, 174, 26, 5);
-              this.add.text(209, CONFIG.GROUND_Y - 65, 'Місточок → На хмаринки!', {
-                fontSize: '12px',
-                fontStyle: 'bold',
-                color: '#3d2314'
-              }).setOrigin(0.5).setDepth(22);
+              // 2. Heavy horizontal oak support beam under planks
+              groundVisual.fillStyle(isl.isBossDeck ? 0x1d3557 : 0x583101, 1);
+              groundVisual.fillRoundedRect(startX - 4, CONFIG.GROUND_Y - 2, islW + 8, 16, 4);
+
+              // 3. Individual wooden boardwalk planks
+              groundVisual.fillStyle(isl.isBossDeck ? 0x415a77 : 0x8a5a36, 1);
+              groundVisual.fillRoundedRect(startX, CONFIG.GROUND_Y - 10, islW, 12, 4);
+              groundVisual.fillStyle(isl.isBossDeck ? 0x778da9 : 0xb07d4f, 1);
+              groundVisual.fillRect(startX + 4, CONFIG.GROUND_Y - 10, islW - 8, 5);
+              groundVisual.lineStyle(2, 0x1b263b, 0.95);
+              for (let bx = startX + 14; bx < endX - 6; bx += 18) {
+                groundVisual.lineBetween(bx, CONFIG.GROUND_Y - 10, bx, CONFIG.GROUND_Y + 2);
+              }
+
+              if (isl.isBossDeck) {
+                // Carved Trident Totem Posts at both ends of «Поміст Водяного Царя»
+                [startX + 18, endX - 18].forEach(totemX => {
+                  bridgeFg.fillStyle(0x1d3557, 1);
+                  bridgeFg.fillRoundedRect(totemX - 6, CONFIG.GROUND_Y - 56, 12, 48, 3);
+                  bridgeFg.fillStyle(0x00f5d4, 0.9);
+                  bridgeFg.fillCircle(totemX, CONFIG.GROUND_Y - 60, 7);
+                  bridgeFg.lineStyle(2.5, 0x90e0ef, 0.95);
+                  bridgeFg.strokeCircle(totemX, CONFIG.GROUND_Y - 60, 10);
+                });
+              } else {
+                // 4. Bridge handrail posts & sagging hemp ropes above deck (поручні місточка)
+                let prevPostX = null;
+                for (let postX = startX + 24; postX <= endX - 20; postX += 86) {
+                  bridgeFg.fillStyle(0x583101, 1);
+                  bridgeFg.fillRoundedRect(postX - 4, CONFIG.GROUND_Y - 42, 9, 34, 2);
+                  bridgeFg.fillStyle(0xd4a373, 1);
+                  bridgeFg.fillCircle(postX + 0.5, CONFIG.GROUND_Y - 43, 5);
+
+                  if (prevPostX !== null) {
+                    bridgeFg.lineStyle(2.5, 0xe9c46a, 0.9);
+                    bridgeFg.beginPath();
+                    bridgeFg.moveTo(prevPostX, CONFIG.GROUND_Y - 36);
+                    bridgeFg.lineTo((prevPostX + postX) / 2, CONFIG.GROUND_Y - 29);
+                    bridgeFg.lineTo(postX, CONFIG.GROUND_Y - 36);
+                    bridgeFg.strokePath();
+                  }
+                  prevPostX = postX;
+                }
+              }
+
             }
 
             const dryBody = this.add.rectangle(islCenterX, CONFIG.GROUND_Y + 10, islW, 24, 0x000000, 0);
@@ -180,26 +224,58 @@
             this.dryGroundGroup.add(dryBody);
           });
 
-          // Waiting Giant River Catfish ("Річковий Сом Вусань") at the far edge of the final pier!
-          this.waitingCatfish = this.add.image(4705, CONFIG.GROUND_Y + 4, 'giant_catfish')
+          // Captive Giant River Catfish ("Річковий Сом Вусань") inside a woven reed cage ("верша") on the right raft!
+          const catfishDockX = this.levelData.catfishDockX || (this.worldWidth - 155);
+          this.isCatfishFreed = false;
+          this.catfishCageBack = this.add.graphics({ x: catfishDockX, y: CONFIG.GROUND_Y - 12 }).setDepth(25);
+          this.catfishCageBack.fillStyle(0x2b1d0e, 0.55);
+          this.catfishCageBack.fillRoundedRect(-64, -36, 128, 56, 16);
+
+          this.waitingCatfish = this.add.image(catfishDockX, CONFIG.GROUND_Y - 4, 'giant_catfish')
             .setFlipX(true)
             .setDepth(26);
           this.tweens.add({
             targets: this.waitingCatfish,
-            y: CONFIG.GROUND_Y - 2,
-            duration: 1100,
+            y: CONFIG.GROUND_Y - 9,
+            angle: { from: -2.5, to: 2.5 },
+            duration: 1350,
             yoyo: true,
             repeat: -1,
             ease: 'Sine.easeInOut'
           });
-          this.add.text(4695, CONFIG.GROUND_Y - 58, '🐟 Річковий Сом Вусань\n(Чекає після перемоги над Водяним Царем)', {
-            fontSize: '12px',
-            fontStyle: 'bold',
-            color: '#90e0ef',
-            align: 'center',
-            backgroundColor: '#031d38d8',
-            padding: { x: 8, y: 4 }
-          }).setOrigin(0.5).setDepth(27);
+
+          // Woven willow & reed cage bars in front of the Catfish
+          this.catfishCageFront = this.add.graphics({ x: catfishDockX, y: CONFIG.GROUND_Y - 12 }).setDepth(28);
+          this.catfishCageFront.lineStyle(4, 0x6f4518, 0.95);
+          this.catfishCageFront.strokeRoundedRect(-64, -36, 128, 56, 16);
+          for (let bx = -48; bx <= 48; bx += 16) {
+            this.catfishCageFront.lineStyle(3.5, 0x8a5a36, 0.92);
+            this.catfishCageFront.lineBetween(bx, -35, bx, 19);
+          }
+          // Horizontal woven reed hoops
+          this.catfishCageFront.lineStyle(3, 0xd4a373, 0.9);
+          this.catfishCageFront.lineBetween(-62, -16, 62, -16);
+          this.catfishCageFront.lineBetween(-62, 4, 62, 4);
+
+          // Sad bubbles rising from the captive Catfish inside the cage
+          this.catfishCageBubbles = [];
+          for (let bi = 0; bi < 4; bi++) {
+            const b = this.add.circle(
+              catfishDockX - 28 + bi * 16,
+              CONFIG.GROUND_Y - 14 - bi * 9,
+              3 + (bi % 2) * 1.5,
+              0xcaf0f8,
+              0.75
+            ).setDepth(27);
+            this.catfishCageBubbles.push({
+              sprite: b,
+              baseX: catfishDockX - 28 + bi * 16,
+              offsetY: bi * 12,
+              phase: bi * 1.4
+            });
+          }
+
+          this.waitingCatfishLabel = null;
 
           // Create Dnipro Water Geyser Traps between cloud platforms
           (this.levelData.geysers || []).forEach((gz, idx) => {
@@ -213,12 +289,36 @@
               .setVisible(false);
             this.waterGeysers.push({
               x: gz.x,
-              phaseOffset: idx * 750,
-              period: gz.period || 2500,
+              phaseOffset: gz.offsetMs !== undefined ? gz.offsetMs : (idx * 750),
+              period: gz.period || CONFIG.DNIPRO.GEYSER_PERIOD_MS,
               nozzle,
               column,
               cap,
               isErupting: false
+            });
+          });
+
+          // Create Dnipro Whirlpool Hazards ("Вири") on the water surface
+          (this.levelData.whirlpools || []).forEach(wp => {
+            const radius = wp.radius || CONFIG.DNIPRO.WHIRLPOOL_RADIUS_X;
+            const outerRing = this.add.ellipse(wp.x, CONFIG.GROUND_Y + 8, radius * 1.15, 22, 0x0077b6, 0.55).setDepth(22);
+            const vortex = this.add.graphics({ x: wp.x, y: CONFIG.GROUND_Y + 8 }).setDepth(23);
+            vortex.lineStyle(3, 0x90e0ef, 0.8);
+            vortex.strokeEllipse(0, 0, 86, 16);
+            vortex.lineStyle(2.5, 0xcaf0f8, 0.9);
+            vortex.strokeEllipse(0, 0, 48, 9);
+            vortex.fillStyle(0x021024, 0.95);
+            vortex.fillEllipse(0, 0, 22, 6);
+
+            this.dniproWhirlpools.push({
+              x: wp.x,
+              radius,
+              pullStrength: wp.pullStrength || CONFIG.DNIPRO.WHIRLPOOL_PULL_GROUND,
+              pullAirStrength: wp.pullAirStrength || CONFIG.DNIPRO.WHIRLPOOL_PULL_AIR,
+              outerRing,
+              vortex,
+              spinPhase: Math.random() * Math.PI * 2,
+              lastHintTime: 0
             });
           });
         } else if (isLevel2) {
@@ -312,65 +412,59 @@
           });
 
           // ==================================================================
-          // 3. ARENA «СОЛЯНА ГОРА» (x: 6240 .. 7200): SUNSET SALT LAKE, BAGS OF SALT & PINK BRINE
+          // 3. ARENA «СОЛЯНА ГОРА» (x: 6240 .. 7500): SPACIOUS CRYSTALLINE SALT BATTLEGROUND
           // ==================================================================
           const arenaX = this.levelData.bossArenaStartX; // 6240
-          // Solid crystalline salt shore on left/center of arena (6240 .. 6760)
+          const solidSaltWidth = 1120; // 6240 .. 7360 is 100% solid crystalline salt shore!
+          groundVisual.fillStyle(0x3a1c38, 1);
+          groundVisual.fillRect(arenaX, CONFIG.GROUND_Y, solidSaltWidth, groundH);
+          groundVisual.fillStyle(0xd8b4e2, 0.45);
+          groundVisual.fillRect(arenaX, CONFIG.GROUND_Y + 14, solidSaltWidth, 34);
           groundVisual.fillStyle(0xffe5ec, 0.96);
-          groundVisual.fillRect(arenaX, CONFIG.GROUND_Y, 520, 14);
+          groundVisual.fillRect(arenaX, CONFIG.GROUND_Y, solidSaltWidth, 16);
           groundVisual.fillStyle(0xffffff, 0.98);
-          groundVisual.fillRect(arenaX, CONFIG.GROUND_Y, 520, 5);
+          groundVisual.fillRect(arenaX, CONFIG.GROUND_Y, solidSaltWidth, 6);
 
-          // Deep glowing pink salt lake water on right side of arena under Salyonohorych (6760 .. 7200)
+          // Decorative pink salt lake water at the far right edge behind Salyonohorych (7360 .. 7500)
           groundVisual.fillStyle(0x590d22, 1);
-          groundVisual.fillRect(6760, CONFIG.GROUND_Y, this.worldWidth - 6760, groundH);
+          groundVisual.fillRect(7360, CONFIG.GROUND_Y, this.worldWidth - 7360, groundH);
           groundVisual.fillStyle(0xc9184a, 0.92);
-          groundVisual.fillRect(6760, CONFIG.GROUND_Y, this.worldWidth - 6760, 44);
+          groundVisual.fillRect(7360, CONFIG.GROUND_Y, this.worldWidth - 7360, 44);
           groundVisual.fillStyle(0xff758f, 0.92);
-          groundVisual.fillRect(6760, CONFIG.GROUND_Y, this.worldWidth - 6760, 16);
-          // Sunset golden-pink reflections across the salt lake water
-          for (let rx = 6780; rx < this.worldWidth - 20; rx += 54) {
-            groundVisual.fillStyle(0xffd166, 0.55);
-            groundVisual.fillEllipse(rx, CONFIG.GROUND_Y + 7, 38, 5);
-            groundVisual.fillStyle(0xffcad4, 0.7);
-            groundVisual.fillEllipse(rx + 22, CONFIG.GROUND_Y + 20, 42, 6);
-          }
+          groundVisual.fillRect(7360, CONFIG.GROUND_Y, this.worldWidth - 7360, 16);
 
-          // Stacked burlap sacks of Chumak salt (мішки солі) in the arena
-          [6275, 6312, 6560, 6725].forEach((bagX, bIdx) => {
-            // Burlap sack body
-            coastDecor.fillStyle(0xd4a373, 1);
-            coastDecor.fillRoundedRect(bagX - 16, CONFIG.GROUND_Y - 26, 32, 28, 7);
-            coastDecor.lineStyle(2, 0x6f4518, 0.9);
-            coastDecor.strokeRoundedRect(bagX - 16, CONFIG.GROUND_Y - 26, 32, 28, 7);
-            // Overflowing white-pink crystalline salt top
-            coastDecor.fillStyle(0xffffff, 1);
-            coastDecor.fillEllipse(bagX, CONFIG.GROUND_Y - 24, 24, 10);
-            coastDecor.fillStyle(0xffcad4, 0.85);
-            coastDecor.fillEllipse(bagX + 3, CONFIG.GROUND_Y - 25, 14, 6);
-            // Red ribbon tie
-            coastDecor.fillStyle(0xc1121f, 1);
-            coastDecor.fillRect(bagX - 12, CONFIG.GROUND_Y - 19, 24, 3);
+          // Stacked burlap sacks of Chumak salt (мішки солі) in the arena background (depth 14, behind Omelko!)
+          const arenaBagsDecor = this.add.graphics().setDepth(14);
+          [6285, 6545, 6765, 7010].forEach((bagX, bIdx) => {
+            arenaBagsDecor.fillStyle(0xd4a373, 1);
+            arenaBagsDecor.fillRoundedRect(bagX - 16, CONFIG.GROUND_Y - 26, 32, 28, 7);
+            arenaBagsDecor.lineStyle(2, 0x6f4518, 0.9);
+            arenaBagsDecor.strokeRoundedRect(bagX - 16, CONFIG.GROUND_Y - 26, 32, 28, 7);
+            arenaBagsDecor.fillStyle(0xffffff, 1);
+            arenaBagsDecor.fillEllipse(bagX, CONFIG.GROUND_Y - 24, 24, 10);
+            arenaBagsDecor.fillStyle(0xffcad4, 0.85);
+            arenaBagsDecor.fillEllipse(bagX + 3, CONFIG.GROUND_Y - 25, 14, 6);
+            arenaBagsDecor.fillStyle(0xc1121f, 1);
+            arenaBagsDecor.fillRect(bagX - 12, CONFIG.GROUND_Y - 19, 24, 3);
             if (bIdx % 2 === 1) {
-              // Second leaning salt sack
-              coastDecor.fillStyle(0xbc8a5f, 1);
-              coastDecor.fillRoundedRect(bagX + 10, CONFIG.GROUND_Y - 20, 26, 22, 6);
-              coastDecor.fillStyle(0xffffff, 0.95);
-              coastDecor.fillEllipse(bagX + 23, CONFIG.GROUND_Y - 19, 18, 7);
+              arenaBagsDecor.fillStyle(0xbc8a5f, 1);
+              arenaBagsDecor.fillRoundedRect(bagX + 10, CONFIG.GROUND_Y - 20, 26, 22, 6);
+              arenaBagsDecor.fillStyle(0xffffff, 0.95);
+              arenaBagsDecor.fillEllipse(bagX + 23, CONFIG.GROUND_Y - 19, 18, 7);
             }
           });
 
-          // Giant Crystalline Salt Mountain Monument behind the Boss Arena (x: 6640 .. 7200)
-          this.saltMountainArenaGraphic = this.add.graphics().setDepth(15);
-          this.saltMountainArenaGraphic.fillStyle(0xe2eafc, 0.95);
-          this.saltMountainArenaGraphic.fillTriangle(6640, CONFIG.GROUND_Y + 4, 6960, 48, 7200, CONFIG.GROUND_Y + 4);
-          this.saltMountainArenaGraphic.fillStyle(0xffffff, 0.98);
-          this.saltMountainArenaGraphic.fillTriangle(6730, CONFIG.GROUND_Y + 4, 6960, 48, 7130, CONFIG.GROUND_Y + 4);
+          // Giant Crystalline Salt Mountain Monument behind the Boss Arena (x: 6880 .. 7490, depth 12)
+          this.saltMountainArenaGraphic = this.add.graphics().setDepth(12);
+          this.saltMountainArenaGraphic.fillStyle(0xe2eafc, 0.92);
+          this.saltMountainArenaGraphic.fillTriangle(6880, CONFIG.GROUND_Y + 4, 7240, 44, 7495, CONFIG.GROUND_Y + 4);
+          this.saltMountainArenaGraphic.fillStyle(0xffffff, 0.96);
+          this.saltMountainArenaGraphic.fillTriangle(6980, CONFIG.GROUND_Y + 4, 7240, 44, 7420, CONFIG.GROUND_Y + 4);
           this.saltMountainArenaGraphic.fillStyle(0xffcad4, 0.78);
-          this.saltMountainArenaGraphic.fillTriangle(6610, CONFIG.GROUND_Y + 4, 6790, 148, 6930, CONFIG.GROUND_Y + 4);
+          this.saltMountainArenaGraphic.fillTriangle(6830, CONFIG.GROUND_Y + 4, 7040, 142, 7200, CONFIG.GROUND_Y + 4);
 
-          // Overlay graphics for Phase 4 Salt Mountain cracks
-          this.saltMountainCracksGraphic = this.add.graphics().setDepth(16);
+          // Overlay graphics for Stage 3 Salt Mountain cracks (depth 13)
+          this.saltMountainCracksGraphic = this.add.graphics().setDepth(13);
         } else {
           // Deep underground stone & catacomb stratum
           groundVisual.fillStyle(0x231912, 1);
@@ -451,8 +545,13 @@
               return;
             }
 
-            const isStorm = p.cloudType === 'storm';
-            const tex = isStorm ? 'platform_cloud_storm' : 'platform_cloud';
+            const cType = p.cloudType || 'normal';
+            const isStorm = cType === 'storm';
+            const tex = isStorm
+              ? 'platform_cloud_storm'
+              : (cType === 'crumbling'
+                ? 'platform_cloud_crumbling'
+                : (cType === 'fading' ? 'platform_cloud_fading' : 'platform_cloud'));
             const tile = this.add.tileSprite(p.x, p.y, p.w, 28, tex).setDepth(18);
             this.physics.add.existing(tile, true);
             this.platforms.add(tile);
@@ -471,10 +570,17 @@
               baseX: p.x,
               baseY: p.y,
               w: p.w,
-              cloudType: p.cloudType || 'normal',
+              cloudType: cType,
               moveRange: p.moveRange || p.moveX || 0,
               moveSpeed: p.moveSpeed || p.speed || 0.002,
               phase: idx * 1.15,
+              stormCycleMs: p.stormCycleMs || CONFIG.DNIPRO.STORM_CYCLE_MS,
+              stormOffset: p.stormOffset !== undefined ? p.stormOffset : Math.round(idx * 1.15 * 600),
+              fadeOffset: p.fadeOffset !== undefined ? p.fadeOffset : (idx * 900),
+              isCrumbling: false,
+              crumbleStartTime: 0,
+              isFallen: false,
+              respawnAt: 0,
               stormIcon,
               lastZapCycle: -1
             });
@@ -524,8 +630,11 @@
         });
 
         // 3. Create Checkpoints
+        const bossStartSpawnX = isLevel3
+          ? (this.levelData.bossArenaStartX + 95)
+          : (this.levelData.bossArenaStartX - 65);
         this.activeCheckpoint = (this.startAtBoss && this.levelData.bossArenaStartX)
-          ? { x: this.levelData.bossArenaStartX - 65, y: CONFIG.GROUND_Y - 45, id: 99 }
+          ? { x: bossStartSpawnX, y: CONFIG.GROUND_Y - 45, id: 99 }
           : { x: 120, y: CONFIG.GROUND_Y - 45, id: 0 };
         this.lastSafePerch = { x: this.activeCheckpoint.x, y: this.activeCheckpoint.y };
         this.checkpointObjects = [];
@@ -548,36 +657,8 @@
           } else if (isLevel2) {
             img.setTint(0x95d5b2);
           }
-          const lbl = this.add.text(
-            cp.x,
-            cp.y - 92,
-            GAME_STATE.isHardcore() ? '✖ Без чекпоїнтів' : '★ Чекпоїнт',
-            {
-              fontSize: '13px',
-              fontStyle: 'bold',
-              color: GAME_STATE.isHardcore() ? '#ff6b6b' : '#adb5bd'
-            }
-          ).setOrigin(0.5);
-          this.checkpointObjects.push({ ...cp, sprite: img, label: lbl, activated: false });
+          this.checkpointObjects.push({ ...cp, sprite: img, label: null, activated: false });
         });
-
-        // Boss Arena Gate Marker
-        this.add.text(
-          this.levelData.bossArenaStartX + 20,
-          CONFIG.GROUND_Y - 115,
-          isLevel4
-            ? STRINGS.STEPPE_ARENA_GATE
-            : (isLevel3
-              ? '⚠ ПОРОГИ ВОДЯНОГО ЦАРЯ ТА СОМА →'
-              : (isLevel2 ? '⚠ ГАЛЯВИНА ЧОРНОБОРА →' : '⚠ ПТАШИНИЙ ДВІР ПІВНЯ →')),
-          {
-            fontSize: '16px',
-            fontStyle: 'bold',
-            color: isLevel4 ? '#ffd166' : (isLevel3 ? '#48cae4' : (isLevel2 ? '#ff6b6b' : '#ffbe0b')),
-            backgroundColor: isLevel4 ? '#2b192e' : (isLevel3 ? '#031d38' : (isLevel2 ? '#1a0f1e' : '#2b2d42')),
-            padding: { x: 8, y: 4 }
-          }
-        );
 
         // 4. Create Player & Platform Collisions
         this.player = new Player(this, this.activeCheckpoint.x, this.activeCheckpoint.y);
@@ -591,20 +672,26 @@
           }
         });
         if (this.groundBody) {
-          this.physics.add.collider(
-            this.player.sprite,
-            this.groundBody,
-            null,
-            (playerSprite) => {
-              if (playerSprite.body.velocity.y < 0) return false;
-              if (this.time.now < this.player.dropThroughUntil) return false;
-              const prevBottom = playerSprite.body.prev.y + playerSprite.body.height;
-              if (prevBottom <= CONFIG.GROUND_Y + 14) return true;
-              if (playerSprite.body.bottom <= CONFIG.GROUND_Y + 28) return true;
-              return false;
-            },
-            this
-          );
+          if (isLevel4) {
+            // In Act IV there are no underground catacombs — groundBody is a 100% solid surface collider
+            this.groundBody.body.checkCollision.up = true;
+            this.physics.add.collider(this.player.sprite, this.groundBody);
+          } else {
+            this.physics.add.collider(
+              this.player.sprite,
+              this.groundBody,
+              null,
+              (playerSprite) => {
+                if (playerSprite.body.velocity.y < 0) return false;
+                if (this.time.now < this.player.dropThroughUntil) return false;
+                const prevBottom = playerSprite.body.prev.y + playerSprite.body.height;
+                if (prevBottom <= CONFIG.GROUND_Y + 14) return true;
+                if (playerSprite.body.bottom <= CONFIG.GROUND_Y + 28) return true;
+                return false;
+              },
+              this
+            );
+          }
         }
 
         // 5. Setup Camera with Lookahead Target & Deadzone
@@ -683,7 +770,13 @@
             this.enemies.push(head);
           });
         } else if (isLevel3) {
-          this.boss = new VodyanykTsarBoss(this, this.levelData.bossSpawnX, CONFIG.GROUND_Y - 58);
+          this.boss = new VodyanykTsarBoss(this, this.levelData.bossSpawnX, CONFIG.GROUND_Y - 68);
+          if (!GAME_STATE.hasSeenVodyanykIntro) {
+            // Keep Vodyanyk Tsar submerged beneath the Dnipro until his cutscene emergence
+            this.boss.sprite.setAlpha(0).setY(CONFIG.GROUND_Y + 60);
+            if (this.boss.barBg) this.boss.barBg.setVisible(false);
+            if (this.boss.barFill) this.boss.barFill.setVisible(false);
+          }
         } else if (isLevel2) {
           this.boss = new DarkLisovykBoss(this, this.levelData.bossSpawnX, CONFIG.GROUND_Y - 58);
         } else {
@@ -967,7 +1060,7 @@
 
           // Layer 1 (Far, scrollFactor 0.16): Distant Dnipro Granite Cliffs (Пороги) & Cossack Watchtowers
           const layer1 = this.add.graphics().setScrollFactor(0.16);
-          for (let x = 0; x < 2400; x += 260) {
+          for (let x = 0; x < 2600; x += 260) {
             layer1.fillStyle(0x16324f, 1);
             layer1.fillTriangle(x, gY, x + 110, gY - 190, x + 235, gY);
             layer1.fillStyle(0x1d3f5e, 1);
@@ -984,7 +1077,7 @@
 
           // Layer 2 (Mid, scrollFactor 0.4): Granite Boulders in the Dnipro Rapids & Weeping Willows
           const layer2 = this.add.graphics().setScrollFactor(0.4);
-          for (let x = 60; x < 3400; x += 210) {
+          for (let x = 60; x < 4200; x += 210) {
             // River granite boulder (дніпровський поріг)
             layer2.fillStyle(0x2a475e, 0.95);
             layer2.fillEllipse(x + 40, gY - 10, 120, 74);
@@ -997,7 +1090,7 @@
 
           // Layer 3 (Near, scrollFactor 0.72): Cattails / Reeds (очерет) & Drifting River Mist
           const layer3 = this.add.graphics().setScrollFactor(0.72);
-          for (let x = 30; x < 4800; x += 145) {
+          for (let x = 30; x < 6800; x += 145) {
             layer3.fillStyle(0x90e0ef, 0.12);
             layer3.fillEllipse(x + 65, gY - 16, 165, 28);
             // Tall Dnipro reeds (очерет і рогіз)
@@ -1185,6 +1278,28 @@
       update(time, delta) {
         if (this.isControlsModalOpen || this.isPaused || this.isDeathModalOpen || this.isVictory) return;
 
+        if (this.isBossIntroPlaying) {
+          if (this.player && this.player.sprite && this.player.sprite.body) {
+            this.player.sprite.body.setVelocityX(0);
+          }
+          const dtSec = Math.min(delta, 50) / 1000;
+          if (this.bossArenaWhirlpoolBg) {
+            this.bossArenaVortexPhase = (this.bossArenaVortexPhase || 0) + dtSec * 2.2;
+            this.bossArenaWhirlpoolBg.setScale(1 + Math.sin(this.bossArenaVortexPhase) * 0.06, 1);
+          }
+          if (this.catfishCageBubbles && !this.isCatfishFreed) {
+            this.catfishCageBubbles.forEach(b => {
+              b.offsetY = (b.offsetY + dtSec * 22) % 44;
+              b.sprite.setPosition(
+                b.baseX + Math.sin(time * 0.004 + b.phase) * 4,
+                CONFIG.GROUND_Y - 4 - b.offsetY
+              );
+              b.sprite.setAlpha(0.85 * (1 - b.offsetY / 44));
+            });
+          }
+          return;
+        }
+
         this.player.update(time, delta);
 
         // ====================================================================
@@ -1272,39 +1387,103 @@
             } else {
               this.activeCheckpoint = { x: cp.x, y: cp.y - 40, id: cp.id };
               this.lastSafePerch = { x: cp.x, y: cp.y - 42 };
-              cp.label.setText('★ Чекпоїнт активний!').setColor('#ffd166');
+              if (cp.sprite) cp.sprite.setTint(0xffd166);
               this.player.stamina = CONFIG.PLAYER.MAX_STAMINA;
               this.player.uzvarCharges = CONFIG.PLAYER.UZVAR_CHARGES;
               SFX.checkpoint();
-              this.showFloatingText(cp.x, cp.y - 125, cp.name, '#00f5d4');
             }
           }
         });
 
         // Activate Boss when Player enters Boss Arena
-        if (this.boss && !this.boss.active && this.player.sprite.x >= this.levelData.bossArenaStartX) {
-          this.boss.activate();
+        if (this.boss && !this.boss.active && !this.bossIntroTriggered && this.player.sprite.x >= this.levelData.bossArenaStartX) {
           if (this.currentLevel === 4) {
+            this.bossIntroTriggered = true;
+            this.boss.activate();
             SFX.playMusic('mus_boss_zmiy', { volume: 0.46 });
-            // Lock camera within the Salt Mountain Arena bounds (6240 .. 7200)
+            // Lock camera within the Salt Mountain Arena bounds (6240 .. 7500)
             this.cameras.main.setBounds(
               this.levelData.bossArenaStartX,
               0,
               this.worldWidth - this.levelData.bossArenaStartX,
               CONFIG.WORLD_HEIGHT
             );
+            if (!this.bossArenaLeftWall) {
+              this.bossArenaLeftWall = this.add.rectangle(
+                this.levelData.bossArenaStartX - 10,
+                CONFIG.WORLD_HEIGHT / 2,
+                20,
+                CONFIG.WORLD_HEIGHT,
+                0x000000,
+                0
+              );
+              this.physics.add.existing(this.bossArenaLeftWall, true);
+              this.physics.add.collider(this.player.sprite, this.bossArenaLeftWall);
+            }
+            this.activeCheckpoint = {
+              x: this.levelData.bossArenaStartX + 95,
+              y: CONFIG.GROUND_Y - 45,
+              id: 99
+            };
             this.lastSafePerch = { x: this.levelData.bossArenaStartX + 95, y: CONFIG.GROUND_Y - 42 };
             this.showFloatingText(this.levelData.bossArenaStartX + 460, 175, STRINGS.BOSS_ZMIY_NAME, '#ffd166');
             this.showOmelkoSpeech(STRINGS.OMELKO_REMARK_ZMIY_BOSS, 5400);
           } else if (this.currentLevel === 3) {
-            SFX.playMusic('mus_boss_vodyanyk', { volume: 0.46 });
-            this.showFloatingText(this.boss.sprite.x - 80, 195, STRINGS.BOSS_VODYANYK_NAME, '#48cae4');
-            this.showOmelkoSpeech(STRINGS.OMELKO_REMARK_VODYANYK_BOSS, 5200);
+            this.bossIntroTriggered = true;
+            // Lock camera within the Vodyanyk Tsar Arena bounds (7100 .. 8400)
+            this.cameras.main.setBounds(
+              this.levelData.bossArenaStartX,
+              0,
+              this.worldWidth - this.levelData.bossArenaStartX,
+              CONFIG.WORLD_HEIGHT
+            );
+            // Create an invisible left barrier wall so the player cannot leave the arena during the fight
+            if (!this.bossArenaLeftWall) {
+              this.bossArenaLeftWall = this.add.rectangle(
+                this.levelData.bossArenaStartX - 10,
+                CONFIG.WORLD_HEIGHT / 2,
+                20,
+                CONFIG.WORLD_HEIGHT,
+                0x000000,
+                0
+              );
+              this.physics.add.existing(this.bossArenaLeftWall, true);
+              this.physics.add.collider(this.player.sprite, this.bossArenaLeftWall);
+            }
+            this.activeCheckpoint = {
+              x: this.levelData.bossArenaStartX + 95,
+              y: CONFIG.GROUND_Y - 45,
+              id: 99
+            };
+            this.lastSafePerch = { x: this.levelData.bossArenaStartX + 115, y: CONFIG.GROUND_Y - 42 };
+
+            const startVodyanykFight = () => {
+              if (!this.boss) return;
+              this.boss.sprite.setAlpha(1).setPosition(this.boss.sprite.x, CONFIG.GROUND_Y - 68);
+              if (this.boss.sprite.body) {
+                this.boss.sprite.body.updateFromGameObject();
+              }
+              if (this.boss.barBg) this.boss.barBg.setVisible(true);
+              if (this.boss.barFill) this.boss.barFill.setVisible(true);
+              this.boss.activate();
+              SFX.playMusic('mus_boss_vodyanyk', { volume: 0.46 });
+              this.showFloatingText(this.boss.sprite.x - 80, 195, STRINGS.BOSS_VODYANYK_NAME, '#48cae4');
+            };
+
+            if (!GAME_STATE.hasSeenVodyanykIntro) {
+              GAME_STATE.hasSeenVodyanykIntro = true;
+              this.playBossIntro(STRINGS.VODYANYK_INTRO_LINES, startVodyanykFight);
+            } else {
+              startVodyanykFight();
+              this.showFloatingText(this.boss.sprite.x - 60, 155, STRINGS.BOSS_VODYANYK_RETRY_REMARK, '#90e0ef');
+            }
           } else if (this.currentLevel === 2) {
+            this.boss.activate();
             SFX.playMusic('mus_boss_chornobor', { volume: 0.46 });
             this.showFloatingText(this.boss.sprite.x - 80, 195, STRINGS.BOSS_LISOVYK_NAME, '#52b788');
             this.showOmelkoSpeech(STRINGS.OMELKO_REMARK_LISOVYK, 5200);
           } else {
+            this.boss.activate();
             SFX.playMusic('mus_boss_rooster', { volume: 0.45 });
             this.showFloatingText(this.boss.sprite.x - 80, 200, STRINGS.BOSS_NAME, '#ffbe0b');
             this.showOmelkoSpeech(STRINGS.OMELKO_REMARK_BOSS, 5200);
@@ -1376,9 +1555,19 @@
         const px = this.player.sprite.x;
         const py = this.player.sprite.y;
 
-        // 1. Update Moving Cloud Platforms & Electric Storm Cloud Traps
+        // 1. Update Cloud Platforms (Normal, Moving, Storm, Crumbling, Fading)
         this.cloudPlatforms.forEach(cp => {
-          if (cp.cloudType === 'moving' && cp.moveRange > 0) {
+          const standingOnThisCloud = (
+            this.player.sprite.body.blocked.down &&
+            cp.sprite.body &&
+            cp.sprite.body.enable &&
+            Math.abs(py + 24 - (cp.sprite.y - 14)) < 16 &&
+            Math.abs(px - cp.sprite.x) <= cp.w * 0.54
+          );
+
+          if (cp.cloudType === 'normal' && standingOnThisCloud) {
+            this.lastSafePerch = { x: cp.baseX, y: cp.baseY - 38 };
+          } else if (cp.cloudType === 'moving' && cp.moveRange > 0) {
             const prevX = cp.sprite.x;
             const newX = cp.baseX + Math.sin(time * cp.moveSpeed + cp.phase) * cp.moveRange;
             const dx = newX - prevX;
@@ -1395,20 +1584,30 @@
               this.lastSafePerch = { x: this.player.sprite.x, y: cp.sprite.y - 38 };
             }
           } else if (cp.cloudType === 'storm') {
-            // Storm clouds cycle every 2800ms: 0..1700 calm, 1700..2350 charging warning, 2350..2800 lightning strike!
-            const cycleMs = (time + Math.round(cp.phase * 600)) % 2800;
-            const cycleIndex = Math.floor((time + Math.round(cp.phase * 600)) / 2800);
+            // Storm clouds cycle every stormCycleMs (2800ms standard, 2200ms in Thunder Rapids)
+            const period = cp.stormCycleMs || CONFIG.DNIPRO.STORM_CYCLE_MS;
+            const warnAt = period * (1700 / 2800);
+            const strikeAt = period * (2350 / 2800);
+            const cycleMs = (time + cp.stormOffset) % period;
+            const cycleIndex = Math.floor((time + cp.stormOffset) / period);
 
-            if (cycleMs < 1700) {
+            if (cycleMs < warnAt) {
               cp.sprite.clearTint();
+              cp.sprite.setAlpha(1);
               if (cp.stormIcon) cp.stormIcon.setText('⚡').setAlpha(0.55).setScale(1);
-            } else if (cycleMs < 2350) {
-              // Warning phase: flash yellow-amber
-              cp.sprite.setTint((Math.floor(time / 90) % 2 === 0) ? 0xffea00 : 0x90e0ef);
-              if (cp.stormIcon) cp.stormIcon.setText('⚡!').setAlpha(1).setScale(1.25);
+              if (standingOnThisCloud) {
+                this.lastSafePerch = { x: cp.baseX, y: cp.baseY - 38 };
+              }
+            } else if (cycleMs < strikeAt) {
+              // Warning phase: smooth sinusoidal pulse (no strobe!)
+              const pulse = 0.5 + 0.5 * Math.sin((cycleMs - warnAt) * 0.014);
+              cp.sprite.setTint(pulse > 0.5 ? 0xffea00 : 0x90e0ef);
+              cp.sprite.setAlpha(0.85 + 0.15 * pulse);
+              if (cp.stormIcon) cp.stormIcon.setText('⚡!').setAlpha(0.8 + 0.2 * pulse).setScale(1.15 + 0.12 * pulse);
             } else {
               // Strike phase!
               cp.sprite.setTint(0xffea00);
+              cp.sprite.setAlpha(1);
               if (cp.lastZapCycle !== cycleIndex) {
                 cp.lastZapCycle = cycleIndex;
                 if (Math.abs(px - cp.sprite.x) < 380) {
@@ -1424,10 +1623,81 @@
                 }
               }
             }
+          } else if (cp.cloudType === 'crumbling') {
+            if (cp.isFallen) {
+              if (time >= cp.respawnAt) {
+                cp.isFallen = false;
+                cp.isCrumbling = false;
+                cp.sprite.setPosition(cp.baseX, cp.baseY);
+                cp.sprite.setAlpha(1).setVisible(true);
+                cp.sprite.body.enable = true;
+                cp.sprite.body.updateFromGameObject();
+              }
+            } else {
+              if (standingOnThisCloud) {
+                this.lastSafePerch = { x: cp.baseX, y: cp.baseY - 38 };
+                if (!cp.isCrumbling) {
+                  cp.isCrumbling = true;
+                  cp.crumbleStartTime = time;
+                }
+              }
+              if (cp.isCrumbling) {
+                const elapsed = time - cp.crumbleStartTime;
+                if (elapsed < CONFIG.DNIPRO.CRUMBLING_SHAKE_MS) {
+                  const shakeOffset = Math.sin(elapsed * 0.045) * 3.5;
+                  cp.sprite.x = cp.baseX + shakeOffset;
+                  cp.sprite.y = cp.baseY + Math.cos(elapsed * 0.03) * 1.2;
+                  cp.sprite.body.updateFromGameObject();
+                } else {
+                  cp.isCrumbling = false;
+                  cp.isFallen = true;
+                  cp.respawnAt = time + CONFIG.DNIPRO.CRUMBLING_RESPAWN_MS;
+                  cp.sprite.body.enable = false;
+                  this.tweens.add({
+                    targets: cp.sprite,
+                    y: cp.baseY + 85,
+                    alpha: 0,
+                    duration: CONFIG.DNIPRO.CRUMBLING_FALL_DURATION_MS,
+                    ease: 'Quad.easeIn'
+                  });
+                }
+              }
+            }
+          } else if (cp.cloudType === 'fading') {
+            const cycle = (time + cp.fadeOffset) % CONFIG.DNIPRO.FADING_CYCLE_MS;
+            const visMs = CONFIG.DNIPRO.FADING_VISIBLE_MS;
+            const warnStart = visMs - CONFIG.DNIPRO.FADING_WARN_MS;
+            const reappearStart = CONFIG.DNIPRO.FADING_CYCLE_MS - 450;
+
+            if (cycle < warnStart) {
+              cp.sprite.body.enable = true;
+              cp.sprite.setAlpha(0.95);
+              if (standingOnThisCloud) {
+                this.lastSafePerch = { x: cp.baseX, y: cp.baseY - 38 };
+              }
+            } else if (cycle < visMs) {
+              // Smooth non-strobing warning shimmer before fading out
+              cp.sprite.body.enable = true;
+              const progress = (cycle - warnStart) / CONFIG.DNIPRO.FADING_WARN_MS;
+              const smoothWave = 0.45 + 0.35 * Math.sin(progress * Math.PI * 3);
+              cp.sprite.setAlpha(smoothWave);
+              if (standingOnThisCloud) {
+                this.lastSafePerch = { x: cp.baseX, y: cp.baseY - 38 };
+              }
+            } else if (cycle < reappearStart) {
+              // Faded out: intangible mist
+              cp.sprite.body.enable = false;
+              cp.sprite.setAlpha(0.14);
+            } else {
+              // Smoothly condensing back
+              const fadeIn = (cycle - reappearStart) / 450;
+              cp.sprite.setAlpha(0.14 + fadeIn * 0.81);
+              cp.sprite.body.enable = fadeIn >= 0.6;
+            }
           }
         });
 
-        // 2. Update Dnipro Water Geyser Traps (Водяні вири)
+        // 2. Update Dnipro Water Geyser Traps
         this.waterGeysers.forEach(gz => {
           const cycle = (time + gz.phaseOffset) % gz.period;
           const activeStart = gz.period * 0.62;
@@ -1443,20 +1713,60 @@
             gz.isErupting = false;
             gz.column.setVisible(false);
             gz.cap.setVisible(false);
-            const pulse = 1 + Math.sin(time * 0.03) * 0.28;
+            const pulse = 1 + Math.sin(time * 0.025) * 0.25;
             gz.nozzle.setScale(pulse, pulse).setAlpha(0.95);
           } else {
             // High-pressure water jet erupts upward!
             gz.isErupting = true;
-            const jetHeight = 165;
+            const jetHeight = CONFIG.DNIPRO.GEYSER_JET_HEIGHT;
             gz.column.setSize(28, jetHeight).setPosition(gz.x, CONFIG.GROUND_Y).setVisible(true);
             gz.cap.setPosition(gz.x, CONFIG.GROUND_Y - jetHeight).setVisible(true);
             if (Math.abs(px - gz.x) < 22 && py > CONFIG.GROUND_Y - jetHeight - 16 && py < CONFIG.GROUND_Y + 20) {
               this.player.sprite.body.setVelocityY(-460);
-              this.player.takeDamage(15, gz.x);
+              this.player.takeDamage(CONFIG.DNIPRO.GEYSER_DAMAGE, gz.x);
             }
           }
         });
+
+        // 2b. Update Dnipro Whirlpools ("Вири") — rotating water funnel & horizontal pull
+        const dtSec = Math.min(delta, 50) / 1000;
+        this.dniproWhirlpools.forEach(wp => {
+          wp.spinPhase += dtSec * 3.2;
+          const scalePulse = 1 + Math.sin(wp.spinPhase) * 0.08;
+          wp.outerRing.setScale(scalePulse, 1);
+          wp.vortex.setScale(1 + Math.cos(wp.spinPhase * 1.3) * 0.12, 1);
+
+          const dx = wp.x - px;
+          const dist = Math.abs(dx);
+          if (dist < wp.radius && dist > 6 && py > CONFIG.GROUND_Y - 280) {
+            const pullFactor = 0.45 + 0.55 * (1 - dist / wp.radius);
+            const onGround = this.player.sprite.body.blocked.down;
+            const strength = onGround ? wp.pullStrength : wp.pullAirStrength;
+            const dir = dx > 0 ? 1 : -1;
+            this.player.sprite.x += dir * strength * pullFactor * dtSec;
+
+            if (time - wp.lastHintTime > 3800 && dist < wp.radius * 0.65) {
+              wp.lastHintTime = time;
+              this.showFloatingText(px, py - 48, STRINGS.WHIRLPOOL_WARN, '#90e0ef');
+            }
+          }
+        });
+
+        // 2c. Animate Boss Arena background whirlpool & captive Catfish bubbles
+        if (this.bossArenaWhirlpoolBg) {
+          this.bossArenaVortexPhase = (this.bossArenaVortexPhase || 0) + dtSec * 2.2;
+          this.bossArenaWhirlpoolBg.setScale(1 + Math.sin(this.bossArenaVortexPhase) * 0.06, 1);
+        }
+        if (this.catfishCageBubbles && !this.isCatfishFreed) {
+          this.catfishCageBubbles.forEach(b => {
+            b.offsetY = (b.offsetY + dtSec * 22) % 44;
+            b.sprite.setPosition(
+              b.baseX + Math.sin(time * 0.004 + b.phase) * 4,
+              CONFIG.GROUND_Y - 4 - b.offsetY
+            );
+            b.sprite.setAlpha(0.85 * (1 - b.offsetY / 44));
+          });
+        }
 
         // 3. Check if Omelko is standing on a wooden bridge / dry island to update lastSafePerch
         const currentIsland = (this.levelData.dryIslands || []).find(isl => {
@@ -1501,8 +1811,27 @@
           }
 
           // Rescue Omelko back onto his last safe cloud or pier with a dramatic upward splash!
-          const safeX = this.lastSafePerch ? this.lastSafePerch.x : this.activeCheckpoint.x;
-          const safeY = this.lastSafePerch ? this.lastSafePerch.y : (this.activeCheckpoint.y - 20);
+          let safeX = this.lastSafePerch ? this.lastSafePerch.x : this.activeCheckpoint.x;
+          let safeY = this.lastSafePerch ? this.lastSafePerch.y : (this.activeCheckpoint.y - 20);
+          if (this.boss && this.boss.active && safeX < this.levelData.bossArenaStartX + 60) {
+            safeX = this.levelData.bossArenaStartX + 115;
+            safeY = CONFIG.GROUND_Y - 42;
+          }
+
+          // Ensure any crumbling or fading cloud at safeX is immediately solid upon rescue
+          this.cloudPlatforms.forEach(cp => {
+            if (Math.abs(cp.baseX - safeX) < cp.w * 0.6) {
+              cp.isFallen = false;
+              cp.isCrumbling = false;
+              cp.sprite.setPosition(cp.baseX, cp.baseY);
+              cp.sprite.setAlpha(1).setVisible(true);
+              if (cp.sprite.body) {
+                cp.sprite.body.enable = true;
+                cp.sprite.body.updateFromGameObject();
+              }
+            }
+          });
+
           this.player.sprite.setPosition(safeX, safeY - 12);
           this.player.sprite.body.setVelocity(0, -180);
           this.player.invulnUntil = time + 1100;
@@ -1560,7 +1889,7 @@
           this.player.sprite.x + this.player.facing * 20,
           this.player.sprite.y - 8,
           usingFrogs ? 'swamp_frog' : 'galushka'
-        );
+        ).setDepth(36);
         g.isSwampFrog = usingFrogs;
         g.setFlipX(this.player.facing < 0);
         g.body.setVelocity(
@@ -1611,6 +1940,18 @@
         orb.body.setVelocity(dir * (dist * 0.85 + 95), CONFIG.ENEMY.VODYANYK.THROW_SPEED_Y);
         orb.isSpinning = true;
         orb.damageAmount = CONFIG.ENEMY.VODYANYK.DAMAGE;
+      }
+
+      spawnVodyanykTrident(fromX, fromY, targetX, targetY, angleOffset = 0) {
+        const trident = this.enemyProjectiles.create(fromX, fromY, 'vodyanyk_trident_proj');
+        trident.body.setAllowGravity(false);
+        const baseAngle = Phaser.Math.Angle.Between(fromX, fromY, targetX, targetY);
+        const finalAngle = baseAngle + angleOffset;
+        const speed = CONFIG.ENEMY.BOSS_VODYANYK_TSAR.TRIDENT_PROJ_SPEED || 390;
+        trident.body.setVelocity(Math.cos(finalAngle) * speed, Math.sin(finalAngle) * speed);
+        trident.setRotation(finalAngle);
+        trident.damageAmount = CONFIG.ENEMY.BOSS_VODYANYK_TSAR.DAMAGE_TRIDENT || 19;
+        SFX.waterSplash();
       }
 
       spawnTidalWaves(x, y) {
@@ -1810,21 +2151,11 @@
       }
 
       showFloatingText(x, y, message, color = '#ffffff') {
-        const txt = this.add.text(x, y, message, {
-          fontSize: '15px',
-          fontStyle: 'bold',
-          color: color,
-          stroke: '#14161f',
-          strokeThickness: 4
-        }).setOrigin(0.5).setDepth(90);
-
-        this.tweens.add({
-          targets: txt,
-          y: y - 38,
-          alpha: 0,
-          duration: 1250,
-          onComplete: () => txt.destroy()
-        });
+        // Floating gameplay popups disabled to keep the screen clean and uncluttered
+        void x;
+        void y;
+        void message;
+        void color;
       }
 
       togglePause() {
@@ -1884,6 +2215,231 @@
         this.showFloatingText(this.player.sprite.x, this.player.sprite.y - 45, STRINGS.TIRED_MESSAGE, '#00f5d4');
       }
 
+      playBossIntro(lines, onComplete) {
+        if (this.isBossIntroPlaying) return;
+        this.isBossIntroPlaying = true;
+
+        // Freeze player & clear active speech bubble
+        if (this.player && this.player.sprite && this.player.sprite.body) {
+          this.player.sprite.body.setVelocity(0, 0);
+          this.player.facing = 1;
+          this.player.sprite.setFlipX(false);
+          this.player.sprite.setScale(1, 1).setAngle(0);
+        }
+        if (this.activeSpeechBubble) {
+          this.activeSpeechBubble.destroy();
+          this.activeSpeechBubble = null;
+        }
+
+        const lbH = (CONFIG.DNIPRO && CONFIG.DNIPRO.INTRO_LETTERBOX_H) || 48;
+        const panCageMs = (CONFIG.DNIPRO && CONFIG.DNIPRO.INTRO_PAN_CAGE_MS) || 1200;
+        const panBossMs = (CONFIG.DNIPRO && CONFIG.DNIPRO.INTRO_PAN_BOSS_MS) || 850;
+        const emergeMs = (CONFIG.DNIPRO && CONFIG.DNIPRO.INTRO_EMERGE_MS) || 700;
+
+        const introUI = this.add.container(0, 0).setScrollFactor(0).setDepth(185);
+        this.bossIntroUI = introUI;
+
+        // Top & Bottom Letterbox Bars
+        const topBar = this.add.rectangle(CONFIG.WIDTH / 2, lbH / 2, CONFIG.WIDTH, lbH, 0x020b16, 0.94);
+        const topTrim = this.add.rectangle(CONFIG.WIDTH / 2, lbH, CONFIG.WIDTH, 2, 0x48cae4, 0.75);
+        const botBar = this.add.rectangle(CONFIG.WIDTH / 2, CONFIG.HEIGHT - lbH / 2, CONFIG.WIDTH, lbH, 0x020b16, 0.94);
+        const botTrim = this.add.rectangle(CONFIG.WIDTH / 2, CONFIG.HEIGHT - lbH, CONFIG.WIDTH, 2, 0x48cae4, 0.75);
+        introUI.add([topBar, topTrim, botBar, botTrim]);
+
+        // Touch / Click Skip Button in Top-Right Letterbox Bar
+        const skipBtnBg = this.add.rectangle(CONFIG.WIDTH - 105, lbH / 2, 178, 30, 0x0b2545, 0.95)
+          .setStrokeStyle(1.5, 0x48cae4, 0.9)
+          .setInteractive({ useHandCursor: true });
+        const skipBtnTxt = this.add.text(CONFIG.WIDTH - 105, lbH / 2, STRINGS.BOSS_INTRO_SKIP_BTN, {
+          fontSize: '13px',
+          fontStyle: 'bold',
+          color: '#ffd166'
+        }).setOrigin(0.5);
+        introUI.add([skipBtnBg, skipBtnTxt]);
+
+        // Dialogue Bubble Container (hidden until camera pan + boss emergence complete)
+        const dialogContainer = this.add.container(CONFIG.WIDTH / 2, CONFIG.HEIGHT - 96).setVisible(false);
+        const boxW = 780;
+        const boxH = 104;
+        const boxBg = this.add.graphics();
+        boxBg.fillStyle(0x041529, 0.95);
+        boxBg.fillRoundedRect(-boxW / 2, -boxH / 2, boxW, boxH, 12);
+        boxBg.lineStyle(2.5, 0x48cae4, 0.95);
+        boxBg.strokeRoundedRect(-boxW / 2, -boxH / 2, boxW, boxH, 12);
+
+        const speakerBadge = this.add.text(-boxW / 2 + 22, -boxH / 2 + 12, '', {
+          fontSize: '15px',
+          fontStyle: 'bold',
+          color: '#ffd166'
+        });
+        const lineText = this.add.text(-boxW / 2 + 22, -boxH / 2 + 36, '', {
+          fontSize: '15px',
+          color: '#f1faee',
+          wordWrap: { width: boxW - 44 },
+          lineSpacing: 4
+        });
+        const hintText = this.add.text(boxW / 2 - 18, boxH / 2 - 14, STRINGS.BOSS_INTRO_HINT, {
+          fontSize: '12px',
+          color: '#90e0ef'
+        }).setOrigin(1, 0.5);
+
+        dialogContainer.add([boxBg, speakerBadge, lineText, hintText]);
+        introUI.add(dialogContainer);
+
+        let lineIndex = 0;
+        let isDialogueReady = false;
+        let isFinished = false;
+        const pendingTimers = [];
+        const pendingTweens = [];
+
+        const renderCurrentLine = () => {
+          const item = (lines && lines[lineIndex]) ? lines[lineIndex] : null;
+          if (!item) return;
+          let badgeColor = '#ffd166';
+          if (item.speaker.indexOf('Сом') !== -1) badgeColor = '#90e0ef';
+          else if (item.speaker.indexOf('Водяний') !== -1) badgeColor = '#00f5d4';
+          speakerBadge.setText(item.speaker + ':').setColor(badgeColor);
+          lineText.setText('«' + item.text + '»');
+          SFX.jump();
+        };
+
+        const finishIntro = () => {
+          if (isFinished) return;
+          isFinished = true;
+
+          pendingTimers.forEach(t => {
+            if (t && t.remove) t.remove(false);
+          });
+          pendingTweens.forEach(tw => {
+            if (tw && tw.stop) tw.stop();
+          });
+
+          if (this.input && this.input.keyboard) {
+            this.input.keyboard.off('keydown-SPACE', onAdvanceKey);
+            this.input.keyboard.off('keydown-ENTER', onAdvanceKey);
+            this.input.keyboard.off('keydown-TAB', onSkipKey);
+          }
+          this.input.off('pointerdown', onPointerDown);
+
+          if (this.boss && this.boss.sprite) {
+            this.boss.sprite.setAlpha(1).setPosition(this.boss.sprite.x, CONFIG.GROUND_Y - 68);
+            if (this.boss.sprite.body) this.boss.sprite.body.updateFromGameObject();
+          }
+
+          if (this.camTarget && this.player && this.player.sprite) {
+            this.camTarget.setPosition(this.player.sprite.x, this.player.sprite.y - 25);
+          }
+
+          if (introUI && introUI.active) {
+            introUI.destroy();
+          }
+          this.bossIntroUI = null;
+          this.isBossIntroPlaying = false;
+
+          if (typeof onComplete === 'function') {
+            onComplete();
+          }
+        };
+
+        const advanceLine = () => {
+          if (isFinished) return;
+          if (!isDialogueReady) return;
+          lineIndex++;
+          if (!lines || lineIndex >= lines.length) {
+            finishIntro();
+          } else {
+            renderCurrentLine();
+          }
+        };
+
+        const onAdvanceKey = (ev) => {
+          if (ev && ev.preventDefault) ev.preventDefault();
+          advanceLine();
+        };
+        const onSkipKey = (ev) => {
+          if (ev && ev.preventDefault) ev.preventDefault();
+          finishIntro();
+        };
+        const onPointerDown = (pointer) => {
+          if (isFinished) return;
+          // Check if pointer clicked the Skip button in top-right
+          if (pointer.x >= CONFIG.WIDTH - 200 && pointer.y <= lbH + 12) {
+            finishIntro();
+            return;
+          }
+          advanceLine();
+        };
+
+        skipBtnBg.on('pointerdown', () => finishIntro());
+        if (this.input && this.input.keyboard) {
+          this.input.keyboard.on('keydown-SPACE', onAdvanceKey);
+          this.input.keyboard.on('keydown-ENTER', onAdvanceKey);
+          this.input.keyboard.on('keydown-TAB', onSkipKey);
+        }
+        this.input.on('pointerdown', onPointerDown);
+
+        // Step 1: Pan camera to the captive Catfish in the woven cage (1.2s)
+        const cageX = this.waitingCatfish ? this.waitingCatfish.x : (this.worldWidth - 155);
+        const bossX = (this.boss && this.boss.sprite) ? this.boss.sprite.x : (this.worldWidth - 550);
+
+        const pan1 = this.tweens.add({
+          targets: this.camTarget,
+          x: cageX - 60,
+          y: CONFIG.GROUND_Y - 60,
+          duration: 600,
+          ease: 'Sine.easeInOut',
+          onComplete: () => {
+            if (isFinished) return;
+            this.spawnWaterSplash(cageX, CONFIG.GROUND_Y - 10, 8);
+          }
+        });
+        pendingTweens.push(pan1);
+
+        // Step 2: After 1.2s focus on cage, pan to «Поміст Водяного Царя» and emerge Vodyanyk Tsar with splash!
+        const t1 = this.time.delayedCall(panCageMs, () => {
+          if (isFinished) return;
+          const pan2 = this.tweens.add({
+            targets: this.camTarget,
+            x: bossX - 60,
+            y: CONFIG.GROUND_Y - 65,
+            duration: panBossMs,
+            ease: 'Sine.easeInOut',
+            onComplete: () => {
+              if (isFinished) return;
+              SFX.waterSplash();
+              this.spawnWaterSplash(bossX, CONFIG.GROUND_Y, 22);
+              this.cameras.main.shake(220, 0.012);
+
+              if (this.boss && this.boss.sprite) {
+                const emergeTween = this.tweens.add({
+                  targets: this.boss.sprite,
+                  y: CONFIG.GROUND_Y - 68,
+                  alpha: 1,
+                  duration: emergeMs,
+                  ease: 'Back.easeOut',
+                  onComplete: () => {
+                    if (isFinished) return;
+                    if (this.boss && this.boss.sprite && this.boss.sprite.body) {
+                      this.boss.sprite.body.updateFromGameObject();
+                    }
+                    isDialogueReady = true;
+                    dialogContainer.setVisible(true);
+                    renderCurrentLine();
+                  }
+                });
+                pendingTweens.push(emergeTween);
+              } else {
+                isDialogueReady = true;
+                dialogContainer.setVisible(true);
+                renderCurrentLine();
+              }
+            }
+          });
+          pendingTweens.push(pan2);
+        });
+        pendingTimers.push(t1);
+      }
+
       switchLevelFromMenu(targetLevel) {
         if (this.hitStopTimeout) {
           clearTimeout(this.hitStopTimeout);
@@ -1893,6 +2449,7 @@
         if (this.physics && this.physics.world) this.physics.world.resume();
         if (this.tweens) this.tweens.resumeAll();
         GAME_STATE.currentLevel = targetLevel;
+        GAME_STATE.hasSeenVodyanykIntro = false;
         if (targetLevel >= 2) {
           GAME_STATE.hasSaber = true;
         }
@@ -1908,6 +2465,7 @@
           this.hitStopTimeout = null;
         }
         this.isPaused = false;
+        GAME_STATE.hasSeenVodyanykIntro = false;
         if (this.physics && this.physics.world) this.physics.world.resume();
         if (this.tweens) this.tweens.resumeAll();
         this.scene.restart({ level: this.currentLevel, coins: this.initialCoins });
@@ -1922,6 +2480,7 @@
         GAME_STATE.currentLevel = 1;
         GAME_STATE.hasSaber = false;
         GAME_STATE.hasSwampFrogs = false;
+        GAME_STATE.hasSeenVodyanykIntro = false;
         GAME_STATE.savedCoins = 0;
         this.scene.start('HutScene');
       }
@@ -1978,11 +2537,10 @@
           }
         }
 
-        // 7. Two Sinusoidal Swaying Feather-Grass Layers (Два шари ковили, що колихаються на вітрі)
+        // 7. Two Sinusoidal Swaying Feather-Grass Layers (placed behind gameplay so Omelko is always 100% visible)
         this.kovylaBackGraphics = this.add.graphics().setScrollFactor(0.45).setDepth(4);
         this.kovylaFrontGraphics = this.add.graphics().setScrollFactor(0.76).setDepth(5);
-        // Foreground grass blades in front of gameplay plane
-        this.foregroundGrassGraphics = this.add.graphics().setScrollFactor(1.08).setDepth(35);
+        this.foregroundGrassGraphics = this.add.graphics().setScrollFactor(1.0).setDepth(6);
 
         // 8. Ambient Steppe Fluff, Seeds, Golden Dust & Distant Seagulls (screen-space ambient particles)
         this.steppeAmbientParticles = [];
@@ -2139,45 +2697,52 @@
           this.windStrengthRatio = Phaser.Math.Linear(this.windStrengthRatio, 0.18, 0.06);
         }
 
-        // 3. Draw Sinusoidal Swaying Feather-Grass (Два шари ковили + передній план із травинками)
+        // 3. Draw Sinusoidal Swaying Feather-Grass (only in the Steppe zone before the Salt Coast / Boss Arena)
         const camX = this.cameras.main.scrollX;
         const bendBoost = 1 + this.windStrengthRatio * 2.1;
         const windSign = this.windDirection || -1;
+        const inBossArena = px >= this.levelData.bossArenaStartX - 120;
 
         if (this.kovylaBackGraphics) {
           this.kovylaBackGraphics.clear();
-          const startB = Math.floor((camX * 0.45) / 48) * 48 - 48;
-          const endB = startB + CONFIG.WIDTH + 120;
-          this.kovylaBackGraphics.lineStyle(2, 0xd4a373, 0.62);
-          for (let bx = startB; bx < endB; bx += 24) {
-            const sway = Math.sin(time * 0.0032 + bx * 0.04) * 7 * bendBoost + windSign * 9 * this.windStrengthRatio;
-            this.kovylaBackGraphics.lineBetween(bx, gY, bx + sway, gY - 34);
+          if (!inBossArena) {
+            const startB = Math.floor((camX * 0.45) / 48) * 48 - 48;
+            const endB = startB + CONFIG.WIDTH + 120;
+            this.kovylaBackGraphics.lineStyle(2, 0xd4a373, 0.55);
+            for (let bx = startB; bx < endB; bx += 28) {
+              const sway = Math.sin(time * 0.0032 + bx * 0.04) * 6 * bendBoost + windSign * 8 * this.windStrengthRatio;
+              this.kovylaBackGraphics.lineBetween(bx, gY, bx + sway, gY - 26);
+            }
           }
         }
 
         if (this.kovylaFrontGraphics) {
           this.kovylaFrontGraphics.clear();
-          const startF = Math.floor((camX * 0.76) / 36) * 36 - 36;
-          const endF = startF + CONFIG.WIDTH + 96;
-          for (let fx = startF; fx < endF; fx += 18) {
-            const sway = Math.sin(time * 0.0042 + fx * 0.05) * 10 * bendBoost + windSign * 14 * this.windStrengthRatio;
-            this.kovylaFrontGraphics.lineStyle(2.5, 0xe9c46a, 0.82);
-            this.kovylaFrontGraphics.lineBetween(fx, gY, fx + sway, gY - 46);
-            // Silky white feather-grass plume tip (периста мітелка ковили)
-            this.kovylaFrontGraphics.lineStyle(3, 0xfefae0, 0.9);
-            this.kovylaFrontGraphics.lineBetween(fx + sway, gY - 46, fx + sway * 1.35, gY - 56);
+          if (!inBossArena) {
+            const startF = Math.floor((camX * 0.76) / 36) * 36 - 36;
+            const endF = startF + CONFIG.WIDTH + 96;
+            for (let fx = startF; fx < endF; fx += 24) {
+              const sway = Math.sin(time * 0.0042 + fx * 0.05) * 8 * bendBoost + windSign * 10 * this.windStrengthRatio;
+              this.kovylaFrontGraphics.lineStyle(2, 0xe9c46a, 0.65);
+              this.kovylaFrontGraphics.lineBetween(fx, gY, fx + sway, gY - 30);
+              this.kovylaFrontGraphics.lineStyle(2.5, 0xfefae0, 0.75);
+              this.kovylaFrontGraphics.lineBetween(fx + sway, gY - 30, fx + sway * 1.25, gY - 37);
+            }
           }
         }
 
         if (this.foregroundGrassGraphics) {
           this.foregroundGrassGraphics.clear();
-          const startFg = Math.floor((camX * 1.08) / 90) * 90 - 90;
-          const endFg = startFg + CONFIG.WIDTH + 180;
-          this.foregroundGrassGraphics.lineStyle(3, 0x3a281c, 0.55);
-          for (let fgx = startFg; fgx < endFg; fgx += 85) {
-            const sway = Math.sin(time * 0.005 + fgx * 0.03) * 12 * bendBoost + windSign * 16 * this.windStrengthRatio;
-            this.foregroundGrassGraphics.lineBetween(fgx, CONFIG.HEIGHT, fgx + sway, CONFIG.HEIGHT - 38);
-            this.foregroundGrassGraphics.lineBetween(fgx + 10, CONFIG.HEIGHT, fgx + 10 + sway * 1.1, CONFIG.HEIGHT - 46);
+        }
+
+        // Failsafe ground clamp for Act IV: Omelko can never fall or clip below CONFIG.GROUND_Y!
+        if (this.player && this.player.sprite && this.player.sprite.body) {
+          if (this.player.sprite.y > CONFIG.GROUND_Y - 22) {
+            this.player.sprite.y = CONFIG.GROUND_Y - 26;
+            if (this.player.sprite.body.velocity.y > 0) {
+              this.player.sprite.body.setVelocityY(0);
+            }
+            this.player.sprite.body.blocked.down = true;
           }
         }
 
@@ -2207,7 +2772,6 @@
               wp.waveCrest.setVisible(false);
             });
           } else if (cycleMs < floodStart) {
-            // Telegraph: rising pink-turquoise sea foam under low coastal platforms
             const pulse = 1 + Math.sin(time * 0.02) * 0.22;
             this.coastalWavePlatforms.forEach(wp => {
               wp.sprite.setTint(0xffcad4);
@@ -2215,10 +2779,9 @@
               wp.waveCrest.setVisible(false);
             });
           } else {
-            // Wave Crest Floods Low Coastal Platforms!
             if (this.lastWaveCycleIndex !== cycleIndex) {
               this.lastWaveCycleIndex = cycleIndex;
-              if (px >= CONFIG.STEPPE.COAST_START_X - 250) {
+              if (px >= CONFIG.STEPPE.COAST_START_X - 250 && px < this.levelData.bossArenaStartX) {
                 SFX.waterSplash();
               }
             }
@@ -2242,73 +2805,21 @@
           }
         }
 
-        // 6. Salt Mountain Arena Mechanics: Camera/Player clamp, Fragile Crystal Platforms & Pink Brine Hazard
+        // 6. Salt Mountain Arena Mechanics: Player bounds clamp & safe perch tracking across the solid salt floor
         if (this.boss && this.boss.active && !this.boss.isFinished) {
-          const minArenaX = this.levelData.bossArenaStartX + 22;
+          const minArenaX = this.levelData.bossArenaStartX + 24;
+          const maxArenaX = this.worldWidth - 150;
           if (this.player.sprite.x < minArenaX) {
             this.player.sprite.x = minArenaX;
+          } else if (this.player.sprite.x > maxArenaX) {
+            this.player.sprite.x = maxArenaX;
           }
 
-          // Update safe perch when standing on solid salt shore in the left/center of the arena (x < 6740)
-          if (this.player.sprite.body.blocked.down && py <= CONFIG.GROUND_Y && px >= minArenaX && px <= 6740) {
+          if (this.player.sprite.body.blocked.down && py <= CONFIG.GROUND_Y) {
             this.lastSafePerch = {
-              x: Phaser.Math.Clamp(px, minArenaX + 20, 6710),
+              x: Phaser.Math.Clamp(px, minArenaX + 20, maxArenaX - 20),
               y: CONFIG.GROUND_Y - 42
             };
-          }
-
-          // Fragile Crystal Platforms (крихкі платформи-кристали): crack after standing on them, then respawn!
-          const crackMs = CONFIG.ENEMY.BOSS_ZMIY.CRYSTAL_CRACK_MS;
-          const respawnMs = CONFIG.ENEMY.BOSS_ZMIY.CRYSTAL_RESPAWN_MS;
-          (this.crystalPlatforms || []).forEach(cp => {
-            if (!cp.fragile) return;
-            if (cp.isBroken) {
-              if (time >= cp.respawnAt) {
-                cp.isBroken = false;
-                cp.standTimer = 0;
-                cp.sprite.body.enable = true;
-                cp.sprite.setAlpha(1).clearTint();
-              }
-              return;
-            }
-
-            const standingOnThis =
-              this.player.sprite.body.blocked.down &&
-              Math.abs(py + 22 - (cp.y - 12)) < 16 &&
-              Math.abs(px - cp.x) <= cp.w * 0.54;
-
-            if (standingOnThis) {
-              cp.standTimer += delta;
-              this.lastSafePerch = { x: cp.x, y: cp.y - 38 };
-              if (cp.standTimer > crackMs * 0.45) {
-                cp.sprite.setTint(0xff758f);
-              }
-              if (cp.standTimer >= crackMs) {
-                cp.isBroken = true;
-                cp.respawnAt = time + respawnMs;
-                cp.sprite.body.enable = false;
-                cp.sprite.setAlpha(0.18).setTint(0xffcad4);
-                if (SFX.crystalChime) SFX.crystalChime(0);
-              }
-            } else if (cp.standTimer > 0) {
-              cp.standTimer = Math.max(0, cp.standTimer - delta * 0.65);
-              if (cp.standTimer <= crackMs * 0.45) {
-                cp.sprite.clearTint();
-              }
-            }
-          });
-
-          // Pink Brine Water Hazard on the right side of the arena (x >= 6755): rescues Omelko to lastSafePerch!
-          if (px >= 6755 && py >= CONFIG.GROUND_Y - 18 && time >= this.waterRescueCooldownUntil) {
-            this.waterRescueCooldownUntil = time + 750;
-            SFX.waterSplash();
-            this.spawnWaterSplash(px, CONFIG.GROUND_Y, 12);
-            this.player.takeDamage(CONFIG.WAVES.DAMAGE, 6780);
-            const safeX = this.lastSafePerch ? this.lastSafePerch.x : (this.levelData.bossArenaStartX + 110);
-            const safeY = this.lastSafePerch ? this.lastSafePerch.y : (CONFIG.GROUND_Y - 42);
-            this.player.sprite.setPosition(safeX, safeY - 10);
-            this.player.sprite.body.setVelocity(-90, -210);
-            this.showFloatingText(safeX, safeY - 48, '🌊 Рожева ропа пече! Назад на берег!', '#ff758f');
           }
         }
       }
@@ -2318,18 +2829,17 @@
         if (this.saltMountainCracksGraphic) {
           this.saltMountainCracksGraphic.clear();
           this.saltMountainCracksGraphic.lineStyle(4, 0xff4d6d, 0.95);
-          // Deep glowing fissures across the Salt Mountain
           this.saltMountainCracksGraphic.beginPath();
-          this.saltMountainCracksGraphic.moveTo(6960, 56);
-          this.saltMountainCracksGraphic.lineTo(6910, 145);
-          this.saltMountainCracksGraphic.lineTo(6945, 235);
-          this.saltMountainCracksGraphic.lineTo(6885, 355);
-          this.saltMountainCracksGraphic.moveTo(6910, 145);
-          this.saltMountainCracksGraphic.lineTo(6835, 220);
-          this.saltMountainCracksGraphic.lineTo(6790, 340);
-          this.saltMountainCracksGraphic.moveTo(6960, 110);
-          this.saltMountainCracksGraphic.lineTo(7025, 210);
-          this.saltMountainCracksGraphic.lineTo(7060, 345);
+          this.saltMountainCracksGraphic.moveTo(7240, 50);
+          this.saltMountainCracksGraphic.lineTo(7180, 145);
+          this.saltMountainCracksGraphic.lineTo(7215, 235);
+          this.saltMountainCracksGraphic.lineTo(7155, 355);
+          this.saltMountainCracksGraphic.moveTo(7180, 145);
+          this.saltMountainCracksGraphic.lineTo(7095, 220);
+          this.saltMountainCracksGraphic.lineTo(7045, 340);
+          this.saltMountainCracksGraphic.moveTo(7240, 110);
+          this.saltMountainCracksGraphic.lineTo(7315, 210);
+          this.saltMountainCracksGraphic.lineTo(7360, 345);
           this.saltMountainCracksGraphic.strokePath();
         }
         if (this.steppeSkyGraphics) {
@@ -2372,6 +2882,85 @@
         this.isVictory = false;
         SFX.pickup();
         this.scene.start('TitleScene');
+      }
+
+      freeCaptiveCatfishAndWin() {
+        if (this.isVictory) return;
+        this.isCatfishFreed = true;
+
+        const cageX = this.waitingCatfish ? this.waitingCatfish.x : (this.worldWidth - 155);
+        const cageY = CONFIG.GROUND_Y - 12;
+
+        // Pan camera smoothly to the right raft where the woven reed cage ("верша") is suspended
+        if (this.camTarget) {
+          this.tweens.add({
+            targets: this.camTarget,
+            x: cageX - 60,
+            y: CONFIG.GROUND_Y - 55,
+            duration: 520,
+            ease: 'Sine.easeInOut'
+          });
+        }
+
+        this.time.delayedCall(480, () => {
+          SFX.finisher();
+          SFX.waterSplash();
+          this.cameras.main.shake(220, 0.014);
+          this.spawnWaterSplash(cageX, CONFIG.GROUND_Y - 6, 22);
+
+          // Hide intact cage bars & bubbles
+          if (this.catfishCageFront) this.catfishCageFront.setVisible(false);
+          if (this.catfishCageBack) this.catfishCageBack.setVisible(false);
+          if (this.catfishCageBubbles) {
+            this.catfishCageBubbles.forEach(b => {
+              if (b && b.sprite) b.sprite.setVisible(false);
+            });
+          }
+
+          // Spawn flying reed & willow cage splinters ("тріски верші")
+          for (let i = 0; i < 10; i++) {
+            const splinter = this.add.rectangle(
+              cageX + Phaser.Math.Between(-45, 45),
+              cageY + Phaser.Math.Between(-24, 16),
+              Phaser.Math.Between(14, 24),
+              4,
+              i % 2 === 0 ? 0x8a5a36 : 0xd4a373
+            ).setDepth(32);
+            const angle = Phaser.Math.FloatBetween(-Math.PI * 0.9, -Math.PI * 0.1);
+            const dist = Phaser.Math.Between(55, 115);
+            this.tweens.add({
+              targets: splinter,
+              x: splinter.x + Math.cos(angle) * dist,
+              y: splinter.y + Math.sin(angle) * dist + 28,
+              angle: Phaser.Math.Between(-260, 260),
+              alpha: 0,
+              duration: 620,
+              ease: 'Quad.easeOut',
+              onComplete: () => splinter.destroy()
+            });
+          }
+
+          // Animate happy freed Catfish leaping on the river surface
+
+          if (this.waitingCatfish) {
+            this.tweens.add({
+              targets: this.waitingCatfish,
+              y: CONFIG.GROUND_Y - 26,
+              scaleX: 1.08,
+              scaleY: 1.08,
+              duration: 320,
+              yoyo: true,
+              repeat: 1,
+              ease: 'Quad.easeOut'
+            });
+          }
+
+          this.time.delayedCall(980, () => {
+            if (this.sys && this.sys.isActive()) {
+              this.triggerVictory();
+            }
+          });
+        });
       }
 
       triggerVictory() {

@@ -821,18 +821,26 @@
             boss.heads.forEach((h, idx) => {
               const seg = this.bossSegFills[idx];
               if (!seg) return;
-              const hRatio = ((h.isPhase1To3Defeated || h.isPhaseDone) && boss.phase < 4) || h.isPhase4Down
+              const hRatio = (h.isKnockedOut || h.isPhase1To3Defeated || h.isPhase4Down)
                 ? 0
                 : Phaser.Math.Clamp(1 - (h.stun / h.maxStun), 0, 1);
               seg.width = 114 * hRatio;
               seg.setFillStyle(0xe63946);
             });
-            this.bossStageBadges.setText(`Ф${boss.phase}/4`);
+            this.bossStageBadges.setText(
+              boss.stage === 1 ? '●●●' : (boss.stage === 2 ? '●●○' : '●○○')
+            );
           } else {
             const bHpRatio = Phaser.Math.Clamp(1 - (boss.stun / boss.maxStun), 0, 1);
             this.bossBarFill.width = 350 * bHpRatio;
             this.bossBarFill.setFillStyle(0xe63946);
-            this.bossStageBadges.setText(boss.stage === 1 ? '●●' : '●○');
+            if (boss.stagesRequired === 3) {
+              this.bossStageBadges.setText(
+                boss.stage === 1 ? '●●●' : (boss.stage === 2 ? '●●○' : '●○○')
+              );
+            } else {
+              this.bossStageBadges.setText(boss.stage === 1 ? '●●' : '●○');
+            }
           }
         }
       }

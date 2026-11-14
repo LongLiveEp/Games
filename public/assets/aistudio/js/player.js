@@ -8,6 +8,7 @@
       constructor(scene, x, y) {
         this.scene = scene;
         this.sprite = scene.physics.add.sprite(x, y, 'cossack');
+        this.sprite.setDepth(35);
         this.sprite.setCollideWorldBounds(true);
         this.sprite.body.setSize(26, 52);
         this.sprite.body.setOffset(7, 6);
@@ -155,8 +156,9 @@
           body.setOffset(7, 6);
         }
 
-        // Shift + Down: Intentionally dive underground only if on grass and pressing Roll specifically while holding Down
-        const onGrassSurface = onFloor && Math.abs(body.bottom - CONFIG.GROUND_Y) <= 18;
+        // Shift + Down: Intentionally dive underground only in Levels 1 & 2 (which have underground catacombs)
+        const canDiveUnderground = Boolean(this.scene && (this.scene.currentLevel === 1 || this.scene.currentLevel === 2));
+        const onGrassSurface = canDiveUnderground && onFloor && Math.abs(body.bottom - CONFIG.GROUND_Y) <= 18;
         if (onGrassSurface && input.moveDown && input.rollJustPressed && time >= this.dropThroughUntil) {
           this.dropThroughUntil = time + 360;
           this.jumpedFromUnderground = true;
@@ -318,7 +320,7 @@
         // Visual Frying Pan or Damascus Cossack Saber Slash Arc
         const slashX = this.sprite.x + this.facing * (usingSaber ? 40 : 36);
         const slashY = this.sprite.y - 2;
-        const slash = this.scene.add.image(slashX, slashY, usingSaber ? 'saber_slash' : 'pan_slash');
+        const slash = this.scene.add.image(slashX, slashY, usingSaber ? 'saber_slash' : 'pan_slash').setDepth(37);
         slash.setFlipX(this.facing < 0);
 
         if (isCounterAttack) {
@@ -387,7 +389,7 @@
             this.sprite.x + Phaser.Math.Between(-12, 12),
             this.sprite.y + 24,
             'particle_dust'
-          );
+          ).setDepth(33);
           p.setScale(Phaser.Math.FloatBetween(0.5, 1.1));
           this.scene.tweens.add({
             targets: p,

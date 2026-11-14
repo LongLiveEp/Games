@@ -127,7 +127,7 @@
         this.telegraphLabel.setVisible(false);
         this.stunEndTime = this.scene.time.now + CONFIG.ENEMY.STUN_DURATION_MS;
         this.barFill.setFillStyle(0xe63946);
-        this.stunPrompt.setVisible(true);
+        this.stunPrompt.setVisible(false);
         this.stars.forEach(s => s.setVisible(true));
         this.sprite.setAngle(0);
         this.sprite.clearTint();
@@ -164,8 +164,6 @@
         if (roll === 0 || roll === 1) {
           // Stuffed into a Barrel or Clay Pot that hops & wiggles!
           const propKey = roll === 0 ? 'prop_barrel' : 'prop_pot';
-          const label = roll === 0 ? STRINGS.FINISHER_BARREL : STRINGS.FINISHER_POT;
-          this.scene.showFloatingText(this.sprite.x, this.sprite.y - 35, label, '#ffea00');
 
           const prop = this.scene.add.image(this.sprite.x, this.sprite.y + 4, propKey);
           this.sprite.setPosition(prop.x, prop.y - 22);
@@ -182,7 +180,6 @@
           });
         } else {
           // Launched into the sky with a twinkling star!
-          this.scene.showFloatingText(this.sprite.x, this.sprite.y - 35, STRINGS.FINISHER_SKY, '#00f5d4');
           this.scene.tweens.add({
             targets: this.sprite,
             x: this.sprite.x + dir * 240,
