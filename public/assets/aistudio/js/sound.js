@@ -20,7 +20,8 @@
           mus_boss_vodyanyk: 'music/m_09_King_of_the_Rising_Tide.mp3',
           mus_catfish: 'music/m_10_The_Whiskered_Crossing.mp3',
           mus_act4: 'music/m_11_Where_the_Wind_Rests.mp3',
-          mus_boss_zmiy: 'music/m_12Beneath_the_Salt_Throne.mp3'
+          mus_boss_zmiy: 'music/m_12Beneath_the_Salt_Throne.mp3',
+          mus_korchma: 'music/track_Korchma.mp3'
         };
         this.audioCache = {};
         this.currentTrackKey = null;
@@ -70,7 +71,10 @@
 
       playMusic(trackKey, options = {}) {
         const src = this.tracks[trackKey];
-        if (!src) return;
+        if (!src) {
+          console.warn('[SoundManager] Unknown music key:', trackKey);
+          return;
+        }
 
         const loop = options.loop !== undefined ? Boolean(options.loop) : true;
         const volume = options.volume !== undefined ? options.volume : 0.4;
