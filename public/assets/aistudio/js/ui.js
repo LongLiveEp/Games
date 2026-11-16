@@ -28,6 +28,7 @@
         if (!isHut) {
           this.createGameHUD();
           this.createControlsModal();
+          this.bestiaryModal = (typeof BestiaryModal !== 'undefined') ? new BestiaryModal(this.scene) : null;
           this.createPauseModal();
           this.createDeathModal();
           this.createVictoryModal();
@@ -304,6 +305,19 @@
             STRINGS.HUD_RESTART,
             () => this.scene.restartLevel()
           );
+
+          this.bestiaryBtn = makeTopBtn(
+            CONFIG.WIDTH - 378,
+            14,
+            124,
+            STRINGS.HUD_BESTIARY || '📖 Бестіарій [B]',
+            () => {
+              if (this.bestiaryModal) {
+                const bossActive = Boolean(this.scene.boss && (this.scene.boss.active || this.scene.bossIntroTriggered));
+                this.bestiaryModal.openForLevel(this.scene.currentLevel || 1, bossActive);
+              }
+            }
+          );
         }
       }
 
@@ -326,19 +340,19 @@
           .setDepth(200)
           .setInteractive();
 
-        // Modal Card (taller to fit Act I / Act II / Act III / Act IV Level Switch & Finale Test options cleanly)
-        const card = this.scene.add.rectangle(cx, cy, 465, 516, 0x1d1e2c, 0.98)
+        // Modal Card (taller to fit Bestiary, Act switches & Finale Test options cleanly)
+        const card = this.scene.add.rectangle(cx, cy, 465, 528, 0x1d1e2c, 0.98)
           .setStrokeStyle(3, 0xffd166)
           .setScrollFactor(0)
           .setDepth(201);
 
-        const title = this.scene.add.text(cx, cy - 224, STRINGS.PAUSE_TITLE, {
+        const title = this.scene.add.text(cx, cy - 232, STRINGS.PAUSE_TITLE, {
           fontSize: '23px',
           fontStyle: 'bold',
           color: '#ffd166'
         }).setOrigin(0.5).setScrollFactor(0).setDepth(202);
 
-        const navHint = this.scene.add.text(cx, cy + 234, STRINGS.PAUSE_NAV_HINT, {
+        const navHint = this.scene.add.text(cx, cy + 242, STRINGS.PAUSE_NAV_HINT, {
           fontSize: '12px',
           color: '#a8dadc'
         }).setOrigin(0.5).setScrollFactor(0).setDepth(202);
@@ -354,12 +368,22 @@
           action: () => this.scene.switchLevelFromMenu(l)
         }));
 
-        // Pause Menu Buttons (includes quick jump to any Act + temporary Finale Test button)
+        // Pause Menu Buttons (includes Cossack Bestiary + quick jump to any Act + Finale Test button)
         const buttonConfigs = [
           {
             text: STRINGS.PAUSE_RESUME,
             color: 0x2a9d8f,
             action: () => this.scene.togglePause()
+          },
+          {
+            text: STRINGS.PAUSE_BESTIARY || '📖 Козацький Бестіарій (B)',
+            color: 0xb56576,
+            action: () => {
+              if (this.bestiaryModal) {
+                const bossActive = Boolean(this.scene.boss && (this.scene.boss.active || this.scene.bossIntroTriggered));
+                this.bestiaryModal.openForLevel(this.scene.currentLevel || 1, bossActive);
+              }
+            }
           },
           ...(!GAME_STATE.isHardcore() ? [{
             text: STRINGS.PAUSE_CHECKPOINT,
@@ -390,12 +414,12 @@
           }
         ];
 
-        const startY = cy - 178;
-        const stepY = 36;
+        const startY = cy - 190;
+        const stepY = 33;
 
         buttonConfigs.forEach((cfg, idx) => {
           const btnY = startY + idx * stepY;
-          const btnObj = this.createScreenSpaceMenuButton(cx, btnY, 355, 31, cfg.text, cfg.color, 203, () => {
+          const btnObj = this.createScreenSpaceMenuButton(cx, btnY, 355, 29, cfg.text, cfg.color, 203, () => {
             this.selectedPauseIndex = idx;
             this.refreshPauseButtonHighlight();
             cfg.action();

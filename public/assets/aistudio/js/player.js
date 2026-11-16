@@ -34,7 +34,8 @@
         this.nextRollAllowedTime = 0;
         this.counterWindowEndTime = 0;
         this.invulnUntil = 0;
-        this.dropThroughUntil = 0; // Allows Shift + Down to drop underground through the grass surface
+        this.dropThroughUntil = 0; // Allows Shift + Down to drop through one-way platforms
+        this.rollHitEnemies = new Set();
 
         // 3-Hit Frying Pan Combo State
         this.comboStep = 0;
@@ -152,22 +153,30 @@
           this.isRolling = false;
           this.sprite.setTexture('cossack');
           this.sprite.setAngle(0);
+          this.sprite.clearTint();
           body.setSize(26, 52);
           body.setOffset(7, 6);
         }
 
-        // Shift + Down: Intentionally dive underground only in Levels 1 & 2 (which have underground catacombs)
-        const canDiveUnderground = Boolean(this.scene && (this.scene.currentLevel === 1 || this.scene.currentLevel === 2));
-        const onGrassSurface = canDiveUnderground && onFloor && Math.abs(body.bottom - CONFIG.GROUND_Y) <= 18;
-        if (onGrassSurface && input.moveDown && input.rollJustPressed && time >= this.dropThroughUntil) {
-          this.dropThroughUntil = time + 360;
-          this.jumpedFromUnderground = true;
-          this.canDoubleJump = true;
-          this.sprite.y += 10;
-          body.setVelocityY(260);
-          this.applySquashStretch(0.78, 1.25);
-          this.spawnDust(5);
-          SFX.roll();
+        // Shift + Down: Drop through elevated one-way platforms OR dive into trapdoor portals
+        const onElevatedPlatform = onFloor && body.bottom < CONFIG.GROUND_Y - 12 && (!this.scene || this.scene.currentLevel !== 3);
+
+        if (input.moveDown && input.rollJustPressed) {
+          if (this.scene && typeof this.scene.tryUsePortalOnShiftDown === 'function' && this.scene.tryUsePortalOnShiftDown(time)) {
+            return;
+          }
+          if (onElevatedPlatform && time >= this.dropThroughUntil) {
+            this.dropThroughUntil = time + 360;
+            this.jumpedFromUnderground = false;
+            this.canDoubleJump = true;
+            this.sprite.y += 10;
+            body.setVelocityY(260);
+            this.applySquashStretch(0.78, 1.25);
+            this.spawnDust(5);
+            SFX.roll();
+          } else if (!this.isRolling && time >= this.nextRollAllowedTime) {
+            this.startRoll(time, input);
+          }
         } else if (input.rollJustPressed && !this.isRolling && time >= this.nextRollAllowedTime) {
           // Start Dodge Roll
           this.startRoll(time, input);
@@ -178,8 +187,8 @@
           body.setVelocityX(this.facing * CONFIG.PLAYER.ROLL_SPEED);
           this.sprite.angle += this.facing * 18;
           if (time > this.nextDustTime) {
-            this.spawnDust(1);
-            this.nextDustTime = time + 55;
+            this.spawnDust(1, Boolean(GAME_STATE.hasRollStunBoots));
+            this.nextDustTime = time + 50;
           }
         } else {
           if (input.moveLeft) {
@@ -281,14 +290,18 @@
         }
 
         this.isRolling = true;
+        this.rollHitEnemies = new Set();
         this.rollEndTime = time + CONFIG.PLAYER.ROLL_DURATION_MS;
         this.nextRollAllowedTime = time + CONFIG.PLAYER.ROLL_COOLDOWN_MS;
         this.invulnUntil = this.rollEndTime + 60; // i-frames during roll
         this.counterWindowEndTime = this.rollEndTime + CONFIG.PLAYER.COUNTER_WINDOW_MS;
 
         this.sprite.setTexture('cossack_roll');
+        if (GAME_STATE.hasRollStunBoots) {
+          this.sprite.setTint(0xffccd5);
+        }
         this.applySquashStretch(1.2, 0.8);
-        this.spawnDust(4);
+        this.spawnDust(4, Boolean(GAME_STATE.hasRollStunBoots));
         SFX.roll();
       }
 
@@ -298,6 +311,7 @@
           this.isRolling = false;
           this.sprite.setTexture('cossack');
           this.sprite.setAngle(0);
+          this.sprite.clearTint();
         }
 
         const isCounterAttack = time <= this.counterWindowEndTime;
@@ -323,9 +337,14 @@
         const slash = this.scene.add.image(slashX, slashY, usingSaber ? 'saber_slash' : 'pan_slash').setDepth(37);
         slash.setFlipX(this.facing < 0);
 
+        const hasShkvarkyBuff = Boolean(this.shkvarkyBuffUntil && time < this.shkvarkyBuffUntil);
+
         if (isCounterAttack) {
           slash.setTint(usingSaber ? 0x00f5d4 : 0xffea00);
           slash.setScale(1.38);
+        } else if (hasShkvarkyBuff) {
+          slash.setTint(0xff9f1c);
+          slash.setScale(this.comboStep === 3 ? 1.42 : 1.24);
         } else if (this.comboStep === 3) {
           slash.setTint(usingSaber ? 0xffd166 : 0xff9f1c);
           slash.setScale(1.3);
@@ -383,14 +402,17 @@
         this.sprite.setScale(scaleX, scaleY);
       }
 
-      spawnDust(count = 3) {
+      spawnDust(count = 3, isCrimsonBootTrail = false) {
         for (let i = 0; i < count; i++) {
           const p = this.scene.add.image(
             this.sprite.x + Phaser.Math.Between(-12, 12),
             this.sprite.y + 24,
-            'particle_dust'
+            isCrimsonBootTrail ? 'particle_star' : 'particle_dust'
           ).setDepth(33);
-          p.setScale(Phaser.Math.FloatBetween(0.5, 1.1));
+          if (isCrimsonBootTrail) {
+            p.setTint(i % 2 === 0 ? 0xff2a4b : 0xffd166);
+          }
+          p.setScale(Phaser.Math.FloatBetween(0.55, 1.15));
           this.scene.tweens.add({
             targets: p,
             x: p.x + Phaser.Math.Between(-24, 24),

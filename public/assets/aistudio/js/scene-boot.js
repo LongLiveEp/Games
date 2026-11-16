@@ -1298,6 +1298,208 @@
         g.strokeCircle(14, 14, 11);
         g.generateTexture('salt_boulder', 28, 28);
 
+        // 36. Act II Korchma «Куций Хвіст»: Enemy Chort ('enemy_chort' — Куций Чортик)
+        g.clear();
+        // Stubby tail ("куций хвіст") sticking out at the back
+        g.lineStyle(3.5, 0x3d1e24, 1);
+        g.beginPath();
+        g.moveTo(10, 36);
+        g.lineTo(3, 31);
+        g.lineTo(5, 27);
+        g.strokePath();
+        // Shaggy dark-brown / maroon imp torso
+        g.fillStyle(0x3a1c20, 1);
+        g.fillRoundedRect(11, 18, 26, 24, 8);
+        g.fillStyle(0x54262b, 1);
+        g.fillRoundedRect(13, 20, 22, 20, 6);
+        // Imp head with pointed bat-ears & curved goat horns
+        g.fillStyle(0x692b32, 1);
+        g.fillTriangle(7, 14, 15, 10, 13, 20);
+        g.fillTriangle(41, 14, 33, 10, 35, 20);
+        g.fillCircle(24, 14, 10.5);
+        // Curved horns
+        g.fillStyle(0x1b1d24, 1);
+        g.fillTriangle(16, 6, 13, 0, 21, 5);
+        g.fillTriangle(32, 6, 35, 0, 27, 5);
+        // Glowing mischievous amber-yellow eyes & dark brows
+        g.fillStyle(0xffbe0b, 1);
+        g.fillCircle(21, 12, 2.6);
+        g.fillCircle(29, 12, 2.6);
+        g.fillStyle(0x111111, 1);
+        g.fillCircle(21.5, 12, 1.1);
+        g.fillCircle(29.5, 12, 1.1);
+        // Hooked imp nose & fanged grin
+        g.fillStyle(0x9e3a44, 1);
+        g.fillEllipse(28, 15.5, 8, 5);
+        g.fillStyle(0xffffff, 1);
+        g.fillTriangle(21, 19, 23, 22, 25, 19);
+        g.fillTriangle(27, 19, 29, 22, 31, 19);
+        // Cloven hooves
+        g.fillStyle(0x1b1d24, 1);
+        g.fillRoundedRect(15, 41, 6, 9, 2);
+        g.fillRoundedRect(27, 41, 6, 9, 2);
+        g.generateTexture('enemy_chort', 48, 52);
+
+        // 37. Act II Korchma Mini-Boss: Лихо з Корчми «Куций Хвіст» ('boss_lykho')
+        // Inspired by the iconic crimson horned devil from "Як козаки на весіллі гуляли"
+        g.clear();
+        // Gleaming Red Cossack Boots (Червоні чоботи-сап'янці Лиха) on his feet!
+        g.fillStyle(0xd90429, 1);
+        g.fillRoundedRect(20, 68, 16, 14, 4);
+        g.fillRoundedRect(48, 68, 16, 14, 4);
+        g.fillStyle(0xff2a4b, 1);
+        g.fillRoundedRect(16, 74, 20, 8, 3);
+        g.fillRoundedRect(48, 74, 20, 8, 3);
+        g.fillStyle(0xffd166, 1);
+        g.fillRect(28, 80, 7, 3);
+        g.fillRect(49, 80, 7, 3);
+        // Hulking crimson-red body & broad shoulders
+        g.fillStyle(0x9b1123, 1);
+        g.fillRoundedRect(14, 30, 56, 40, 14);
+        g.fillStyle(0xc1122a, 1);
+        g.fillRoundedRect(17, 32, 50, 35, 12);
+        // Wide black leather belt with golden buckle
+        g.fillStyle(0x181920, 1);
+        g.fillRoundedRect(15, 57, 54, 9, 3);
+        g.lineStyle(2.5, 0xffd166, 1);
+        g.strokeRoundedRect(35, 56, 14, 11, 2);
+        // Giant bat-like ears on both sides of the head
+        g.fillStyle(0xa81327, 1);
+        g.fillEllipse(13, 25, 16, 26);
+        g.fillEllipse(71, 25, 16, 26);
+        g.fillStyle(0x7a0c1b, 1);
+        g.fillEllipse(14, 26, 9, 16);
+        g.fillEllipse(70, 26, 9, 16);
+        // Golden hoop earring hanging from left ear
+        g.lineStyle(2.5, 0xffd166, 1);
+        g.strokeCircle(14, 38, 5);
+        // Massive crimson head
+        g.fillStyle(0xc91831, 1);
+        g.fillRoundedRect(20, 10, 44, 34, 12);
+        // Two curved dark devil horns on top of the forehead
+        g.fillStyle(0x221619, 1);
+        g.fillTriangle(29, 12, 24, 1, 36, 10);
+        g.fillTriangle(55, 12, 60, 1, 48, 10);
+        // Deep dark purple-black eye sockets & fierce yellow eyes
+        g.fillStyle(0x2b192e, 0.95);
+        g.fillEllipse(34, 22, 13, 10);
+        g.fillEllipse(50, 22, 13, 10);
+        g.fillStyle(0xffe66d, 1);
+        g.fillCircle(34, 22, 4.2);
+        g.fillCircle(50, 22, 4.2);
+        g.fillStyle(0x111111, 1);
+        g.fillCircle(33, 22, 1.8);
+        g.fillCircle(49, 22, 1.8);
+        // Heavy furrowed brow
+        g.lineStyle(3.5, 0x590814, 1);
+        g.lineBetween(26, 16, 40, 20);
+        g.lineBetween(58, 16, 44, 20);
+        // Wide fanged grin
+        g.fillStyle(0x4a060f, 1);
+        g.fillRoundedRect(27, 34, 30, 7, 3);
+        g.fillStyle(0xffffff, 1);
+        g.fillTriangle(29, 34, 32, 39, 35, 34);
+        g.fillTriangle(49, 34, 52, 39, 55, 34);
+        g.fillTriangle(38, 41, 40, 36, 42, 41);
+        // Iconic huge drooping bulbous nose ("великий грушоподібний ніс")
+        g.fillStyle(0xe34258, 1);
+        g.fillEllipse(40, 30, 16, 20);
+        g.lineStyle(1.5, 0x800f1d, 0.9);
+        g.strokeEllipse(40, 30, 16, 20);
+        g.generateTexture('boss_lykho', 84, 84);
+
+        // 38. Frothy Wooden Tavern Mug Projectile ('korchma_mug')
+        g.clear();
+        g.fillStyle(0x7f4f24, 1);
+        g.fillRoundedRect(3, 5, 13, 15, 3);
+        g.lineStyle(2, 0x3d2314, 1);
+        g.strokeRoundedRect(3, 5, 13, 15, 3);
+        g.strokeCircle(16, 12, 4);
+        // White frothy foam on top
+        g.fillStyle(0xfefae0, 1);
+        g.fillCircle(6, 5, 3.5);
+        g.fillCircle(10, 4, 4);
+        g.fillCircle(14, 5, 3.2);
+        g.generateTexture('korchma_mug', 22, 22);
+
+        // 39. Crimson Boots of Lykho Pickup ('loot_boots_lykho' — Червоні Чоботи-Сап'янці)
+        g.clear();
+        // Left boot (back)
+        g.fillStyle(0xa80b22, 1);
+        g.fillRoundedRect(6, 4, 11, 20, 3);
+        g.fillRoundedRect(2, 18, 16, 8, 3);
+        // Right boot (front, bright crimson with golden trim & heel)
+        g.fillStyle(0xe60026, 1);
+        g.fillRoundedRect(16, 6, 12, 22, 3);
+        g.fillRoundedRect(10, 21, 19, 9, 4);
+        g.fillTriangle(10, 21, 6, 17, 13, 22); // Upturned Cossack boot toe!
+        g.fillStyle(0xffd166, 1);
+        g.fillRect(16, 6, 12, 3);
+        g.fillRect(23, 29, 6, 3);
+        g.lineStyle(1.5, 0xffea00, 0.95);
+        g.strokeRoundedRect(16, 6, 12, 22, 3);
+        g.generateTexture('loot_boots_lykho', 34, 34);
+
+        // 40. Act II Korchma Enemy: «Дуля» ('enemy_dulya' — Окаста Дуля в вишитій сорочці, 56x60)
+        g.clear();
+        // Flowing tattered off-white/parchment embroidered shirt skirt at bottom
+        g.fillStyle(0xbeb29e, 1);
+        g.fillTriangle(10, 58, 28, 25, 48, 58);
+        g.fillStyle(0xe6decb, 1);
+        g.fillRoundedRect(15, 28, 28, 29, 8);
+        // Fold shadows on the linen robe
+        g.lineStyle(1.8, 0xa89b85, 0.85);
+        g.lineBetween(24, 32, 20, 56);
+        g.lineBetween(33, 32, 37, 56);
+        // Two dangling empty rushnyk-sleeves in front with red-brown embroidery on the cuffs!
+        g.fillStyle(0xf2ece1, 1);
+        g.fillRoundedRect(10, 35, 11, 18, 4);
+        g.fillRoundedRect(26, 35, 11, 18, 4);
+        // Traditional crimson-brown geometric embroidery stripes on sleeves (як на ілюстрації)
+        g.lineStyle(2, 0x8c2d19, 0.95);
+        g.lineBetween(11, 44, 20, 44);
+        g.lineBetween(11, 48, 20, 48);
+        g.lineBetween(27, 44, 36, 44);
+        g.lineBetween(27, 48, 36, 48);
+        // Knotted linen collar around the wrist/neck
+        g.fillStyle(0xd5c8b3, 1);
+        g.fillRoundedRect(16, 25, 24, 7, 3);
+        g.lineStyle(1.5, 0x8c7d68, 0.9);
+        g.strokeRoundedRect(16, 25, 24, 7, 3);
+        // Giant gnarled clenched fist head («Дуля / Фіґа») facing left/right
+        g.fillStyle(0xb56545, 1);
+        g.fillRoundedRect(12, 4, 32, 23, 8);
+        g.fillStyle(0xd48462, 1);
+        g.fillRoundedRect(14, 5, 28, 21, 7);
+        // Four stacked curled fingers of the fist
+        g.fillStyle(0xde9372, 1);
+        g.fillRoundedRect(11, 5, 20, 6, 3);
+        g.fillRoundedRect(11, 11, 21, 6, 3);
+        g.fillRoundedRect(12, 17, 20, 5.5, 3);
+        g.fillRoundedRect(14, 22, 18, 5, 2.5);
+        g.lineStyle(1.5, 0x7a3b24, 0.9);
+        g.lineBetween(12, 11, 31, 11);
+        g.lineBetween(12, 17, 31, 17);
+        g.lineBetween(14, 22, 30, 22);
+        // Iconic thumb tip ("дуля") jutting out between the top two fingers!
+        g.fillStyle(0xe8a384, 1);
+        g.fillRoundedRect(6, 8, 12, 7, 3.5);
+        g.lineStyle(1.5, 0x7a3b24, 0.95);
+        g.strokeRoundedRect(6, 8, 12, 7, 3.5);
+        // Pale fingernail on the protruding thumb
+        g.fillStyle(0xfefae0, 0.92);
+        g.fillRoundedRect(7, 9, 4, 4.5, 1.5);
+        // Creepy bulging bloodshot eye peeking out between the knuckles!
+        g.fillStyle(0x8c1d18, 1);
+        g.fillCircle(28, 12, 5.2);
+        g.fillStyle(0xfff3b0, 1);
+        g.fillCircle(28, 12, 4);
+        g.fillStyle(0x1b1d24, 1);
+        g.fillCircle(27, 12, 1.9);
+        g.fillStyle(0xffffff, 1);
+        g.fillCircle(26.3, 11.2, 0.8);
+        g.generateTexture('enemy_dulya', 56, 60);
+
         let titleLaunched = false;
         const launchTitle = () => {
           if (titleLaunched) return;

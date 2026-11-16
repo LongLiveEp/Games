@@ -29,6 +29,7 @@
         ROLL_DURATION_MS: 350,
         ROLL_COOLDOWN_MS: 800,
         ROLL_SPEED: 490,
+        ROLL_BOOTS_STUN: 35,       // Stun dealt when rolling through enemies with Red Boots of Lykho
         COUNTER_WINDOW_MS: 650,    // Time after roll to trigger Counter-Attack
 
         // Combat (3-hit Frying Pan combo)
@@ -174,6 +175,40 @@
           DAMAGE_WAVE: 19,
           DAMAGE_WISP: 17,
           COOLDOWN_MS: 820
+        },
+        CHORT: {
+          SPEED: 155,
+          HOP_VEL_Y: -420,
+          LUNGE_SPEED: 330,
+          AGGRO_RANGE: 380,
+          TELEGRAPH_MS: 380,
+          TELEPORT_COOLDOWN_MS: 3400,
+          POST_TELEPORT_MS: 340,
+          MAX_STUN: 85,
+          DAMAGE: 15,
+          THROW_SPEED_Y: -285,
+          COOLDOWN_MS: 1150
+        },
+        DULYA: {
+          WALK_SPEED: 88,
+          ROLL_SPEED: 335,
+          AGGRO_RANGE: 420,
+          TELEGRAPH_MS: 480,
+          ROLL_DURATION_MS: 1150,
+          MAX_STUN: 95,
+          DAMAGE_ROLL: 18,
+          COOLDOWN_MS: 1050
+        },
+        BOSS_LYKHO: {
+          MAX_STUN: 240,
+          WALK_SPEED: 125,
+          CHARGE_SPEED: 440,
+          JUMP_VEL_Y: -610,
+          TELEGRAPH_MS: 440,
+          DAMAGE_CHARGE: 20,
+          DAMAGE_WAVE: 16,
+          DAMAGE_MUG: 15,
+          COOLDOWN_MS: 920
         },
         // ACT III: «НА ДНІПРІ» — UKRAINIAN WATER MYTHOLOGY & CLOUD PLATFORMER
         RUSALKA: {

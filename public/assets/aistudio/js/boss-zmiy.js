@@ -371,6 +371,31 @@ class SalyonohorychBoss {
         this.drawDragonBody(0);
     }
 
+    destroyBoss() {
+        this.isFinished = true;
+        this.isDefeated = true;
+        if (typeof this.clearPendingPillarMarkers === 'function') {
+            this.clearPendingPillarMarkers();
+        }
+        if (this.bodyBackGraphics) this.bodyBackGraphics.destroy();
+        if (this.necksGraphics) this.necksGraphics.destroy();
+        if (this.bodyFrontGraphics) this.bodyFrontGraphics.destroy();
+        if (this.effectsGraphics) this.effectsGraphics.destroy();
+        if (Array.isArray(this.heads)) {
+            this.heads.forEach(h => {
+                if (!h) return;
+                h.isFinished = true;
+                if (h.stunTimer) h.stunTimer.remove(false);
+                if (h.headLabel) h.headLabel.destroy();
+                if (h.stunStars) h.stunStars.destroy();
+                if (h.barrelVisual) h.barrelVisual.destroy();
+                if (h.sleepText) h.sleepText.destroy();
+                if (h.crownVisual) h.crownVisual.destroy();
+                if (h.sprite && h.sprite.active) h.sprite.destroy();
+            });
+        }
+    }
+
     /**
      * Повертає головну цільову голову поточної стадії (1 -> leftHead, 2 -> midHead, 3 -> rightHead)
      */

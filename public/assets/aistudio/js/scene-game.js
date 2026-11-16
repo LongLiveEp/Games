@@ -21,6 +21,7 @@
         }
         if (this.currentLevel >= 3) {
           GAME_STATE.hasSwampFrogs = true;
+          GAME_STATE.hasRollStunBoots = true;
         }
         this.initialCoins = (data && data.coins !== undefined) ? data.coins : (GAME_STATE.savedCoins || 0);
         this.startAtBoss = Boolean(data && data.startAtBoss);
@@ -39,6 +40,9 @@
 
         this.physics.world.setBounds(0, 0, this.worldWidth, CONFIG.WORLD_HEIGHT);
         this.physics.world.OVERLAP_BIAS = 16;
+        if (this.input && this.input.keyboard) {
+          this.input.keyboard.removeAllListeners();
+        }
         this.isPaused = false;
         this.isDeathModalOpen = false;
         this.isVictory = false;
@@ -348,6 +352,9 @@
           groundVisual.fillRect(0, CONFIG.GROUND_Y, this.worldWidth, 14);
           groundVisual.fillStyle(0x2d6a4f, 1);
           groundVisual.fillRect(0, CONFIG.GROUND_Y, this.worldWidth, 5);
+
+          // Build Act II Hybrid Chunks Environment (Korchma «Куций Хвіст», Root Catacombs, Canopy & Banquet Hall)
+          this.createAct2ChunksEnvironment();
         } else if (isLevel4) {
           // ==================================================================
           // ACT IV («ДИКЕ ПОЛЕ І ЧОРНЕ МОРЕ»): STEPPE CHERNOZEM -> PINK SYVASH BRINE & SALT CRYSTALS
@@ -466,34 +473,10 @@
           // Overlay graphics for Stage 3 Salt Mountain cracks (depth 13)
           this.saltMountainCracksGraphic = this.add.graphics().setDepth(13);
         } else {
-          // Deep underground stone & catacomb stratum
-          groundVisual.fillStyle(0x231912, 1);
-          groundVisual.fillRect(0, CONFIG.GROUND_Y, this.worldWidth, groundH);
-
-          // Mid-earth warm clay & soil band
-          groundVisual.fillStyle(0x3d291a, 1);
-          groundVisual.fillRect(0, CONFIG.GROUND_Y + 12, this.worldWidth, 52);
-
-          // Underground tunnel archways, roots & rocky texture details so the lower band is clearly visible
-          for (let x = 40; x < this.worldWidth; x += 120) {
-            groundVisual.fillStyle(0x332419, 1);
-            groundVisual.fillRoundedRect(x, CONFIG.GROUND_Y + 68, 72, 26, 5);
-            groundVisual.fillStyle(0x2c1f16, 1);
-            groundVisual.fillRoundedRect(x + 36, CONFIG.GROUND_Y + 100, 68, 24, 5);
-
-            // Hanging tree roots & pebbles in upper soil
-            groundVisual.lineStyle(2.5, 0x5c3c24, 0.85);
-            groundVisual.lineBetween(x + 20, CONFIG.GROUND_Y + 14, x + 12, CONFIG.GROUND_Y + 46);
-            groundVisual.lineBetween(x + 20, CONFIG.GROUND_Y + 28, x + 30, CONFIG.GROUND_Y + 42);
-            groundVisual.fillStyle(0x6c584c, 0.75);
-            groundVisual.fillCircle(x + 85, CONFIG.GROUND_Y + 34, 6);
-          }
-
-          // Lush Top Grass Border at CONFIG.GROUND_Y (405)
-          groundVisual.fillStyle(0x4c953e, 1);
-          groundVisual.fillRect(0, CONFIG.GROUND_Y, this.worldWidth, 14);
-          groundVisual.fillStyle(0x6ab04c, 1);
-          groundVisual.fillRect(0, CONFIG.GROUND_Y, this.worldWidth, 5);
+          // ==================================================================
+          // ACT I («ХУТІР І УЗЛІССЯ»): HYBRID ROOM GRAPH (LEVEL1_CHUNKS)
+          // ==================================================================
+          this.createAct1ChunksEnvironment(groundVisual);
         }
 
         if (!isLevel3) {
@@ -523,6 +506,21 @@
           this.physics.add.existing(undergroundFloor, true);
           this.platforms.add(undergroundFloor);
           this.undergroundFloorGroup.add(undergroundFloor);
+
+          // In Act I, chunk_cellar_dungeon (x: 4200..6120) and chunk_mill_upper (x: 6400..7680)
+          // have a 100% solid stone/timber floor at CONFIG.GROUND_Y so nothing drops below it!
+          if (this.currentLevel === 1) {
+            const solidInteriorFloor = this.add.rectangle(
+              5940,
+              CONFIG.GROUND_Y + 12,
+              3480,
+              24,
+              0x000000,
+              0
+            );
+            this.physics.add.existing(solidInteriorFloor, true);
+            this.platforms.add(solidInteriorFloor);
+          }
         } else {
           this.groundBody = null;
         }
@@ -591,9 +589,17 @@
               : (isLevel4
                 ? 'platform_tile_steppe'
                 : (isLevel2 ? 'platform_tile_dark' : 'platform_tile'));
-            const tile = this.add.tileSprite(p.x, p.y, p.w, 24, platTex);
-            if (isCrystal) tile.setDepth(19);
+            const tile = this.add.tileSprite(p.x, p.y, p.w, 24, platTex).setDepth(isCrystal ? 19 : 18);
+            if (p.isCellarPlatform) {
+              tile.setTint(0x9c7a54);
+            }
             this.physics.add.existing(tile, true);
+            if (!isCrystal) {
+              tile.isOneWayPlatform = true;
+              tile.body.checkCollision.down = false;
+              tile.body.checkCollision.left = false;
+              tile.body.checkCollision.right = false;
+            }
             this.platforms.add(tile);
 
             if (isCrystal) {
@@ -632,10 +638,12 @@
         // 3. Create Checkpoints
         const bossStartSpawnX = isLevel3
           ? (this.levelData.bossArenaStartX + 95)
-          : (this.levelData.bossArenaStartX - 65);
+          : (this.currentLevel === 1
+            ? (this.levelData.bossArenaStartX + 85)
+            : (this.levelData.bossArenaStartX - 65));
         this.activeCheckpoint = (this.startAtBoss && this.levelData.bossArenaStartX)
-          ? { x: bossStartSpawnX, y: CONFIG.GROUND_Y - 45, id: 99 }
-          : { x: 120, y: CONFIG.GROUND_Y - 45, id: 0 };
+          ? { x: bossStartSpawnX, y: CONFIG.GROUND_Y - 45, id: 99, chunkId: 'chunk_boss_rooster' }
+          : { x: 120, y: CONFIG.GROUND_Y - 45, id: 0, chunkId: 'chunk_village_start' };
         this.lastSafePerch = { x: this.activeCheckpoint.x, y: this.activeCheckpoint.y };
         this.checkpointObjects = [];
         const checkpointTextureMap = {
@@ -647,7 +655,7 @@
         };
         this.levelData.checkpoints.forEach(cp => {
           const tex = checkpointTextureMap[cp.type] || 'checkpoint_pillar';
-          const img = this.add.image(cp.x, cp.y - 40, tex);
+          const img = this.add.image(cp.x, cp.y - 40, tex).setDepth(20);
           if (GAME_STATE.isHardcore()) {
             img.setTint(0x555555);
           } else if (isLevel4) {
@@ -663,17 +671,29 @@
         // 4. Create Player & Platform Collisions
         this.player = new Player(this, this.activeCheckpoint.x, this.activeCheckpoint.y);
         this.player.coins = this.initialCoins;
-        this.physics.add.collider(this.player.sprite, this.platforms, (playerSprite, platSprite) => {
-          if ((isLevel3 || isLevel4) && playerSprite.body.blocked.down) {
-            this.lastSafePerch = {
-              x: Phaser.Math.Clamp(playerSprite.x, platSprite.x - platSprite.width * 0.3, platSprite.x + platSprite.width * 0.3),
-              y: platSprite.y - 38
-            };
-          }
-        });
+        this.physics.add.collider(
+          this.player.sprite,
+          this.platforms,
+          (playerSprite, platSprite) => {
+            if ((isLevel3 || isLevel4) && playerSprite.body.blocked.down) {
+              this.lastSafePerch = {
+                x: Phaser.Math.Clamp(playerSprite.x, platSprite.x - platSprite.width * 0.3, platSprite.x + platSprite.width * 0.3),
+                y: platSprite.y - 38
+              };
+            }
+          },
+          (playerSprite, platSprite) => {
+            if (platSprite && platSprite.isOneWayPlatform) {
+              if (playerSprite.body.velocity.y < 0) return false;
+              if (this.time.now < this.player.dropThroughUntil) return false;
+            }
+            return true;
+          },
+          this
+        );
         if (this.groundBody) {
-          if (isLevel4) {
-            // In Act IV there are no underground catacombs — groundBody is a 100% solid surface collider
+          if (isLevel4 || this.currentLevel === 1 || this.currentLevel === 2) {
+            // In Act I, Act II (hybrid chunks) and Act IV, groundBody is a 100% solid surface collider
             this.groundBody.body.checkCollision.up = true;
             this.physics.add.collider(this.player.sprite, this.groundBody);
           } else {
@@ -700,93 +720,9 @@
         this.cameras.main.startFollow(this.camTarget, true, CONFIG.CAMERA.LERP_X, CONFIG.CAMERA.LERP_Y);
         this.cameras.main.setDeadzone(CONFIG.CAMERA.DEADZONE_W, CONFIG.CAMERA.DEADZONE_H);
 
-        // 6. Create Enemies & Boss (Act I vs. Act II "Злий Ліс" vs. Act III "На Дніпрі")
+        // 6. Create Enemies & Boss (Act I vs. Act II "Злий Ліс" vs. Act III "На Дніпрі" vs. Act IV)
         this.enemies = [];
-        this.levelData.enemies.forEach(eData => {
-          let enemy;
-          if (eData.type === 'goose') {
-            enemy = new GooseEnemy(this, eData.x, eData.y, eData.minX, eData.maxX);
-            this.physics.add.collider(enemy.sprite, this.platforms);
-            if (this.groundBody) this.physics.add.collider(enemy.sprite, this.groundBody);
-          } else if (eData.type === 'shield_guardian') {
-            enemy = new ShieldGuardianEnemy(this, eData.x, eData.y, eData.minX, eData.maxX);
-            this.physics.add.collider(enemy.sprite, this.platforms);
-            if (this.groundBody) this.physics.add.collider(enemy.sprite, this.groundBody);
-          } else if (eData.type === 'nyavka') {
-            enemy = new NyavkaEnemy(this, eData.x, eData.y, eData.minX, eData.maxX);
-          } else if (eData.type === 'bolotyanyk') {
-            enemy = new BolotyanykEnemy(this, eData.x, eData.y, eData.minX, eData.maxX);
-            this.physics.add.collider(enemy.sprite, this.platforms);
-            if (this.groundBody) this.physics.add.collider(enemy.sprite, this.groundBody);
-          } else if (eData.type === 'rusalka') {
-            enemy = new RusalkaEnemy(this, eData.x, eData.y, eData.minX, eData.maxX);
-          } else if (eData.type === 'vodyanyk') {
-            enemy = new VodyanykEnemy(this, eData.x, eData.y, eData.minX, eData.maxX);
-            this.physics.add.collider(enemy.sprite, this.platforms);
-          } else if (eData.type === 'potercha') {
-            enemy = new PoterchaEnemy(this, eData.x, eData.y, eData.minX, eData.maxX);
-          } else if (eData.type === 'polovyk') {
-            enemy = new PolovykEnemy(this, eData.x, eData.y, eData.minX, eData.maxX);
-            this.physics.add.collider(enemy.sprite, this.platforms);
-            if (this.groundBody) this.physics.add.collider(enemy.sprite, this.groundBody);
-          } else if (eData.type === 'vovkulaka') {
-            enemy = new VovkulakaEnemy(this, eData.x, eData.y, eData.minX, eData.maxX);
-            this.physics.add.collider(enemy.sprite, this.platforms);
-            if (this.groundBody) this.physics.add.collider(enemy.sprite, this.groundBody);
-          } else if (eData.type === 'tumbleweed') {
-            enemy = new TumbleweedEnemy(this, eData.x, eData.y, eData.minX, eData.maxX);
-            this.physics.add.collider(enemy.sprite, this.platforms);
-            if (this.groundBody) this.physics.add.collider(enemy.sprite, this.groundBody);
-          } else if (eData.type === 'seagull') {
-            enemy = new SeagullEnemy(this, eData.x, eData.y, eData.minX, eData.maxX);
-          } else {
-            // Pesyholovtsi (LeshyEnemy) move on the surface AND burrow underground to hide from Omelko!
-            enemy = new LeshyEnemy(this, eData.x, eData.y, eData.minX, eData.maxX);
-            this.physics.add.collider(enemy.sprite, this.platforms);
-            this.physics.add.collider(enemy.sprite, this.undergroundFloorGroup);
-            if (this.groundBody) {
-              this.physics.add.collider(
-                enemy.sprite,
-                this.groundBody,
-                null,
-                (enemySprite) => {
-                  const ref = enemySprite.enemyRef;
-                  if (ref && this.time.now < ref.burrowPassUntil) return false;
-                  if (enemySprite.body.velocity.y < 0) return false;
-                  const prevBottom = enemySprite.body.prev.y + enemySprite.body.height;
-                  if (prevBottom <= CONFIG.GROUND_Y + 18) return true;
-                  return enemySprite.body.bottom <= CONFIG.GROUND_Y + 28;
-                },
-                this
-              );
-            }
-          }
-          this.enemies.push(enemy);
-        });
-
-        if (isLevel4) {
-          this.boss = new SalyonohorychBoss(this, this.levelData.bossArenaStartX);
-          this.boss.heads.forEach(head => {
-            this.enemies.push(head);
-          });
-        } else if (isLevel3) {
-          this.boss = new VodyanykTsarBoss(this, this.levelData.bossSpawnX, CONFIG.GROUND_Y - 68);
-          if (!GAME_STATE.hasSeenVodyanykIntro) {
-            // Keep Vodyanyk Tsar submerged beneath the Dnipro until his cutscene emergence
-            this.boss.sprite.setAlpha(0).setY(CONFIG.GROUND_Y + 60);
-            if (this.boss.barBg) this.boss.barBg.setVisible(false);
-            if (this.boss.barFill) this.boss.barFill.setVisible(false);
-          }
-        } else if (isLevel2) {
-          this.boss = new DarkLisovykBoss(this, this.levelData.bossSpawnX, CONFIG.GROUND_Y - 58);
-        } else {
-          this.boss = new MadRoosterBoss(this, this.levelData.bossSpawnX, CONFIG.GROUND_Y - 50);
-        }
-        if (this.boss && !this.boss.isCompositeZmiy) {
-          this.physics.add.collider(this.boss.sprite, this.platforms);
-          if (this.groundBody) this.physics.add.collider(this.boss.sprite, this.groundBody);
-          this.enemies.push(this.boss);
-        }
+        this.spawnAllEnemiesAndBoss();
 
         // 7. Create Projectiles & Loot Physics Groups
         this.galushkaGroup = this.physics.add.group();
@@ -802,11 +738,15 @@
         }
 
         this.enemyProjectiles = this.physics.add.group();
-        this.physics.add.collider(this.enemyProjectiles, this.platforms, (proj) => {
+        this.physics.add.collider(this.enemyProjectiles, this.platforms, (obj1, obj2) => {
+          const proj = this.enemyProjectiles.contains(obj1) ? obj1 : obj2;
           if (
             proj &&
             proj.active &&
+            proj.texture &&
+            proj.body &&
             (proj.texture.key === 'pinecone' ||
+              proj.texture.key === 'korchma_mug' ||
               proj.texture.key === 'swamp_glob' ||
               proj.texture.key === 'water_orb' ||
               proj.texture.key === 'salt_shard' ||
@@ -825,6 +765,7 @@
               proj.active &&
               proj.texture &&
               (proj.texture.key === 'swamp_glob' ||
+                proj.texture.key === 'korchma_mug' ||
                 proj.texture.key === 'salt_shard' ||
                 proj.texture.key === 'salt_boulder') &&
               proj.body.velocity.y > 0
@@ -837,6 +778,26 @@
         this.lootGroup = this.physics.add.group();
         this.physics.add.collider(this.lootGroup, this.platforms);
         if (this.groundBody) this.physics.add.collider(this.lootGroup, this.groundBody);
+
+        // 7b. Setup Hybrid Chunk Portals, Breakable False Walls & Pre-placed Chunk Loot (Act I & Act II)
+        this.brokenWallIds = new Set();
+        this.collectedChunkLootIds = new Set();
+        this.chunkPortals = [];
+        this.breakableWalls = [];
+        this.portalTransitionCooldownUntil = 0;
+        this.hasEnteredCellar = false;
+        this.hasEnteredMill = false;
+        this.hasEnteredKorchma = false;
+        this.hasSeenKorchmaOutside = false;
+        this.isKorchmaIntroModalOpen = false;
+        this.korchmaIntroModalContainer = null;
+        if (this.levelData && this.levelData.chunks) {
+          this.setupAct1ChunksInteractiveObjects();
+          const initialChunkId = this.startAtBoss
+            ? (this.currentLevel === 2 ? 'chunk_boss_lisovyk' : 'chunk_boss_rooster')
+            : (this.levelData.initialChunkId || 'chunk_village_start');
+          this.setActiveLevel1Chunk(initialChunkId);
+        }
 
         // 8. UI & Pause / Menu Keyboard Shortcuts
         this.ui = new UI(this, false);
@@ -853,6 +814,9 @@
           this.showFloatingText(this.player.sprite.x + 80, this.player.sprite.y - 85, `🌾 ${STRINGS.LEVEL_4_TITLE} — ${STRINGS.LEVEL_4_SUBTITLE}`, '#ffd166');
           this.time.delayedCall(450, () => {
             this.showOmelkoSpeech(STRINGS.OMELKO_REMARK_STEPPE, 5400);
+            if (this.ui && this.ui.bestiaryModal) {
+              this.ui.bestiaryModal.showArenaPromptBanner(this.currentLevel, false);
+            }
           });
         } else if (isLevel3) {
           this.isControlsModalOpen = false;
@@ -862,6 +826,9 @@
           this.showFloatingText(this.player.sprite.x + 80, this.player.sprite.y - 85, `🌊 ${STRINGS.LEVEL_3_TITLE} — ${STRINGS.LEVEL_3_SUBTITLE}`, '#48cae4');
           this.time.delayedCall(450, () => {
             this.showOmelkoSpeech(STRINGS.OMELKO_REMARK_DNIPRO, 5200);
+            if (this.ui && this.ui.bestiaryModal) {
+              this.ui.bestiaryModal.showArenaPromptBanner(this.currentLevel, false);
+            }
           });
         } else if (isLevel2) {
           // In Act II ("Злий Ліс"), start immediately with atmospheric intro banner & Omelko's remark
@@ -872,6 +839,9 @@
           this.showFloatingText(this.player.sprite.x + 60, this.player.sprite.y - 85, `🌲 ${STRINGS.LEVEL_2_TITLE} — ${STRINGS.LEVEL_2_SUBTITLE}`, '#ff9f1c');
           this.time.delayedCall(450, () => {
             this.showOmelkoSpeech(STRINGS.OMELKO_REMARK_EVIL_FOREST, 5000);
+            if (this.ui && this.ui.bestiaryModal) {
+              this.ui.bestiaryModal.showArenaPromptBanner(this.currentLevel, false);
+            }
           });
         } else {
           // Show stylized Controls Guide Modal upon exiting the hut into Level 1
@@ -883,35 +853,46 @@
         }
 
         this.input.keyboard.on('keydown-ESC', () => {
-          if (this.isControlsModalOpen) {
+          if (this.ui && this.ui.bestiaryModal && this.ui.bestiaryModal.isOpen) return;
+          if (this.isKorchmaIntroModalOpen) {
+            this.closeKorchmaIntroModal();
+          } else if (this.isControlsModalOpen) {
             this.closeControlsModal();
           } else if (!this.isDeathModalOpen) {
             this.togglePause();
           }
         });
         this.input.keyboard.on('keydown-P', () => {
-          if (!this.isControlsModalOpen && !this.isDeathModalOpen) this.togglePause();
+          if (this.ui && this.ui.bestiaryModal && this.ui.bestiaryModal.isOpen) return;
+          if (!this.isControlsModalOpen && !this.isKorchmaIntroModalOpen && !this.isDeathModalOpen) this.togglePause();
         });
 
         // Keyboard navigation & hotkeys inside Controls Modal, Pause Menu, Death Modal, and Victory Screen
         this.input.keyboard.on('keydown-UP', () => {
+          if (this.ui && this.ui.bestiaryModal && this.ui.bestiaryModal.isOpen) return;
           if (this.isPaused) this.ui.movePauseSelection(-1);
           else if (this.isDeathModalOpen) this.ui.moveDeathSelection(-1);
         });
         this.input.keyboard.on('keydown-W', () => {
+          if (this.ui && this.ui.bestiaryModal && this.ui.bestiaryModal.isOpen) return;
           if (this.isPaused) this.ui.movePauseSelection(-1);
           else if (this.isDeathModalOpen) this.ui.moveDeathSelection(-1);
         });
         this.input.keyboard.on('keydown-DOWN', () => {
+          if (this.ui && this.ui.bestiaryModal && this.ui.bestiaryModal.isOpen) return;
           if (this.isPaused) this.ui.movePauseSelection(1);
           else if (this.isDeathModalOpen) this.ui.moveDeathSelection(1);
         });
         this.input.keyboard.on('keydown-S', () => {
+          if (this.ui && this.ui.bestiaryModal && this.ui.bestiaryModal.isOpen) return;
           if (this.isPaused) this.ui.movePauseSelection(1);
           else if (this.isDeathModalOpen) this.ui.moveDeathSelection(1);
         });
         this.input.keyboard.on('keydown-ENTER', () => {
-          if (this.isControlsModalOpen) {
+          if (this.ui && this.ui.bestiaryModal && this.ui.bestiaryModal.isOpen) return;
+          if (this.isKorchmaIntroModalOpen) {
+            this.closeKorchmaIntroModal();
+          } else if (this.isControlsModalOpen) {
             this.closeControlsModal();
           } else if (this.isDeathModalOpen) {
             this.ui.activateSelectedDeathButton();
@@ -923,7 +904,10 @@
           }
         });
         this.input.keyboard.on('keydown-SPACE', () => {
-          if (this.isControlsModalOpen) {
+          if (this.ui && this.ui.bestiaryModal && this.ui.bestiaryModal.isOpen) return;
+          if (this.isKorchmaIntroModalOpen) {
+            this.closeKorchmaIntroModal();
+          } else if (this.isControlsModalOpen) {
             this.closeControlsModal();
           } else if (this.isDeathModalOpen) {
             this.ui.activateSelectedDeathButton();
@@ -935,12 +919,15 @@
           }
         });
         this.input.keyboard.on('keydown-C', () => {
+          if (this.ui && this.ui.bestiaryModal && this.ui.bestiaryModal.isOpen) return;
           if (this.isPaused && !GAME_STATE.isHardcore()) this.returnToCheckpointFromMenu();
         });
         this.input.keyboard.on('keydown-R', () => {
+          if (this.ui && this.ui.bestiaryModal && this.ui.bestiaryModal.isOpen) return;
           if (this.isPaused || this.isVictory || this.isDeathModalOpen) this.restartLevel();
         });
         this.input.keyboard.on('keydown-H', () => {
+          if (this.ui && this.ui.bestiaryModal && this.ui.bestiaryModal.isOpen) return;
           if (this.isPaused) this.goToHutScene();
         });
         this.input.keyboard.on('keydown-M', () => {
@@ -971,6 +958,9 @@
 
         // Omelko's comic remark about Hrytsko's geese right after dismissing the controls guide
         this.showOmelkoSpeech(STRINGS.OMELKO_REMARK_GEESE, 4200);
+        if (this.ui && this.ui.bestiaryModal) {
+          this.ui.bestiaryModal.showArenaPromptBanner(this.currentLevel, false);
+        }
       }
 
       showOmelkoSpeech(text, duration = 4200) {
@@ -1276,7 +1266,16 @@
       }
 
       update(time, delta) {
-        if (this.isControlsModalOpen || this.isPaused || this.isDeathModalOpen || this.isVictory) return;
+        if (
+          this.isControlsModalOpen ||
+          this.isKorchmaIntroModalOpen ||
+          this.isPaused ||
+          this.isDeathModalOpen ||
+          this.isVictory ||
+          (this.ui && this.ui.bestiaryModal && this.ui.bestiaryModal.isOpen)
+        ) {
+          return;
+        }
 
         if (this.isBossIntroPlaying) {
           if (this.player && this.player.sprite && this.player.sprite.body) {
@@ -1302,10 +1301,39 @@
 
         this.player.update(time, delta);
 
+        // Check Roll-Stun Boots («Червоні Чоботи Лиха»): rolling through enemies deals heavy Stun!
+        if (this.player.isRolling && GAME_STATE.hasRollStunBoots) {
+          const rollBox = new Phaser.Geom.Rectangle(
+            this.player.sprite.x - 26,
+            this.player.sprite.y - 26,
+            52,
+            52
+          );
+          this.enemies.forEach(enemy => {
+            if (!enemy || enemy.isFinished || !enemy.sprite || !enemy.sprite.visible) return;
+            if (this.levelData && this.levelData.chunks && enemy.chunkId && enemy.chunkId !== this.currentChunkId) return;
+            if (this.player.rollHitEnemies && this.player.rollHitEnemies.has(enemy)) return;
+            if (Phaser.Geom.Intersects.RectangleToRectangle(rollBox, enemy.sprite.getBounds())) {
+              if (this.player.rollHitEnemies) this.player.rollHitEnemies.add(enemy);
+              enemy.receiveStunHit(
+                CONFIG.PLAYER.ROLL_BOOTS_STUN || 35,
+                this.player.sprite.x,
+                true,
+                false,
+                false,
+                true
+              );
+              this.spawnHitParticles(enemy.sprite.x, enemy.sprite.y, 7);
+            }
+          });
+        }
+
         // ====================================================================
-        // ACT III ("НА ДНІПРІ") & ACT IV ("ДИКЕ ПОЛЕ І ЧОРНЕ МОРЕ") MECHANICS
+        // ACT I & II CHUNKS, ACT III ("НА ДНІПРІ") & ACT IV ("ДИКЕ ПОЛЕ") MECHANICS
         // ====================================================================
-        if (this.currentLevel === 3) {
+        if (this.levelData && this.levelData.chunks) {
+          this.updateAct1ChunksAndPortals(time, delta);
+        } else if (this.currentLevel === 3) {
           this.updateDniproCloudsAndTraps(time, delta);
         } else if (this.currentLevel === 4) {
           this.updateSteppeAtmosphereAndMechanics(time, delta);
@@ -1370,7 +1398,7 @@
         // Trigger Omelko's surprise line the first time a Pesyholovets (LeshyEnemy) enters view in Level 1
         if (this.currentLevel === 1 && !this.hasSeenPesyholovets) {
           const firstMonster = this.enemies.find(
-            e => (e instanceof LeshyEnemy) && !e.isFinished && Math.abs(e.sprite.x - this.player.sprite.x) < 420
+            e => (e instanceof LeshyEnemy) && !e.isFinished && (!e.chunkId || e.chunkId === this.currentChunkId) && Math.abs(e.sprite.x - this.player.sprite.x) < 420
           );
           if (firstMonster) {
             this.hasSeenPesyholovets = true;
@@ -1385,7 +1413,7 @@
             if (GAME_STATE.isHardcore()) {
               this.showFloatingText(cp.x, cp.y - 125, STRINGS.CHECKPOINT_DISABLED_HARDCORE, '#ff6b6b');
             } else {
-              this.activeCheckpoint = { x: cp.x, y: cp.y - 40, id: cp.id };
+              this.activeCheckpoint = { x: cp.x, y: cp.y - 40, id: cp.id, chunkId: cp.chunkId || this.currentChunkId };
               this.lastSafePerch = { x: cp.x, y: cp.y - 42 };
               if (cp.sprite) cp.sprite.setTint(0xffd166);
               this.player.stamina = CONFIG.PLAYER.MAX_STAMINA;
@@ -1395,8 +1423,19 @@
           }
         });
 
+        // Trigger Omelko's remark when approaching Korchma «Куций Хвіст» in Level 2
+        if (this.currentLevel === 2 && !this.hasSeenKorchmaOutside && this.currentChunkId === 'chunk_forest_glade' && Math.abs(this.player.sprite.x - 2500) < 230) {
+          this.hasSeenKorchmaOutside = true;
+          this.showOmelkoSpeech(STRINGS.OMELKO_REMARK_KORCHMA_OUTSIDE, 4800);
+        }
+
         // Activate Boss when Player enters Boss Arena
-        if (this.boss && !this.boss.active && !this.bossIntroTriggered && this.player.sprite.x >= this.levelData.bossArenaStartX) {
+        const inBossArenaTrigger = (this.currentLevel === 1)
+          ? (this.currentChunkId === 'chunk_boss_rooster' || (this.player.sprite.x >= 3040 && this.player.sprite.x <= 4000))
+          : (this.currentLevel === 2
+            ? (this.currentChunkId === 'chunk_boss_lisovyk' || (this.player.sprite.x >= 3520 && this.player.sprite.x <= 4600))
+            : (this.player.sprite.x >= this.levelData.bossArenaStartX));
+        if (this.boss && !this.boss.active && !this.bossIntroTriggered && inBossArenaTrigger) {
           if (this.currentLevel === 4) {
             this.bossIntroTriggered = true;
             this.boss.activate();
@@ -1428,6 +1467,9 @@
             this.lastSafePerch = { x: this.levelData.bossArenaStartX + 95, y: CONFIG.GROUND_Y - 42 };
             this.showFloatingText(this.levelData.bossArenaStartX + 460, 175, STRINGS.BOSS_ZMIY_NAME, '#ffd166');
             this.showOmelkoSpeech(STRINGS.OMELKO_REMARK_ZMIY_BOSS, 5400);
+            if (this.ui && this.ui.bestiaryModal) {
+              this.ui.bestiaryModal.showArenaPromptBanner(4, true);
+            }
           } else if (this.currentLevel === 3) {
             this.bossIntroTriggered = true;
             // Lock camera within the Vodyanyk Tsar Arena bounds (7100 .. 8400)
@@ -1468,6 +1510,9 @@
               this.boss.activate();
               SFX.playMusic('mus_boss_vodyanyk', { volume: 0.46 });
               this.showFloatingText(this.boss.sprite.x - 80, 195, STRINGS.BOSS_VODYANYK_NAME, '#48cae4');
+              if (this.ui && this.ui.bestiaryModal) {
+                this.ui.bestiaryModal.showArenaPromptBanner(3, true);
+              }
             };
 
             if (!GAME_STATE.hasSeenVodyanykIntro) {
@@ -1478,21 +1523,49 @@
               this.showFloatingText(this.boss.sprite.x - 60, 155, STRINGS.BOSS_VODYANYK_RETRY_REMARK, '#90e0ef');
             }
           } else if (this.currentLevel === 2) {
+            this.bossIntroTriggered = true;
+            this.setActiveLevel1Chunk('chunk_boss_lisovyk');
+            this.activeCheckpoint = {
+              x: 3610,
+              y: CONFIG.GROUND_Y - 45,
+              id: 99,
+              chunkId: 'chunk_boss_lisovyk'
+            };
+            this.lastSafePerch = { x: 3610, y: CONFIG.GROUND_Y - 42 };
             this.boss.activate();
             SFX.playMusic('mus_boss_chornobor', { volume: 0.46 });
             this.showFloatingText(this.boss.sprite.x - 80, 195, STRINGS.BOSS_LISOVYK_NAME, '#52b788');
             this.showOmelkoSpeech(STRINGS.OMELKO_REMARK_LISOVYK, 5200);
+            if (this.ui && this.ui.bestiaryModal) {
+              this.ui.bestiaryModal.showArenaPromptBanner(2, true);
+            }
           } else {
+            this.bossIntroTriggered = true;
+            this.setActiveLevel1Chunk('chunk_boss_rooster');
+            this.activeCheckpoint = {
+              x: 3125,
+              y: CONFIG.GROUND_Y - 45,
+              id: 99,
+              chunkId: 'chunk_boss_rooster'
+            };
+            this.lastSafePerch = { x: 3125, y: CONFIG.GROUND_Y - 42 };
             this.boss.activate();
             SFX.playMusic('mus_boss_rooster', { volume: 0.45 });
             this.showFloatingText(this.boss.sprite.x - 80, 200, STRINGS.BOSS_NAME, '#ffbe0b');
             this.showOmelkoSpeech(STRINGS.OMELKO_REMARK_BOSS, 5200);
+            if (this.ui && this.ui.bestiaryModal) {
+              this.ui.bestiaryModal.showArenaPromptBanner(1, true);
+            }
           }
         }
 
-        // Update all active Enemies & Boss
+        // Update all active Enemies & Boss (in chunked levels, only update enemies in the active chunk)
         this.enemies.forEach(enemy => {
           if (!enemy.isFinished && typeof enemy.update === 'function') {
+            if (this.levelData && this.levelData.chunks && enemy.chunkId && enemy.chunkId !== this.currentChunkId) {
+              if (enemy.sprite && enemy.sprite.body) enemy.sprite.body.setVelocityX(0);
+              return;
+            }
             enemy.update(time, this.player);
           }
         });
@@ -1501,10 +1574,22 @@
         }
 
         // Update Galushka / Swamp Frog Projectiles
-        this.galushkaGroup.getChildren().forEach(g => {
+        this.galushkaGroup.getChildren().slice().forEach(g => {
+          if (!g || !g.active) return;
           g.angle += g.isSwampFrog ? 6 : 10;
+          if (g.active && this.breakableWalls && this.breakableWalls.length > 0) {
+            this.breakableWalls.forEach(wall => {
+              if (!wall.isBroken && g.active && Phaser.Geom.Intersects.RectangleToRectangle(g.getBounds(), wall.hitRect)) {
+                this.damageBreakableWall(wall, 1, g.x);
+                g.destroy();
+              }
+            });
+          }
+          if (!g.active) return;
           this.enemies.forEach(enemy => {
-            if (!enemy.isFinished && g.active && Phaser.Geom.Intersects.RectangleToRectangle(g.getBounds(), enemy.sprite.getBounds())) {
+            if (!g.active || !enemy || enemy.isFinished || !enemy.sprite || !enemy.sprite.active) return;
+            if (this.levelData && this.levelData.chunks && enemy.chunkId && enemy.chunkId !== this.currentChunkId) return;
+            if (Phaser.Geom.Intersects.RectangleToRectangle(g.getBounds(), enemy.sprite.getBounds())) {
               const stunDmg = g.isSwampFrog ? (CONFIG.PLAYER.GALUSHKA_STUN + 14) : CONFIG.PLAYER.GALUSHKA_STUN;
               enemy.receiveStunHit(stunDmg, g.x, true, false, Boolean(g.isSwampFrog));
               g.destroy();
@@ -1513,29 +1598,66 @@
         });
 
         // Update Enemy Projectiles (Pinecones, Swamp Globs, Water Orbs, Will-o'-the-Wisps & Boss Shockwaves)
-        this.enemyProjectiles.getChildren().forEach(proj => {
+        this.enemyProjectiles.getChildren().slice().forEach(proj => {
+          if (!proj || !proj.active) return;
           if (proj.isSpinning) proj.angle += 12;
           if (proj.active && Phaser.Geom.Intersects.RectangleToRectangle(proj.getBounds(), this.player.sprite.getBounds())) {
             if (this.player.takeDamage(proj.damageAmount || 15, proj.x)) {
               proj.destroy();
+              return;
             }
           }
-          if (proj.x < 0 || proj.x > this.worldWidth || proj.y > CONFIG.WORLD_HEIGHT) {
+          if (proj.active && (proj.x < 0 || proj.x > this.worldWidth || proj.y > CONFIG.WORLD_HEIGHT)) {
             proj.destroy();
           }
         });
 
-        // Update Loot Pickups
-        this.lootGroup.getChildren().forEach(item => {
-          if (item.active && Phaser.Geom.Intersects.RectangleToRectangle(item.getBounds(), this.player.sprite.getBounds())) {
-            SFX.pickup();
-            if (item.lootType === 'coin') {
+        // Update Loot Pickups (including Act I Secret Stash & Windmill Cracklings Pan)
+        this.lootGroup.getChildren().slice().forEach(item => {
+          if (item && item.active && Phaser.Geom.Intersects.RectangleToRectangle(item.getBounds(), this.player.sprite.getBounds())) {
+            if (item.chunkLootId && this.collectedChunkLootIds) {
+              this.collectedChunkLootIds.add(item.chunkLootId);
+            }
+            if (item.auraGraphic && item.auraGraphic.active) {
+              item.auraGraphic.destroy();
+            }
+            if (item.lootType === 'secret_kissel_jug') {
+              SFX.drinkUzvar();
+              this.player.stamina = CONFIG.PLAYER.MAX_STAMINA;
+              this.player.uzvarCharges = Math.min(CONFIG.PLAYER.UZVAR_CHARGES + 1, this.player.uzvarCharges + 1);
+              this.showChunkArtifactBanner('🍒 Глечик вишневого киселю: козацьке здоров’я повністю відновлено! (+1 Кисіль)', '#ff4d6d');
+            } else if (item.lootType === 'secret_galushka_stash') {
+              SFX.pickup();
+              this.player.galushkas = Math.min(CONFIG.PLAYER.MAX_GALUSHKAS, this.player.galushkas + 3);
+              this.showChunkArtifactBanner('🥟 Козацький сховок: +3 черстві галушки до торби!', '#ffd166');
+            } else if (item.lootType === 'secret_bestiary_scroll') {
+              SFX.itemFanfare();
+              this.player.coins += 5;
+              GAME_STATE.foundPesyholovetsChronicle = true;
+              this.showChunkArtifactBanner(STRINGS.SECRET_SCROLL_PICKUP, '#48cae4');
+            } else if (item.lootType === 'shkvarky_pan') {
+              SFX.itemFanfare();
+              this.player.shkvarkyBuffUntil = time + 45000;
+              this.player.coins += 5;
+              this.showOmelkoSpeech(STRINGS.OMELKO_REMARK_SHKVARKY, 4800);
+              this.showChunkArtifactBanner(STRINGS.SHKVARKY_PAN_PICKUP, '#ff9f1c');
+            } else if (item.lootType === 'boots_lykho') {
+              SFX.itemFanfare();
+              GAME_STATE.hasRollStunBoots = true;
+              this.player.stamina = CONFIG.PLAYER.MAX_STAMINA;
+              this.player.coins += 10;
+              this.showOmelkoSpeech(STRINGS.OMELKO_REMARK_LYKHO_DEFEATED, 5200);
+              this.showChunkArtifactBanner(STRINGS.BOOTS_LYKHO_PICKUP, '#ff2a4b');
+            } else if (item.lootType === 'coin') {
+              SFX.pickup();
               this.player.coins += 1;
               this.showFloatingText(item.x, item.y - 15, STRINGS.FLOAT_COIN, '#ffd166');
             } else if (item.lootType === 'food') {
+              SFX.pickup();
               this.player.stamina = Math.min(CONFIG.PLAYER.MAX_STAMINA, this.player.stamina + 20);
               this.showFloatingText(item.x, item.y - 15, STRINGS.FLOAT_HEAL, '#2ec4b6');
             } else if (item.lootType === 'galushka') {
+              SFX.pickup();
               this.player.galushkas = Math.min(CONFIG.PLAYER.MAX_GALUSHKAS, this.player.galushkas + 2);
               this.showFloatingText(
                 item.x,
@@ -1856,9 +1978,23 @@
         if (comboStep === 3) baseStun = CONFIG.PLAYER.HIT_3_STUN;
         if (usingSaber) baseStun += 5;
         if (isCounterAttack) baseStun += CONFIG.PLAYER.COUNTER_BONUS_STUN;
+        if (this.player.shkvarkyBuffUntil && this.time.now < this.player.shkvarkyBuffUntil) {
+          baseStun = Math.round(baseStun * 1.4);
+        }
+
+        // Check Breakable False Walls in Act I Cellar Dungeon
+        if (this.breakableWalls && this.breakableWalls.length > 0) {
+          this.breakableWalls.forEach(wall => {
+            if (!wall.isBroken && Phaser.Geom.Intersects.RectangleToRectangle(hitBox, wall.hitRect)) {
+              this.damageBreakableWall(wall, 1, this.player.sprite.x);
+            }
+          });
+        }
 
         this.enemies.forEach(enemy => {
-          if (!enemy.isFinished && Phaser.Geom.Intersects.RectangleToRectangle(hitBox, enemy.sprite.getBounds())) {
+          if (!enemy || enemy.isFinished || !enemy.sprite || !enemy.sprite.active) return;
+          if (this.levelData && this.levelData.chunks && enemy.chunkId && enemy.chunkId !== this.currentChunkId) return;
+          if (Phaser.Geom.Intersects.RectangleToRectangle(hitBox, enemy.sprite.getBounds())) {
             if (isCounterAttack) {
               this.showFloatingText(enemy.sprite.x, enemy.sprite.y - 55, STRINGS.COUNTER_HIT, '#ffea00');
             }
@@ -1916,7 +2052,7 @@
       }
 
       spawnPinecone(fromX, fromY, targetX, targetY) {
-        const cone = this.enemyProjectiles.create(fromX, fromY, 'pinecone');
+        const cone = this.enemyProjectiles.create(fromX, fromY, 'pinecone').setDepth(34);
         const dir = targetX >= fromX ? 1 : -1;
         const dist = Math.min(420, Math.abs(targetX - fromX));
         cone.body.setVelocity(dir * (dist * 0.85 + 90), CONFIG.ENEMY.LESHY.THROW_SPEED_Y);
@@ -1925,7 +2061,7 @@
       }
 
       spawnSwampGlob(fromX, fromY, targetX, targetY) {
-        const glob = this.enemyProjectiles.create(fromX, fromY, 'swamp_glob');
+        const glob = this.enemyProjectiles.create(fromX, fromY, 'swamp_glob').setDepth(34);
         const dir = targetX >= fromX ? 1 : -1;
         const dist = Math.min(430, Math.abs(targetX - fromX));
         glob.body.setVelocity(dir * (dist * 0.88 + 95), CONFIG.ENEMY.BOLOTYANYK.THROW_SPEED_Y);
@@ -1934,7 +2070,7 @@
       }
 
       spawnWaterOrb(fromX, fromY, targetX, targetY) {
-        const orb = this.enemyProjectiles.create(fromX, fromY, 'water_orb');
+        const orb = this.enemyProjectiles.create(fromX, fromY, 'water_orb').setDepth(34);
         const dir = targetX >= fromX ? 1 : -1;
         const dist = Math.min(420, Math.abs(targetX - fromX));
         orb.body.setVelocity(dir * (dist * 0.85 + 95), CONFIG.ENEMY.VODYANYK.THROW_SPEED_Y);
@@ -1943,7 +2079,7 @@
       }
 
       spawnVodyanykTrident(fromX, fromY, targetX, targetY, angleOffset = 0) {
-        const trident = this.enemyProjectiles.create(fromX, fromY, 'vodyanyk_trident_proj');
+        const trident = this.enemyProjectiles.create(fromX, fromY, 'vodyanyk_trident_proj').setDepth(34);
         trident.body.setAllowGravity(false);
         const baseAngle = Phaser.Math.Angle.Between(fromX, fromY, targetX, targetY);
         const finalAngle = baseAngle + angleOffset;
@@ -1956,7 +2092,7 @@
 
       spawnTidalWaves(x, y) {
         [-1, 1].forEach(dir => {
-          const wave = this.enemyProjectiles.create(x + dir * 28, y, 'tidal_wave');
+          const wave = this.enemyProjectiles.create(x + dir * 28, y, 'tidal_wave').setDepth(34);
           wave.body.setAllowGravity(false);
           wave.body.setVelocityX(dir * CONFIG.ENEMY.BOSS_VODYANYK_TSAR.WAVE_SPEED);
           wave.damageAmount = CONFIG.ENEMY.BOSS_VODYANYK_TSAR.DAMAGE_WAVE;
@@ -1981,7 +2117,7 @@
       }
 
       spawnWillOWisp(fromX, fromY, targetX, targetY) {
-        const wisp = this.enemyProjectiles.create(fromX, fromY, 'willowisp');
+        const wisp = this.enemyProjectiles.create(fromX, fromY, 'willowisp').setDepth(34);
         wisp.body.setAllowGravity(false);
         const angle = Phaser.Math.Angle.Between(fromX, fromY, targetX, targetY);
         const speed = 265;
@@ -1991,7 +2127,7 @@
 
       spawnRootWaves(x, y) {
         [-1, 1].forEach(dir => {
-          const wave = this.enemyProjectiles.create(x + dir * 28, y, 'root_wave');
+          const wave = this.enemyProjectiles.create(x + dir * 28, y, 'root_wave').setDepth(34);
           wave.body.setAllowGravity(false);
           wave.body.setVelocityX(dir * CONFIG.ENEMY.BOSS_LISOVYK.ROOT_WAVE_SPEED);
           wave.damageAmount = CONFIG.ENEMY.BOSS_LISOVYK.DAMAGE_WAVE;
@@ -2000,14 +2136,16 @@
 
       summonLisovykMinions(bossX, stage) {
         const arenaMin = this.levelData.bossArenaStartX + 60;
-        const arenaMax = this.worldWidth - 60;
+        const arenaMax = (this.currentLevel === 2) ? 4440 : (this.worldWidth - 60);
         const spawnX = Phaser.Math.Clamp(bossX - 140, arenaMin, arenaMax);
         const nyavka = new NyavkaEnemy(this, spawnX, CONFIG.GROUND_Y - 125, arenaMin, arenaMax);
+        if (this.currentLevel === 2) nyavka.chunkId = 'chunk_boss_lisovyk';
         this.enemies.push(nyavka);
 
         if (stage === 2) {
           const spawnX2 = Phaser.Math.Clamp(bossX + 140, arenaMin, arenaMax);
           const leshy = new LeshyEnemy(this, spawnX2, CONFIG.GROUND_Y - 40, arenaMin, arenaMax);
+          if (this.currentLevel === 2) leshy.chunkId = 'chunk_boss_lisovyk';
           this.physics.add.collider(leshy.sprite, this.platforms);
           this.physics.add.collider(leshy.sprite, this.undergroundFloorGroup);
           if (this.groundBody) this.physics.add.collider(leshy.sprite, this.groundBody);
@@ -2015,9 +2153,38 @@
         }
       }
 
+      spawnKorchmaMug(fromX, fromY, targetX, targetY) {
+        void targetY;
+        const mug = this.enemyProjectiles.create(fromX, fromY, 'korchma_mug').setDepth(34);
+        const dir = targetX >= fromX ? 1 : -1;
+        const dist = Math.min(430, Math.abs(targetX - fromX));
+        mug.body.setVelocity(dir * (dist * 0.88 + 95), CONFIG.ENEMY.CHORT.THROW_SPEED_Y);
+        mug.isSpinning = true;
+        mug.damageAmount = CONFIG.ENEMY.CHORT.DAMAGE_MUG;
+      }
+
+      spawnLykhoBootsReward(x, y) {
+        if (GAME_STATE.hasRollStunBoots) return;
+        const boots = this.lootGroup.create(x, y - 16, 'loot_boots_lykho').setDepth(35).setScale(1.25);
+        boots.lootType = 'boots_lykho';
+        boots.body.setAllowGravity(false);
+        boots.body.setImmovable(true);
+        boots.auraGraphic = this.add.circle(x, y - 16, 26, 0xff002b, 0.32).setDepth(34);
+
+        this.tweens.add({
+          targets: [boots, boots.auraGraphic],
+          y: y - 24,
+          duration: 750,
+          yoyo: true,
+          repeat: -1,
+          ease: 'Sine.easeInOut'
+        });
+        SFX.itemFanfare();
+      }
+
       spawnShockwaves(x, y) {
         [-1, 1].forEach(dir => {
-          const wave = this.enemyProjectiles.create(x + dir * 24, y, 'shockwave');
+          const wave = this.enemyProjectiles.create(x + dir * 24, y, 'shockwave').setDepth(34);
           wave.body.setAllowGravity(false);
           wave.body.setVelocityX(dir * CONFIG.ENEMY.BOSS_ROOSTER.SHOCKWAVE_SPEED);
           wave.damageAmount = CONFIG.ENEMY.BOSS_ROOSTER.DAMAGE_WAVE;
@@ -2026,9 +2193,11 @@
 
       summonBossChicks(bossX, stage) {
         const count = stage === 2 ? 2 : 1;
+        const maxArenaX = (this.currentLevel === 1) ? 3950 : (this.worldWidth - 50);
         for (let i = 0; i < count; i++) {
-          const spawnX = Phaser.Math.Clamp(bossX + (i === 0 ? -90 : 90), this.levelData.bossArenaStartX + 50, this.worldWidth - 50);
+          const spawnX = Phaser.Math.Clamp(bossX + (i === 0 ? -90 : 90), this.levelData.bossArenaStartX + 50, maxArenaX);
           const chick = new ChickEnemy(this, spawnX, CONFIG.GROUND_Y - 35);
+          if (this.currentLevel === 1) chick.chunkId = 'chunk_boss_rooster';
           this.physics.add.collider(chick.sprite, this.platforms);
           if (this.groundBody) this.physics.add.collider(chick.sprite, this.groundBody);
           this.enemies.push(chick);
@@ -2041,7 +2210,7 @@
           const tex = t === 'coin'
             ? 'loot_coin'
             : (t === 'food' ? 'loot_food' : (GAME_STATE.hasSwampFrogs ? 'swamp_frog' : 'loot_galushka'));
-          const item = this.lootGroup.create(x + (idx - 1.5) * 14, y - 10, tex);
+          const item = this.lootGroup.create(x + (idx - 1.5) * 14, y - 10, tex).setDepth(28);
           item.lootType = t;
           item.body.setBounce(0.45);
           item.body.setDragX(180);
@@ -2051,7 +2220,7 @@
 
       spawnHitParticles(x, y, count = 8) {
         for (let i = 0; i < count; i++) {
-          const star = this.add.image(x, y, 'particle_star');
+          const star = this.add.image(x, y, 'particle_star').setDepth(42);
           const angle = Phaser.Math.FloatBetween(0, Math.PI * 2);
           const speed = Phaser.Math.Between(35, 95);
           this.tweens.add({
@@ -2125,6 +2294,1282 @@
         });
       }
 
+      spawnAllEnemiesAndBoss() {
+        const isLevel2 = this.currentLevel === 2;
+        const isLevel3 = this.currentLevel === 3;
+        const isLevel4 = this.currentLevel === 4;
+
+        this.enemies = [];
+        this.levelData.enemies.forEach(eData => {
+          if (eData.type === 'boss_lykho' && GAME_STATE.hasDefeatedLykho) {
+            return;
+          }
+          let enemy;
+          if (eData.type === 'goose') {
+            enemy = new GooseEnemy(this, eData.x, eData.y, eData.minX, eData.maxX);
+            this.physics.add.collider(enemy.sprite, this.platforms);
+            if (this.groundBody) this.physics.add.collider(enemy.sprite, this.groundBody);
+          } else if (eData.type === 'shield_guardian') {
+            enemy = new ShieldGuardianEnemy(this, eData.x, eData.y, eData.minX, eData.maxX);
+            this.physics.add.collider(enemy.sprite, this.platforms);
+            if (this.groundBody) this.physics.add.collider(enemy.sprite, this.groundBody);
+          } else if (eData.type === 'nyavka') {
+            enemy = new NyavkaEnemy(this, eData.x, eData.y, eData.minX, eData.maxX);
+          } else if (eData.type === 'bolotyanyk') {
+            enemy = new BolotyanykEnemy(this, eData.x, eData.y, eData.minX, eData.maxX);
+            this.physics.add.collider(enemy.sprite, this.platforms);
+            if (this.groundBody) this.physics.add.collider(enemy.sprite, this.groundBody);
+          } else if (eData.type === 'chort') {
+            enemy = new ChortEnemy(this, eData.x, eData.y, eData.minX, eData.maxX);
+            this.physics.add.collider(enemy.sprite, this.platforms);
+            if (this.groundBody) this.physics.add.collider(enemy.sprite, this.groundBody);
+          } else if (eData.type === 'dulya') {
+            enemy = new DulyaEnemy(this, eData.x, eData.y, eData.minX, eData.maxX);
+            this.physics.add.collider(enemy.sprite, this.platforms);
+            if (this.groundBody) this.physics.add.collider(enemy.sprite, this.groundBody);
+          } else if (eData.type === 'boss_lykho') {
+            enemy = new LykhoMiniBoss(this, eData.x, eData.y, eData.minX, eData.maxX);
+            this.physics.add.collider(enemy.sprite, this.platforms);
+            if (this.groundBody) this.physics.add.collider(enemy.sprite, this.groundBody);
+          } else if (eData.type === 'rusalka') {
+            enemy = new RusalkaEnemy(this, eData.x, eData.y, eData.minX, eData.maxX);
+          } else if (eData.type === 'vodyanyk') {
+            enemy = new VodyanykEnemy(this, eData.x, eData.y, eData.minX, eData.maxX);
+            this.physics.add.collider(enemy.sprite, this.platforms);
+          } else if (eData.type === 'potercha') {
+            enemy = new PoterchaEnemy(this, eData.x, eData.y, eData.minX, eData.maxX);
+          } else if (eData.type === 'polovyk') {
+            enemy = new PolovykEnemy(this, eData.x, eData.y, eData.minX, eData.maxX);
+            this.physics.add.collider(enemy.sprite, this.platforms);
+            if (this.groundBody) this.physics.add.collider(enemy.sprite, this.groundBody);
+          } else if (eData.type === 'vovkulaka') {
+            enemy = new VovkulakaEnemy(this, eData.x, eData.y, eData.minX, eData.maxX);
+            this.physics.add.collider(enemy.sprite, this.platforms);
+            if (this.groundBody) this.physics.add.collider(enemy.sprite, this.groundBody);
+          } else if (eData.type === 'tumbleweed') {
+            enemy = new TumbleweedEnemy(this, eData.x, eData.y, eData.minX, eData.maxX);
+            this.physics.add.collider(enemy.sprite, this.platforms);
+            if (this.groundBody) this.physics.add.collider(enemy.sprite, this.groundBody);
+          } else if (eData.type === 'seagull') {
+            enemy = new SeagullEnemy(this, eData.x, eData.y, eData.minX, eData.maxX);
+          } else {
+            // Pesyholovtsi (LeshyEnemy) move on the surface AND burrow underground (or stay on cellar stone floor)
+            enemy = new LeshyEnemy(this, eData.x, eData.y, eData.minX, eData.maxX, Boolean(eData.stayOnSurface));
+            this.physics.add.collider(enemy.sprite, this.platforms);
+            this.physics.add.collider(enemy.sprite, this.undergroundFloorGroup);
+            if (this.groundBody) {
+              this.physics.add.collider(
+                enemy.sprite,
+                this.groundBody,
+                null,
+                (enemySprite) => {
+                  const ref = enemySprite.enemyRef;
+                  if (ref && this.time.now < ref.burrowPassUntil) return false;
+                  if (enemySprite.body.velocity.y < 0) return false;
+                  const prevBottom = enemySprite.body.prev.y + enemySprite.body.height;
+                  if (prevBottom <= CONFIG.GROUND_Y + 18) return true;
+                  return enemySprite.body.bottom <= CONFIG.GROUND_Y + 28;
+                },
+                this
+              );
+            }
+          }
+          if (enemy && eData.chunkId) {
+            enemy.chunkId = eData.chunkId;
+          }
+          this.enemies.push(enemy);
+        });
+
+        if (isLevel4) {
+          this.boss = new SalyonohorychBoss(this, this.levelData.bossArenaStartX);
+          this.boss.heads.forEach(head => {
+            this.enemies.push(head);
+          });
+        } else if (isLevel3) {
+          this.boss = new VodyanykTsarBoss(this, this.levelData.bossSpawnX, CONFIG.GROUND_Y - 68);
+          if (!GAME_STATE.hasSeenVodyanykIntro) {
+            // Keep Vodyanyk Tsar submerged beneath the Dnipro until his cutscene emergence
+            this.boss.sprite.setAlpha(0).setY(CONFIG.GROUND_Y + 60);
+            if (this.boss.barBg) this.boss.barBg.setVisible(false);
+            if (this.boss.barFill) this.boss.barFill.setVisible(false);
+          }
+        } else if (isLevel2) {
+          this.boss = new DarkLisovykBoss(this, this.levelData.bossSpawnX, CONFIG.GROUND_Y - 58);
+          this.boss.chunkId = 'chunk_boss_lisovyk';
+        } else {
+          this.boss = new MadRoosterBoss(this, this.levelData.bossSpawnX, CONFIG.GROUND_Y - 50);
+          this.boss.chunkId = 'chunk_boss_rooster';
+        }
+        if (this.boss && !this.boss.isCompositeZmiy) {
+          this.physics.add.collider(this.boss.sprite, this.platforms);
+          if (this.groundBody) this.physics.add.collider(this.boss.sprite, this.groundBody);
+          this.enemies.push(this.boss);
+        }
+      }
+
+      resetAndRespawnEnemiesAtCheckpoint() {
+        // 1. Clear all active projectiles on screen
+        if (this.enemyProjectiles) this.enemyProjectiles.clear(true, true);
+        if (this.galushkaGroup) this.galushkaGroup.clear(true, true);
+        this.grabbedByRusalka = null;
+
+        // 2. Destroy all existing enemy instances (including summoned minions & finished props)
+        if (Array.isArray(this.enemies)) {
+          this.enemies.forEach(e => {
+            if (!e) return;
+            if (typeof e.destroyEnemy === 'function') {
+              e.destroyEnemy();
+            } else if (e.sprite && e.sprite.active) {
+              e.sprite.destroy();
+            }
+          });
+          this.enemies = [];
+        }
+
+        // 3. Destroy Boss instance cleanly
+        if (this.boss) {
+          if (typeof this.boss.destroyBoss === 'function') {
+            this.boss.destroyBoss();
+          } else if (typeof this.boss.destroyEnemy === 'function') {
+            this.boss.destroyEnemy();
+          }
+          this.boss = null;
+        }
+
+        // 4. Reset Act IV Salt Mountain cracks if any
+        this.isSaltMountainCracked = false;
+        if (this.saltMountainCracksGraphic) {
+          this.saltMountainCracksGraphic.clear();
+        }
+
+        // 5. Reset boss Arena trigger so Boss activates fresh at 100% HP when player is in or enters Arena
+        this.bossIntroTriggered = false;
+        const hasChunkSystem = Boolean(this.levelData && this.levelData.chunks);
+        const defaultStartChunk = (this.levelData && this.levelData.initialChunkId) || 'chunk_village_start';
+        if (hasChunkSystem) {
+          const targetChunk = (this.activeCheckpoint && this.activeCheckpoint.chunkId)
+            ? this.activeCheckpoint.chunkId
+            : defaultStartChunk;
+          this.setActiveLevel1Chunk(targetChunk);
+          if (targetChunk === 'chunk_korchma_hall' || targetChunk === 'chunk_korchma_boss') {
+            SFX.playMusic('mus_korchma', { volume: 0.44, restart: true });
+          } else if (targetChunk !== 'chunk_boss_rooster' && targetChunk !== 'chunk_boss_lisovyk') {
+            this.playLevelExplorationMusic();
+          }
+        } else if (this.activeCheckpoint && this.activeCheckpoint.x < (this.levelData.bossArenaStartX || 99999)) {
+          if (this.bossArenaLeftWall) {
+            this.bossArenaLeftWall.destroy();
+            this.bossArenaLeftWall = null;
+          }
+          this.cameras.main.setBounds(0, 0, this.worldWidth, CONFIG.WORLD_HEIGHT);
+          this.playLevelExplorationMusic();
+        }
+
+        // 6. Respawn all level enemies & Boss at 100% health
+        this.spawnAllEnemiesAndBoss();
+
+        // 7. Re-link breakable wall colliders, sync active chunk enemy visibility & respawn uncollected chunk loot
+        if (hasChunkSystem) {
+          const targetChunk = (this.activeCheckpoint && this.activeCheckpoint.chunkId)
+            ? this.activeCheckpoint.chunkId
+            : defaultStartChunk;
+          this.setActiveLevel1Chunk(targetChunk);
+          if (this.breakableWalls && this.breakableWalls.length > 0) {
+            this.breakableWalls.forEach(wall => {
+              if (!wall.isBroken && wall.blocker) {
+                this.enemies.forEach(en => {
+                  if (en && en.sprite) this.physics.add.collider(en.sprite, wall.blocker);
+                });
+              }
+            });
+          }
+          this.spawnChunkPreplacedLoot();
+        }
+      }
+
+      // ======================================================================
+      // ACT II («ЗЛИЙ ЛІС»): HAUNTED TAVERN «КУЦИЙ ХВІСТ» & NON-LINEAR CHUNKS
+      // ======================================================================
+      createAct2ChunksEnvironment() {
+        const gY = CONFIG.GROUND_Y; // 405
+        const groundH = CONFIG.HEIGHT - gY;
+
+        // 1. EXTERIOR OF КОРЧМА-МЛИН «КУЦИЙ ХВІСТ» in `chunk_forest_glade` (around x = 2500)
+        // Inspired by the iconic haunted mill-tavern from "Як козаки на весіллі гуляли":
+        // Dark crooked wooden mill-tavern, smoking chimney, waterwheel, glowing cyan neon sign,
+        // warm yellow lattice window, and glowing fiery-orange open door spilling a carpet of light!
+        const korchmaExt = this.add.graphics().setDepth(13);
+        const kx = 2500;
+
+        // Mystical cyan-emerald fog halo behind the haunted tavern
+        korchmaExt.fillStyle(0x00f5d4, 0.08);
+        korchmaExt.fillCircle(kx, gY - 125, 165);
+        korchmaExt.fillStyle(0x48cae4, 0.12);
+        korchmaExt.fillEllipse(kx, gY - 14, 340, 28);
+
+        // Old wooden Mill Waterwheel on the right side of the tavern
+        korchmaExt.fillStyle(0x140d08, 0.96);
+        korchmaExt.fillCircle(kx + 104, gY - 54, 48);
+        korchmaExt.lineStyle(5, 0x3d2314, 1);
+        korchmaExt.strokeCircle(kx + 104, gY - 54, 48);
+        korchmaExt.lineStyle(3, 0x583101, 0.9);
+        korchmaExt.lineBetween(kx + 56, gY - 54, kx + 152, gY - 54);
+        korchmaExt.lineBetween(kx + 104, gY - 102, kx + 104, gY - 6);
+        korchmaExt.lineBetween(kx + 70, gY - 88, kx + 138, gY - 20);
+        korchmaExt.lineBetween(kx + 138, gY - 88, kx + 70, gY - 20);
+
+        // Crooked dark log cabin walls of the Korchma
+        korchmaExt.fillStyle(0x1b120c, 0.98);
+        korchmaExt.fillRoundedRect(kx - 106, gY - 148, 204, 148, 4);
+        korchmaExt.lineStyle(2, 0x3d2616, 0.85);
+        for (let ly = gY - 134; ly < gY - 10; ly += 18) {
+          korchmaExt.lineBetween(kx - 104, ly, kx + 96, ly);
+        }
+
+        // Steep crooked gabled roof & tall smoking chimney (matching the cartoon silhouette!)
+        korchmaExt.fillStyle(0x100b08, 0.98);
+        korchmaExt.fillTriangle(kx - 128, gY - 142, kx + 8, gY - 292, kx + 126, gY - 142);
+        korchmaExt.lineStyle(4, 0x2b1d12, 1);
+        korchmaExt.lineBetween(kx - 128, gY - 142, kx + 8, gY - 292);
+        korchmaExt.lineBetween(kx + 8, gY - 292, kx + 126, gY - 142);
+
+        // Crooked chimney & dark swirling smoke puffs rising into the night sky
+        korchmaExt.fillStyle(0x16100c, 1);
+        korchmaExt.fillRect(kx - 36, gY - 285, 22, 65);
+        korchmaExt.fillStyle(0x090c10, 0.65);
+        korchmaExt.fillCircle(kx - 24, gY - 302, 14);
+        korchmaExt.fillCircle(kx - 16, gY - 326, 18);
+        korchmaExt.fillCircle(kx - 28, gY - 352, 22);
+
+        // Warm yellow lattice window on the left wall
+        korchmaExt.fillStyle(0xffd166, 0.92);
+        korchmaExt.fillRoundedRect(kx - 78, gY - 102, 30, 32, 3);
+        korchmaExt.lineStyle(3, 0x1b120c, 1);
+        korchmaExt.strokeRoundedRect(kx - 78, gY - 102, 30, 32, 3);
+        korchmaExt.lineBetween(kx - 63, gY - 102, kx - 63, gY - 70);
+        korchmaExt.lineBetween(kx - 78, gY - 86, kx - 48, gY - 86);
+
+        // Glowing Open Doorway & Fiery-Orange Carpet of Light spilling onto the forest path!
+        korchmaExt.fillStyle(0x00f5d4, 0.22);
+        korchmaExt.fillRoundedRect(kx - 28, gY - 102, 56, 102, 6);
+        korchmaExt.fillStyle(0xe85d04, 0.96);
+        korchmaExt.fillRoundedRect(kx - 22, gY - 96, 44, 96, 3);
+        korchmaExt.fillStyle(0xff9f1c, 0.65);
+        korchmaExt.fillRoundedRect(kx - 16, gY - 90, 32, 90, 2);
+        // Trapezoid carpet of light on the ground in front of the door
+        korchmaExt.fillStyle(0xe85d04, 0.55);
+        korchmaExt.fillTriangle(kx - 22, gY + 2, kx + 22, gY + 2, kx - 58, gY + 34);
+        korchmaExt.fillTriangle(kx + 22, gY + 2, kx + 64, gY + 34, kx - 58, gY + 34);
+        korchmaExt.lineStyle(2, 0xffd166, 0.7);
+        korchmaExt.strokeTriangle(kx - 22, gY + 2, kx + 22, gY + 2, kx - 58, gY + 34);
+
+        // Glowing Cyan Neon Signboard above the doorway: «КОРЧМА КУЦИЙ ХВІСТ»
+        korchmaExt.fillStyle(0x04151f, 0.96);
+        korchmaExt.fillRoundedRect(kx - 64, gY - 172, 128, 52, 8);
+        korchmaExt.lineStyle(4, 0x00f5d4, 0.98);
+        korchmaExt.strokeRoundedRect(kx - 64, gY - 172, 128, 52, 8);
+        korchmaExt.lineStyle(8, 0x48cae4, 0.24);
+        korchmaExt.strokeRoundedRect(kx - 68, gY - 176, 136, 60, 10);
+
+        const signText = this.add.text(kx, gY - 146, 'КОРЧМА\n«КУЦИЙ ХВІСТ»', {
+          fontFamily: "'Montserrat', sans-serif",
+          fontSize: '12px',
+          fontStyle: 'bold',
+          color: '#90e0ef',
+          align: 'center',
+          stroke: '#00f5d4',
+          strokeThickness: 1
+        }).setOrigin(0.5).setDepth(14);
+        this.tweens.add({
+          targets: signText,
+          alpha: { from: 0.82, to: 1 },
+          duration: 680,
+          yoyo: true,
+          repeat: -1
+        });
+
+        // ====================================================================
+        // 2. NODE 2B (`chunk_root_catacombs`, x: 4800..6400): SUNKEN ROOT CATACOMBS
+        // ====================================================================
+        const catacombsBg = this.add.graphics().setDepth(8);
+        catacombsBg.fillStyle(0x07120e, 1);
+        catacombsBg.fillRect(4800, 0, 1600, CONFIG.HEIGHT);
+        catacombsBg.fillStyle(0x0d1f18, 1);
+        catacombsBg.fillRect(4800, 44, 1600, gY - 44);
+
+        // Intertwined giant oak roots & bioluminescent emerald mushrooms along the ceiling and walls
+        catacombsBg.fillStyle(0x1f140e, 1);
+        catacombsBg.fillRect(4800, 0, 1600, 48);
+        for (let rx = 4860; rx <= 6340; rx += 210) {
+          catacombsBg.fillStyle(0x2b1d12, 0.95);
+          catacombsBg.fillRect(rx - 14, 44, 28, gY - 44);
+          catacombsBg.lineStyle(6, 0x3d2616, 0.95);
+          catacombsBg.lineBetween(rx - 12, 95, rx - 55, 44);
+          catacombsBg.lineBetween(rx + 12, 95, rx + 55, 44);
+          // Glowing cyan-emerald forest mushrooms
+          catacombsBg.fillStyle(0x00f5d4, 0.22);
+          catacombsBg.fillCircle(rx + 26, gY - 22, 24);
+          catacombsBg.fillStyle(0x80ed99, 0.95);
+          catacombsBg.fillEllipse(rx + 26, gY - 20, 18, 10);
+          catacombsBg.fillStyle(0xd8f3dc, 0.9);
+          catacombsBg.fillRect(rx + 24, gY - 16, 4, 16);
+        }
+
+        // Secret Root Alcove glow on the far left (x: 4820..5140)
+        catacombsBg.fillStyle(0x1b2e22, 0.95);
+        catacombsBg.fillRoundedRect(4820, 165, 315, gY - 165, 8);
+        catacombsBg.lineStyle(3, 0x80ed99, 0.65);
+        catacombsBg.strokeRoundedRect(4820, 165, 315, gY - 165, 8);
+
+        // Solid mossy stone floor in the Root Catacombs
+        catacombsBg.fillStyle(0x09140f, 1);
+        catacombsBg.fillRect(4800, gY, 1600, groundH);
+        catacombsBg.fillStyle(0x2d6a4f, 1);
+        catacombsBg.fillRect(4800, gY, 1600, 14);
+        catacombsBg.fillStyle(0x52b788, 1);
+        catacombsBg.fillRect(4800, gY, 1600, 4);
+
+        // ====================================================================
+        // 3. NODE 2C (`chunk_canopy_walk`, x: 6600..7880): NYAVKA OAK CANOPY WALK
+        // ====================================================================
+        const canopyBg = this.add.graphics().setDepth(8);
+        canopyBg.fillStyle(0x06101e, 1);
+        canopyBg.fillRect(6600, 0, 1280, CONFIG.HEIGHT);
+        canopyBg.fillStyle(0x0b1d33, 1);
+        canopyBg.fillRect(6600, 32, 1280, gY - 32);
+
+        // Giant ancient oak trunks & moonlit foliage arches high in the treetops
+        for (let tx = 6680; tx <= 7820; tx += 220) {
+          canopyBg.fillStyle(0x23160d, 0.95);
+          canopyBg.fillRect(tx - 24, 0, 48, gY);
+          canopyBg.fillStyle(0x1b4332, 0.75);
+          canopyBg.fillCircle(tx, 52, 85);
+          canopyBg.fillStyle(0x48cae4, 0.08);
+          canopyBg.fillTriangle(tx + 90, 0, tx + 35, gY, tx + 155, gY);
+        }
+
+        // Solid ancient oak bough floor
+        canopyBg.fillStyle(0x1a110a, 1);
+        canopyBg.fillRect(6600, gY, 1280, groundH);
+        canopyBg.fillStyle(0x583101, 1);
+        canopyBg.fillRect(6600, gY, 1280, 14);
+        canopyBg.fillStyle(0x80ed99, 0.85);
+        canopyBg.fillRect(6600, gY, 1280, 4);
+
+        // ====================================================================
+        // 4. NODES 3A & 3B (`chunk_korchma_hall` 8100..10700 & `chunk_korchma_boss` 10900..12300):
+        //    INTERIOR OF HAUNTED TAVERN «КУЦИЙ ХВІСТ»
+        //    Inspired by the user's reference art:
+        //    - Dark timber walls & heavy ceiling rafters
+        //    - Upper shelves lined with giant oak barrels (including the skull-and-crossbones poison barrel!)
+        //    - Hanging dried herbs & garlic bundles
+        //    - Silhouettes of horned tavern devils/sprites with glowing eyes watching from the shadows
+        //    - Long oak banquet tables with spilled tankards & candles
+        // ====================================================================
+        const korchmaBg = this.add.graphics().setDepth(8);
+        [
+          { startX: 8100, width: 2600, isBossHall: false },
+          { startX: 10900, width: 1400, isBossHall: true }
+        ].forEach(room => {
+          const rx = room.startX;
+          const rw = room.width;
+
+          // Deep smoky tavern backdrop
+          korchmaBg.fillStyle(0x140c08, 1);
+          korchmaBg.fillRect(rx, 0, rw, CONFIG.HEIGHT);
+          korchmaBg.fillStyle(0x21130d, 1);
+          korchmaBg.fillRect(rx, 46, rw, gY - 46);
+
+          // Horizontal dark timber wall planks
+          korchmaBg.lineStyle(2, 0x120905, 0.8);
+          for (let py = 68; py < gY; py += 34) {
+            korchmaBg.lineBetween(rx, py, rx + rw, py);
+          }
+
+          // Upper tavern shelf (y = 128) holding giant oak casks & barrels (like in the reference painting!)
+          korchmaBg.fillStyle(0x3d2314, 1);
+          korchmaBg.fillRect(rx, 126, rw, 12);
+
+          for (let bx = rx + 110; bx < rx + rw - 90; bx += 220) {
+            // Giant circular oak barrel front on the upper shelf
+            korchmaBg.fillStyle(0x2b1810, 1);
+            korchmaBg.fillCircle(bx, 82, 40);
+            korchmaBg.lineStyle(5, 0x583101, 1);
+            korchmaBg.strokeCircle(bx, 82, 40);
+            korchmaBg.lineStyle(2, 0x140c08, 0.9);
+            korchmaBg.lineBetween(bx - 36, 72, bx + 36, 72);
+            korchmaBg.lineBetween(bx - 36, 92, bx + 36, 92);
+            // Wooden tap spigot
+            korchmaBg.fillStyle(0xd4a373, 1);
+            korchmaBg.fillRect(bx - 4, 96, 8, 12);
+
+            // Every second barrel bears the painted white Skull & Crossbones from the reference illustration!
+            if (((bx - rx) / 220) % 2 === 1) {
+              korchmaBg.fillStyle(0xe0e1dd, 0.78);
+              korchmaBg.fillCircle(bx, 76, 9);
+              korchmaBg.fillRect(bx - 5, 83, 10, 6);
+              korchmaBg.fillStyle(0x140c08, 1);
+              korchmaBg.fillCircle(bx - 3, 75, 2.2);
+              korchmaBg.fillCircle(bx + 3, 75, 2.2);
+              korchmaBg.lineStyle(2.5, 0xe0e1dd, 0.78);
+              korchmaBg.lineBetween(bx - 12, 92, bx + 12, 102);
+              korchmaBg.lineBetween(bx - 12, 102, bx + 12, 92);
+            }
+
+            // Hanging bundles of dried herbs & garlic under the shelf
+            korchmaBg.fillStyle(0x6c757d, 0.65);
+            korchmaBg.fillTriangle(bx + 75, 138, bx + 62, 176, bx + 88, 176);
+            korchmaBg.fillStyle(0xe9c46a, 0.7);
+            korchmaBg.fillCircle(bx + 98, 152, 5);
+            korchmaBg.fillCircle(bx + 95, 162, 5);
+            korchmaBg.fillCircle(bx + 101, 162, 5);
+          }
+
+          // Vertical timber pillars & warm candle sconces
+          for (let px = rx + 60; px <= rx + rw - 60; px += 240) {
+            korchmaBg.fillStyle(0x2b1810, 1);
+            korchmaBg.fillRect(px - 12, 0, 24, gY);
+            korchmaBg.fillStyle(0xff9f1c, 0.18);
+            korchmaBg.fillCircle(px, 195, 48);
+            korchmaBg.fillStyle(0xffea00, 0.95);
+            korchmaBg.fillCircle(px, 190, 6);
+            korchmaBg.fillStyle(0xfefae0, 0.9);
+            korchmaBg.fillRect(px - 3, 195, 6, 16);
+          }
+
+          // Shadowy silhouettes of horned tavern imps/spectators with glowing amber eyes in the background!
+          for (let sx = rx + 150; sx < rx + rw - 140; sx += 190) {
+            korchmaBg.fillStyle(0x100805, 0.92);
+            korchmaBg.fillEllipse(sx, gY - 42, 46, 68);
+            korchmaBg.fillCircle(sx, gY - 82, 18);
+            // Pointed imp horns
+            korchmaBg.fillTriangle(sx - 12, gY - 94, sx - 18, gY - 112, sx - 4, gY - 96);
+            korchmaBg.fillTriangle(sx + 12, gY - 94, sx + 18, gY - 112, sx + 4, gY - 96);
+            // Glowing yellow-orange eyes watching Omelko
+            korchmaBg.fillStyle(0xffbe0b, 0.95);
+            korchmaBg.fillCircle(sx - 6, gY - 84, 2.5);
+            korchmaBg.fillCircle(sx + 6, gY - 84, 2.5);
+          }
+
+          // Long Oak Banquet Tables on the tavern floor
+          for (let tx = rx + 240; tx < rx + rw - 240; tx += 340) {
+            korchmaBg.fillStyle(0x4a2c11, 0.96);
+            korchmaBg.fillRoundedRect(tx - 85, gY - 46, 170, 12, 3);
+            korchmaBg.fillStyle(0x3d2314, 0.96);
+            korchmaBg.fillRect(tx - 70, gY - 34, 12, 34);
+            korchmaBg.fillRect(tx + 58, gY - 34, 12, 34);
+            // Foaming mugs on the banquet table
+            this.add.image(tx - 32, gY - 56, 'korchma_mug').setDepth(14).setScale(0.9);
+            this.add.image(tx + 28, gY - 54, 'korchma_mug').setDepth(14).setScale(0.85).setAngle(82);
+          }
+
+          // Solid dark oak tavern floor
+          korchmaBg.fillStyle(0x160c07, 1);
+          korchmaBg.fillRect(rx, gY, rw, groundH);
+          korchmaBg.fillStyle(0x583101, 1);
+          korchmaBg.fillRect(rx, gY, rw, 14);
+          korchmaBg.fillStyle(0xd4a373, 0.85);
+          korchmaBg.fillRect(rx, gY, rw, 4);
+        });
+      }
+
+      // ======================================================================
+      // ACT I («ХУТІР І УЗЛІССЯ»): DEAD CELLS-STYLE HYBRID CHUNK ARCHITECTURE
+      // ======================================================================
+      createAct1ChunksEnvironment(groundVisual) {
+        const gY = CONFIG.GROUND_Y; // 405
+        const groundH = CONFIG.HEIGHT - gY;
+
+        // 1. Outdoor Chunks Ground (0 .. 4000: chunk_village_start, chunk_pond_road, chunk_boss_rooster)
+        groundVisual.fillStyle(0x231912, 1);
+        groundVisual.fillRect(0, gY, 4000, groundH);
+        groundVisual.fillStyle(0x3d291a, 1);
+        groundVisual.fillRect(0, gY + 12, 4000, 52);
+
+        for (let x = 40; x < 4000; x += 120) {
+          groundVisual.fillStyle(0x332419, 1);
+          groundVisual.fillRoundedRect(x, gY + 68, 72, 26, 5);
+          groundVisual.fillStyle(0x2c1f16, 1);
+          groundVisual.fillRoundedRect(x + 36, gY + 100, 68, 24, 5);
+          groundVisual.lineStyle(2.5, 0x5c3c24, 0.85);
+          groundVisual.lineBetween(x + 20, gY + 14, x + 12, gY + 46);
+          groundVisual.lineBetween(x + 20, gY + 28, x + 30, gY + 42);
+          groundVisual.fillStyle(0x6c584c, 0.75);
+          groundVisual.fillCircle(x + 85, gY + 34, 6);
+        }
+
+        // Lush Top Grass Border across outdoor chunks (0 .. 4000)
+        groundVisual.fillStyle(0x4c953e, 1);
+        groundVisual.fillRect(0, gY, 4000, 14);
+        groundVisual.fillStyle(0x6ab04c, 1);
+        groundVisual.fillRect(0, gY, 4000, 5);
+
+        // Node 1 (chunk_village_start): High Wooden Fence & Windmill Tower base on the right (x: 1185..1350)
+        const outdoorDecor = this.add.graphics().setDepth(14);
+        for (let fx = 1175; fx <= 1345; fx += 24) {
+          outdoorDecor.fillStyle(0x583101, 0.95);
+          outdoorDecor.fillRoundedRect(fx, gY - 96, 18, 96, 4);
+          outdoorDecor.fillStyle(0x7f4f24, 0.95);
+          outdoorDecor.fillTriangle(fx, gY - 96, fx + 9, gY - 112, fx + 18, gY - 96);
+        }
+        outdoorDecor.fillStyle(0x4a2c11, 0.95);
+        outdoorDecor.fillRect(1170, gY - 72, 195, 8);
+        outdoorDecor.fillRect(1170, gY - 34, 195, 8);
+
+        // Old Windmill Tower rising behind the high roof platforms in Node 1 (x: 1245) & Node 2A (x: 2090)
+        [1245, 2090].forEach(mx => {
+          outdoorDecor.fillStyle(0x6f4518, 0.92);
+          outdoorDecor.fillTriangle(mx - 68, gY, mx - 42, 75, mx + 42, 75);
+          outdoorDecor.fillTriangle(mx - 68, gY, mx + 42, 75, mx + 68, gY);
+          outdoorDecor.fillStyle(0x3d2314, 0.96);
+          outdoorDecor.fillTriangle(mx - 54, 78, mx, 22, mx + 54, 78);
+          outdoorDecor.lineStyle(3, 0xd4a373, 0.75);
+          outdoorDecor.strokeRect(mx - 22, 96, 44, 52);
+        });
+
+        // Node 2A (chunk_pond_road, x: 1440..3040): Shimmering Village Pond water & wooden deck pilings
+        outdoorDecor.fillStyle(0x1d4e89, 0.82);
+        outdoorDecor.fillRoundedRect(1600, gY - 4, 1080, 18, 6);
+        outdoorDecor.fillStyle(0x48cae4, 0.65);
+        for (let wx = 1640; wx < 2640; wx += 95) {
+          outdoorDecor.fillEllipse(wx, gY + 3, 58, 6);
+          // Wooden pilings under pond platforms
+          outdoorDecor.fillStyle(0x4a2c11, 0.9);
+          outdoorDecor.fillRect(wx - 4, gY - 82, 8, 84);
+          outdoorDecor.fillStyle(0x48cae4, 0.65);
+        }
+
+        // Node 3 (chunk_boss_rooster, x: 3040..4000): Kum Hrytsko's Courtyard & Whitewashed Khata on the right
+        outdoorDecor.fillStyle(0xf1faee, 0.96);
+        outdoorDecor.fillRoundedRect(3790, gY - 145, 185, 145, 4);
+        outdoorDecor.lineStyle(3, 0x6f4518, 1);
+        outdoorDecor.strokeRoundedRect(3790, gY - 145, 185, 145, 4);
+        // Thatched roof ("стріха")
+        outdoorDecor.fillStyle(0x7f4f24, 1);
+        outdoorDecor.fillTriangle(3765, gY - 142, 3882, gY - 215, 3998, gY - 142);
+        // Glowing warm cottage window
+        outdoorDecor.fillStyle(0xffbe0b, 0.9);
+        outdoorDecor.fillRoundedRect(3830, gY - 95, 44, 44, 4);
+        outdoorDecor.lineStyle(3, 0x583101, 1);
+        outdoorDecor.strokeRoundedRect(3830, gY - 95, 44, 44, 4);
+
+        // ====================================================================
+        // 2. NODE 2B (`chunk_cellar_dungeon`, x: 4200..6120): ABANDONED COSSACK CELLAR
+        // ====================================================================
+        const cellarBg = this.add.graphics().setDepth(8);
+        // Full-height dark subterranean stone & timber wall (blocks outdoor sky when camera is in cellar!)
+        cellarBg.fillStyle(0x0f1018, 1);
+        cellarBg.fillRect(4200, 0, 1920, CONFIG.HEIGHT);
+        cellarBg.fillStyle(0x171a26, 1);
+        cellarBg.fillRect(4200, 44, 1920, gY - 44);
+
+        // Masonry stone blocks & mortar lines across the cellar wall
+        for (let cy = 62; cy < gY - 18; cy += 48) {
+          for (let cx = 4220 + ((cy % 96 === 0) ? 0 : 45); cx < 6080; cx += 110) {
+            cellarBg.fillStyle(0x1f2433, 0.85);
+            cellarBg.fillRoundedRect(cx, cy, 92, 36, 4);
+          }
+        }
+
+        // Secret Stash Alcove glow on the far left (x: 4220..4545) behind the breakable false wall
+        cellarBg.fillStyle(0x2b1d12, 0.95);
+        cellarBg.fillRoundedRect(4225, 165, 310, gY - 165, 8);
+        cellarBg.lineStyle(3, 0xd4a373, 0.65);
+        cellarBg.strokeRoundedRect(4225, 165, 310, gY - 165, 8);
+        cellarBg.fillStyle(0xffbe0b, 0.16);
+        cellarBg.fillCircle(4370, gY - 75, 115);
+
+        // Low heavy oak ceiling beams, wooden support pillars ("дерев'яні підпірки") & cobwebs ("павутиння")
+        cellarBg.fillStyle(0x2b1810, 1);
+        cellarBg.fillRect(4200, 0, 1920, 48);
+        cellarBg.fillStyle(0x3d2314, 1);
+        cellarBg.fillRect(4200, 38, 1920, 14);
+
+        for (let px = 4240; px <= 6080; px += 230) {
+          // Vertical oak support pillar
+          cellarBg.fillStyle(0x3d2314, 1);
+          cellarBg.fillRect(px - 12, 48, 24, gY - 48);
+          cellarBg.fillStyle(0x583101, 0.85);
+          cellarBg.fillRect(px - 6, 48, 8, gY - 48);
+          // Diagonal timber knee-braces at top of pillar
+          cellarBg.lineStyle(6, 0x4a2c11, 1);
+          cellarBg.lineBetween(px - 10, 88, px - 46, 50);
+          cellarBg.lineBetween(px + 10, 88, px + 46, 50);
+
+          // Procedural Cobwebs ("павутиння") in the ceiling beam corners
+          cellarBg.lineStyle(1.5, 0xe0e1dd, 0.42);
+          cellarBg.lineBetween(px + 12, 50, px + 64, 50);
+          cellarBg.lineBetween(px + 12, 50, px + 48, 76);
+          cellarBg.lineBetween(px + 12, 50, px + 12, 92);
+          cellarBg.lineBetween(px + 34, 50, px + 12, 72);
+          cellarBg.lineBetween(px + 54, 50, px + 28, 76);
+          cellarBg.lineBetween(px + 28, 76, px + 12, 86);
+
+          // Warm flickering cellar wall torch on every pillar
+          if (px > 4560 && px < 6000) {
+            cellarBg.fillStyle(0xff9f1c, 0.22);
+            cellarBg.fillCircle(px, 165, 42);
+            cellarBg.fillStyle(0xffea00, 0.9);
+            cellarBg.fillCircle(px, 162, 7);
+            cellarBg.fillStyle(0x583101, 1);
+            cellarBg.fillRect(px - 3, 168, 6, 18);
+          }
+        }
+
+        // Decorative Cossack oak barrels in the cellar behind which Pesyholovtsi hide
+        [4810, 5090, 5360, 5580, 5790].forEach((bx, bIdx) => {
+          this.add.image(bx, gY - 22, 'prop_barrel').setDepth(15).setTint(0xc8b6a6);
+          if (bIdx % 2 === 0) {
+            this.add.image(bx + 28, gY - 22, 'prop_barrel').setDepth(14).setTint(0x9c8978);
+          }
+        });
+
+        // Solid cobblestone cellar floor visual
+        cellarBg.fillStyle(0x1b1d29, 1);
+        cellarBg.fillRect(4200, gY, 1920, groundH);
+        cellarBg.fillStyle(0x343a40, 1);
+        cellarBg.fillRect(4200, gY, 1920, 14);
+        cellarBg.fillStyle(0x6c757d, 1);
+        cellarBg.fillRect(4200, gY, 1920, 4);
+
+        // ====================================================================
+        // 3. NODE 2C (`chunk_mill_upper`, x: 6400..7680): OLD WINDMILL ATTIC
+        // ====================================================================
+        const millBg = this.add.graphics().setDepth(8);
+        millBg.fillStyle(0x1c140d, 1);
+        millBg.fillRect(6400, 0, 1280, CONFIG.HEIGHT);
+        millBg.fillStyle(0x2b1e14, 1);
+        millBg.fillRect(6400, 36, 1280, gY - 36);
+
+        // Horizontal wooden plank panelling & slanted roof rafters
+        for (let my = 56; my < gY; my += 36) {
+          millBg.lineStyle(2, 0x160f0a, 0.75);
+          millBg.lineBetween(6400, my, 7680, my);
+        }
+        for (let rx = 6440; rx <= 7640; rx += 180) {
+          millBg.fillStyle(0x3d2616, 1);
+          millBg.fillRect(rx - 10, 0, 20, gY);
+          // Golden sunbeams streaming through round windmill dormer windows
+          if (rx % 360 === 320) {
+            millBg.fillStyle(0xffea00, 0.11);
+            millBg.fillTriangle(rx + 70, 88, rx + 15, gY, rx + 145, gY);
+            millBg.fillStyle(0x90e0ef, 0.45);
+            millBg.fillCircle(rx + 70, 88, 26);
+            millBg.lineStyle(4, 0x583101, 1);
+            millBg.strokeCircle(rx + 70, 88, 26);
+          }
+        }
+
+        // Giant wooden Windmill Cogwheels ("млинові жорна та шестерні") in the attic background
+        [6760, 7260].forEach(gx => {
+          millBg.lineStyle(8, 0x6f4518, 0.9);
+          millBg.strokeCircle(gx, 165, 58);
+          millBg.lineStyle(5, 0x8a5a36, 0.85);
+          millBg.strokeCircle(gx, 165, 28);
+          millBg.lineBetween(gx - 58, 165, gx + 58, 165);
+          millBg.lineBetween(gx, 107, gx, 223);
+        });
+
+        // Solid wooden attic floor visual
+        millBg.fillStyle(0x23150c, 1);
+        millBg.fillRect(6400, gY, 1280, groundH);
+        millBg.fillStyle(0x6f4518, 1);
+        millBg.fillRect(6400, gY, 1280, 14);
+        millBg.fillStyle(0xd4a373, 1);
+        millBg.fillRect(6400, gY, 1280, 4);
+      }
+
+      setupAct1ChunksInteractiveObjects() {
+        const gY = CONFIG.GROUND_Y;
+
+        // 1. Build Breakable False Walls (`this.breakableWalls`)
+        this.breakableWalls = [];
+        (this.levelData.breakableWalls || []).forEach(bw => {
+          if (this.brokenWallIds && this.brokenWallIds.has(bw.id)) return;
+
+          const blocker = this.add.rectangle(bw.x, bw.y, bw.width, bw.height, 0x000000, 0);
+          this.physics.add.existing(blocker, true);
+          this.physics.add.collider(this.player.sprite, blocker);
+          this.enemies.forEach(en => {
+            if (en && en.sprite) this.physics.add.collider(en.sprite, blocker);
+          });
+
+          const container = this.add.container(bw.x, bw.y).setDepth(26);
+          const wallGfx = this.add.graphics();
+          // Cracked wooden partition & stacked barrels blocking the secret room
+          wallGfx.fillStyle(0x4a2c11, 1);
+          wallGfx.fillRoundedRect(-bw.width / 2, -bw.height / 2, bw.width, bw.height, 4);
+          wallGfx.lineStyle(2.5, 0xd4a373, 0.85);
+          wallGfx.strokeRoundedRect(-bw.width / 2, -bw.height / 2, bw.width, bw.height, 4);
+          // Glowing golden-amber cracks hinting at the secret room behind!
+          wallGfx.lineStyle(3, 0xffbe0b, 0.92);
+          wallGfx.beginPath();
+          wallGfx.moveTo(-6, -bw.height / 2 + 12);
+          wallGfx.lineTo(8, -18);
+          wallGfx.lineTo(-8, 14);
+          wallGfx.lineTo(6, bw.height / 2 - 10);
+          wallGfx.strokePath();
+
+          const b1 = this.add.image(8, bw.height / 2 - 22, 'prop_barrel').setScale(0.95);
+          const b2 = this.add.image(6, bw.height / 2 - 62, 'prop_barrel').setScale(0.88);
+          const hintTxt = this.add.text(0, -bw.height / 2 - 18, STRINGS.BREAKABLE_WALL_HINT || '💥 [D]', {
+            fontFamily: "'Montserrat', sans-serif",
+            fontSize: '12px',
+            fontStyle: 'bold',
+            color: '#ffd166',
+            backgroundColor: 'rgba(15,16,24,0.85)',
+            padding: { x: 6, y: 3 }
+          }).setOrigin(0.5);
+
+          container.add([wallGfx, b1, b2, hintTxt]);
+
+          this.breakableWalls.push({
+            ...bw,
+            maxHp: bw.hp || 3,
+            isBroken: false,
+            blocker,
+            container,
+            hintTxt,
+            hitRect: new Phaser.Geom.Rectangle(bw.x - bw.width / 2 - 18, bw.y - bw.height / 2 - 10, bw.width + 36, bw.height + 20)
+          });
+        });
+
+        // 2. Build Interactive Portals (`this.chunkPortals`)
+        this.chunkPortals = [];
+        (this.levelData.portals || []).forEach(p => {
+          const propGfx = this.add.graphics().setDepth(19);
+          if (p.visualType === 'trapdoor' || p.visualType === 'chute_drop') {
+            // Open wooden cellar trapdoor / hollow oak root sinkhole on the ground with iron hinges & warm glow
+            propGfx.fillStyle(0x141622, 0.95);
+            propGfx.fillRoundedRect(p.x - 28, p.y - 6, 56, 16, 4);
+            propGfx.lineStyle(3, 0x7f4f24, 1);
+            propGfx.strokeRoundedRect(p.x - 28, p.y - 6, 56, 16, 4);
+            // Open trapdoor leaf propped on the side
+            propGfx.fillStyle(0x583101, 1);
+            propGfx.fillRoundedRect(p.x + 24, p.y - 38, 12, 36, 3);
+            // Downward golden chevron
+            propGfx.fillStyle(0xffd166, 0.9);
+            propGfx.fillTriangle(p.x - 9, p.y - 26, p.x + 9, p.y - 26, p.x, p.y - 14);
+          } else if (p.visualType === 'cellar_stairs_up') {
+            // Wooden cellar / root stairs leading up toward a shaft of daylight
+            propGfx.fillStyle(0xa8dadc, 0.18);
+            propGfx.fillTriangle(p.x - 32, 48, p.x + 32, 48, p.x, p.y);
+            for (let s = 0; s < 5; s++) {
+              propGfx.fillStyle(0x6f4518, 1);
+              propGfx.fillRoundedRect(p.x - 24 + s * 6, p.y - 12 - s * 14, 36, 8, 2);
+            }
+            propGfx.fillStyle(0xffd166, 0.92);
+            propGfx.fillTriangle(p.x - 9, p.y - 82, p.x + 9, p.y - 82, p.x, p.y - 96);
+          } else if (p.visualType === 'roof_ladder') {
+            // Wooden ladder / vine climb leading up to the upper branch
+            propGfx.lineStyle(4, 0x7f4f24, 1);
+            propGfx.lineBetween(p.x - 14, p.y, p.x - 14, p.y - 68);
+            propGfx.lineBetween(p.x + 14, p.y, p.x + 14, p.y - 68);
+            propGfx.lineStyle(3, 0xd4a373, 0.95);
+            for (let ry = p.y - 12; ry >= p.y - 62; ry -= 12) {
+              propGfx.lineBetween(p.x - 14, ry, p.x + 14, ry);
+            }
+            propGfx.fillStyle(0xffd166, 0.95);
+            propGfx.fillTriangle(p.x - 9, p.y - 76, p.x + 9, p.y - 76, p.x, p.y - 90);
+          } else if (p.visualType === 'road_gate') {
+            // Cossack wooden signpost at chunk edge
+            propGfx.fillStyle(0x583101, 1);
+            propGfx.fillRect(p.x - 4, gY - 58, 8, 58);
+            propGfx.fillStyle(0x8a5a36, 1);
+            propGfx.fillRoundedRect(p.x - 28, gY - 54, 56, 18, 4);
+            propGfx.lineStyle(2, 0xffd166, 0.85);
+            propGfx.strokeRoundedRect(p.x - 28, gY - 54, 56, 18, 4);
+          } else if (p.visualType === 'korchma_door') {
+            // Glowing chevron above the Korchma "Куций Хвіст" entrance
+            propGfx.fillStyle(0x00f5d4, 0.95);
+            propGfx.fillTriangle(p.x - 10, p.y - 104, p.x + 10, p.y - 104, p.x, p.y - 118);
+          } else if (p.visualType === 'korchma_exit_door' || p.visualType === 'korchma_boss_door') {
+            // Heavy oak tavern archway door with iron studs & crimson/cyan glow
+            const isBossDoor = p.visualType === 'korchma_boss_door';
+            propGfx.fillStyle(isBossDoor ? 0x3b0918 : 0x1b263b, 0.96);
+            propGfx.fillRoundedRect(p.x - 28, gY - 96, 56, 96, 10);
+            propGfx.lineStyle(4, isBossDoor ? 0xff002b : 0x00f5d4, 0.92);
+            propGfx.strokeRoundedRect(p.x - 28, gY - 96, 56, 96, 10);
+            propGfx.fillStyle(0xffd166, 0.95);
+            propGfx.fillCircle(p.x + 16, gY - 46, 4);
+          }
+
+          // Floating proximity prompt badge (shown when Omelko is near the portal)
+          const promptBadge = this.add.container(p.x, p.y - 68).setDepth(138).setVisible(false);
+          const badgeTxt = this.add.text(0, 0, STRINGS[p.promptKey] || '▲', {
+            fontFamily: "'Montserrat', sans-serif",
+            fontSize: '13px',
+            fontStyle: 'bold',
+            color: '#fefae0',
+            align: 'center'
+          }).setOrigin(0.5);
+          const bw = Math.max(136, badgeTxt.width + 26);
+          const bh = 32;
+          const badgeBg = this.add.rectangle(0, 0, bw, bh, 0x141622, 0.94)
+            .setStrokeStyle(2, 0xffd166, 0.98)
+            .setInteractive({ useHandCursor: true });
+          badgeBg.on('pointerdown', () => {
+            if (this.levelData && this.levelData.chunks && (p.chunkId || p.fromChunkId) === this.currentChunkId) {
+              this.setActiveLevel1Chunk(p.targetChunkId, p.targetX, p.targetY, true);
+            }
+          });
+          promptBadge.add([badgeBg, badgeTxt]);
+
+          this.chunkPortals.push({
+            ...p,
+            chunkId: p.chunkId || p.fromChunkId,
+            propGfx,
+            promptBadge,
+            badgeTxt
+          });
+        });
+
+        // 3. Spawn Pre-placed Chunk Loot (Secret Cellar Stash & Windmill Cracklings Pan)
+        this.spawnChunkPreplacedLoot();
+      }
+
+      spawnChunkPreplacedLoot() {
+        if (!this.lootGroup || !this.levelData.chunkLoot) return;
+
+        // Remove existing pre-placed chunk loot items before respawning uncollected ones
+        this.lootGroup.getChildren().slice().forEach(it => {
+          if (it && it.chunkLootId) {
+            if (it.auraGraphic && it.auraGraphic.active) it.auraGraphic.destroy();
+            it.destroy();
+          }
+        });
+
+        this.levelData.chunkLoot.forEach((lData, idx) => {
+          const lootId = `${lData.chunkId}_${lData.type}_${idx}`;
+          if (this.collectedChunkLootIds && this.collectedChunkLootIds.has(lootId)) return;
+
+          let tex = 'loot_coin';
+          if (lData.type === 'food' || lData.type === 'secret_kissel_jug') tex = 'loot_food';
+          else if (lData.type === 'galushka' || lData.type === 'secret_galushka_stash') tex = 'loot_galushka';
+          else if (lData.type === 'shkvarky_pan') tex = 'pan_slash';
+
+          const item = this.lootGroup.create(lData.x, lData.y, tex).setDepth(28);
+          item.lootType = lData.type;
+          item.chunkLootId = lootId;
+          item.body.setAllowGravity(false);
+          item.body.setImmovable(true);
+
+          if (lData.type === 'secret_kissel_jug') {
+            item.setScale(1.38).setTint(0xff4d6d);
+            item.auraGraphic = this.add.circle(lData.x, lData.y, 20, 0xff4d6d, 0.25).setDepth(27);
+          } else if (lData.type === 'secret_galushka_stash') {
+            item.setScale(1.32);
+            item.auraGraphic = this.add.circle(lData.x, lData.y, 18, 0xffd166, 0.25).setDepth(27);
+          } else if (lData.type === 'secret_bestiary_scroll') {
+            item.setScale(1.35).setTint(0x48cae4);
+            item.auraGraphic = this.add.circle(lData.x, lData.y, 22, 0x48cae4, 0.28).setDepth(27);
+          } else if (lData.type === 'shkvarky_pan') {
+            item.setScale(1.25).setTint(0xff9f1c);
+            item.auraGraphic = this.add.circle(lData.x, lData.y, 24, 0xff9f1c, 0.3).setDepth(27);
+          }
+
+          this.tweens.add({
+            targets: item,
+            y: lData.y - 6,
+            duration: 950 + (idx % 3) * 150,
+            yoyo: true,
+            repeat: -1,
+            ease: 'Sine.easeInOut'
+          });
+        });
+      }
+
+      setActiveLevel1Chunk(chunkId, targetX, targetY, withTransition = false) {
+        if (!this.levelData || !this.levelData.chunks) return;
+        const chunk = this.levelData.chunks[chunkId];
+        if (!chunk || !chunk.bounds) return;
+
+        this.currentChunkId = chunkId;
+        const b = chunk.bounds;
+
+        // Keep global physics world bounds across all chunks so enemies in other chunks
+        // are NEVER clamped/teleported by collideWorldBounds, and bind ONLY the player to the active chunk!
+        this.physics.world.setBounds(0, 0, this.worldWidth, CONFIG.WORLD_HEIGHT);
+        this.cameras.main.setBounds(b.x, b.y, b.width, b.height);
+        if (this.player && this.player.sprite && this.player.sprite.body) {
+          this.player.sprite.body.setBoundsRectangle(new Phaser.Geom.Rectangle(b.x, b.y, b.width, b.height));
+        }
+
+        // Show & enable only enemies belonging to the active chunk
+        if (Array.isArray(this.enemies)) {
+          this.enemies.forEach(en => {
+            if (!en || !en.sprite || !en.chunkId) return;
+            const inActiveChunk = en.chunkId === chunkId;
+            en.sprite.setVisible(inActiveChunk);
+            if (en.uiContainer) {
+              en.uiContainer.setVisible(inActiveChunk && !en.isFinished);
+            }
+            if (en.finisherProp) {
+              en.finisherProp.setVisible(inActiveChunk);
+            }
+            if (!inActiveChunk) {
+              if (en.telegraphLabel) en.telegraphLabel.setVisible(false);
+              if (en.finisherPrompt) en.finisherPrompt.setVisible(false);
+              if (en.barBg) en.barBg.setVisible(false);
+              if (en.barFill) en.barFill.setVisible(false);
+              if (en.sprite.body) {
+                en.sprite.body.setVelocity(0, 0);
+                en.sprite.body.enable = false;
+              }
+            } else if (!en.isFinished && en.sprite.body) {
+              en.sprite.body.enable = true;
+              if (en.barBg && en !== this.boss) en.barBg.setVisible(true);
+              if (en.barFill && en !== this.boss) en.barFill.setVisible(true);
+            }
+          });
+        }
+
+        if (targetX !== undefined && targetY !== undefined && this.player && this.player.sprite) {
+          this.player.sprite.setPosition(targetX, targetY);
+          if (this.player.sprite.body) {
+            this.player.sprite.body.setVelocity(0, 0);
+          }
+          if (this.camTarget) {
+            this.camTarget.setPosition(targetX, targetY - 25);
+          }
+          this.lastSafePerch = { x: targetX, y: targetY };
+        }
+
+        if (withTransition) {
+          this.portalTransitionCooldownUntil = this.time.now + 460;
+          this.cameras.main.fadeIn(180, 14, 16, 24);
+          SFX.jump(true);
+
+          if (chunkId === 'chunk_cellar_dungeon' && !this.hasEnteredCellar) {
+            this.hasEnteredCellar = true;
+            this.time.delayedCall(220, () => {
+              this.showOmelkoSpeech(STRINGS.OMELKO_REMARK_CELLAR, 4600);
+            });
+          } else if (chunkId === 'chunk_mill_upper' && !this.hasEnteredMill) {
+            this.hasEnteredMill = true;
+            this.time.delayedCall(220, () => {
+              this.showOmelkoSpeech(STRINGS.OMELKO_REMARK_MILL, 4600);
+            });
+          } else if (chunkId === 'chunk_korchma_hall' || chunkId === 'chunk_korchma_boss') {
+            SFX.playMusic('mus_korchma', { volume: 0.44, restart: true });
+            if (!this.hasEnteredKorchma) {
+              this.hasEnteredKorchma = true;
+              this.openKorchmaIntroModal();
+            }
+          } else if (chunkId === 'chunk_root_catacombs' && !this.hasEnteredCatacombs) {
+            this.hasEnteredCatacombs = true;
+            this.time.delayedCall(220, () => {
+              this.showOmelkoSpeech(STRINGS.OMELKO_REMARK_CATACOMBS, 4600);
+            });
+          } else if (chunkId === 'chunk_canopy_walk' && !this.hasEnteredCanopy) {
+            this.hasEnteredCanopy = true;
+            this.time.delayedCall(220, () => {
+              this.showOmelkoSpeech(STRINGS.OMELKO_REMARK_CANOPY, 4600);
+            });
+          }
+        }
+      }
+
+      openKorchmaIntroModal() {
+        if (this.isKorchmaIntroModalOpen) return;
+        this.isKorchmaIntroModalOpen = true;
+        this.korchmaModalReadyTime = this.time.now + 220;
+        if (this.player && this.player.sprite && this.player.sprite.body) {
+          this.player.sprite.body.setVelocity(0, 0);
+        }
+        this.physics.world.pause();
+        SFX.itemFanfare();
+
+        const cx = CONFIG.WIDTH / 2;
+        const cy = CONFIG.HEIGHT / 2;
+        const container = this.add.container(0, 0).setScrollFactor(0).setDepth(245);
+
+        const dimBg = this.add.rectangle(cx, cy, CONFIG.WIDTH, CONFIG.HEIGHT, 0x080504, 0.78).setInteractive();
+        const cardBg = this.add.rectangle(cx, cy, 700, 366, 0x1a110b, 0.97).setStrokeStyle(3, 0x00f5d4);
+        const innerFrame = this.add.rectangle(cx, cy, 686, 352, 0x000000, 0).setStrokeStyle(1.5, 0xffd166, 0.75);
+
+        const titleText = this.add.text(cx, cy - 148, STRINGS.KORCHMA_MODAL_TITLE || '🏚️ КОРЧМА «КУЦИЙ ХВІСТ»', {
+          fontFamily: "'Cormorant Infant', Georgia, serif",
+          fontSize: '28px',
+          fontStyle: 'bold',
+          color: '#00f5d4',
+          stroke: '#000000',
+          strokeThickness: 4
+        }).setOrigin(0.5);
+
+        const subText = this.add.text(cx, cy - 118, STRINGS.KORCHMA_MODAL_SUBTITLE || '', {
+          fontSize: '13px',
+          fontStyle: 'italic',
+          color: '#ffd166'
+        }).setOrigin(0.5);
+
+        // Character & Enemy preview badges
+        const omelkoImg = this.add.image(cx - 255, cy - 38, 'omelko_saber').setScale(1.3);
+        const chortImg = this.add.image(cx + 225, cy - 42, 'enemy_chort').setScale(1.18).setFlipX(true);
+        const dulyaImg = this.add.image(cx + 282, cy - 38, 'enemy_dulya').setScale(1.08);
+
+        // Omelko's quote box
+        const speechBox = this.add.rectangle(cx - 18, cy - 38, 390, 96, 0x261810, 0.95).setStrokeStyle(1.5, 0xffd166, 0.85);
+        const speechText = this.add.text(cx - 18, cy - 38, STRINGS.KORCHMA_MODAL_SPEECH || STRINGS.OMELKO_REMARK_KORCHMA_INSIDE, {
+          fontSize: '13.5px',
+          fontStyle: 'bold',
+          color: '#fefae0',
+          align: 'center',
+          wordWrap: { width: 368 },
+          lineSpacing: 4
+        }).setOrigin(0.5);
+
+        // Tactical tips box for Teleporting Chorts & Rolling Dulya
+        const tipsBg = this.add.rectangle(cx, cy + 58, 636, 68, 0x120b07, 0.95).setStrokeStyle(1, 0x48cae4, 0.65);
+        const tipChort = this.add.text(cx, cy + 41, STRINGS.KORCHMA_MODAL_TIP_CHORT || '', {
+          fontSize: '12.5px',
+          color: '#ffb703',
+          align: 'center',
+          wordWrap: { width: 615 }
+        }).setOrigin(0.5);
+        const tipDulya = this.add.text(cx, cy + 72, STRINGS.KORCHMA_MODAL_TIP_DULYA || '', {
+          fontSize: '12.5px',
+          color: '#90e0ef',
+          align: 'center',
+          wordWrap: { width: 615 }
+        }).setOrigin(0.5);
+
+        // Action button: [Enter] До бою!
+        const btnBg = this.add.rectangle(cx, cy + 136, 250, 42, 0x9b1123, 1)
+          .setStrokeStyle(2, 0xffd166)
+          .setInteractive({ useHandCursor: true });
+        const btnLabel = this.add.text(cx, cy + 136, STRINGS.KORCHMA_MODAL_BTN || '⚔ До бою! [Enter]', {
+          fontSize: '16px',
+          fontStyle: 'bold',
+          color: '#ffffff'
+        }).setOrigin(0.5);
+
+        btnBg.on('pointerover', () => btnBg.setFillStyle(0xc91831));
+        btnBg.on('pointerout', () => btnBg.setFillStyle(0x9b1123));
+        btnBg.on('pointerdown', () => this.closeKorchmaIntroModal());
+        dimBg.on('pointerdown', () => {
+          if (this.time.now >= (this.korchmaModalReadyTime || 0)) {
+            this.closeKorchmaIntroModal();
+          }
+        });
+
+        container.add([
+          dimBg,
+          cardBg,
+          innerFrame,
+          titleText,
+          subText,
+          speechBox,
+          speechText,
+          omelkoImg,
+          chortImg,
+          dulyaImg,
+          tipsBg,
+          tipChort,
+          tipDulya,
+          btnBg,
+          btnLabel
+        ]);
+
+        this.korchmaIntroModalContainer = container;
+      }
+
+      closeKorchmaIntroModal() {
+        if (!this.isKorchmaIntroModalOpen) return;
+        if (this.time.now < (this.korchmaModalReadyTime || 0)) return;
+        this.isKorchmaIntroModalOpen = false;
+        if (this.korchmaIntroModalContainer) {
+          this.korchmaIntroModalContainer.destroy(true);
+          this.korchmaIntroModalContainer = null;
+        }
+        if (!this.isPaused && !this.isDeathModalOpen && !this.isVictory) {
+          this.physics.world.resume();
+        }
+        SFX.banduraStart();
+        this.showOmelkoSpeech(STRINGS.OMELKO_REMARK_KORCHMA_INSIDE, 4200);
+      }
+
+      tryUsePortalOnShiftDown(time) {
+        if (!this.levelData || !this.levelData.chunks || time < (this.portalTransitionCooldownUntil || 0)) return false;
+        const px = this.player.sprite.x;
+        const py = this.player.sprite.y;
+        const matchingPortal = (this.chunkPortals || []).find(p =>
+          (p.chunkId || p.fromChunkId) === this.currentChunkId &&
+          (p.allowShiftDown || p.allowDownKey) &&
+          Math.abs(px - p.x) < 62 &&
+          Math.abs(py - (p.y - 30)) < 76
+        );
+        if (matchingPortal) {
+          this.setActiveLevel1Chunk(matchingPortal.targetChunkId, matchingPortal.targetX, matchingPortal.targetY, true);
+          return true;
+        }
+        return false;
+      }
+
+      updateAct1ChunksAndPortals(time, delta) {
+        void delta;
+        if (!this.player || !this.player.sprite) return;
+        const px = this.player.sprite.x;
+        const py = this.player.sprite.y;
+        const body = this.player.sprite.body;
+        const onFloor = Boolean(body && (body.blocked.down || body.touching.down));
+        const k = this.player.keys;
+        const touch = this.ui ? this.ui.touchState : {};
+        const canTransition = time >= (this.portalTransitionCooldownUntil || 0);
+
+        const upDownNow = Boolean((k && k.upArrow.isDown) || touch.jump);
+        const downDownNow = Boolean((k && k.downArrow.isDown) || touch.down);
+        const upJustPressed = upDownNow && !this.prevPortalUpDown;
+        const downJustPressed = downDownNow && !this.prevPortalDownDown;
+        this.prevPortalUpDown = upDownNow;
+        this.prevPortalDownDown = downDownNow;
+
+        (this.chunkPortals || []).forEach(p => {
+          const portalChunkId = p.chunkId || p.fromChunkId;
+          if (portalChunkId !== this.currentChunkId) {
+            if (p.promptBadge && p.promptBadge.visible) p.promptBadge.setVisible(false);
+            return;
+          }
+
+          const nearX = Math.abs(px - p.x) < 64;
+          const nearY = Math.abs(py - (p.y - 30)) < 82;
+          const isNear = nearX && nearY;
+
+          if (p.promptBadge) {
+            p.promptBadge.setVisible(isNear);
+            if (isNear) {
+              p.promptBadge.y = p.y - 72 + Math.sin(time * 0.006) * 3;
+            }
+          }
+
+          if (!canTransition || !isNear) return;
+
+          // 1. Auto-edge road transitions when walking to chunk boundary OR pressing Up/Right at gate
+          if (p.autoEdge === 'right' && ((px >= p.x - 16 && (k.rightArrow.isDown || touch.right)) || (upJustPressed && onFloor))) {
+            this.setActiveLevel1Chunk(p.targetChunkId, p.targetX, p.targetY, true);
+            return;
+          }
+          if (p.autoEdge === 'left' && ((px <= p.x + 16 && (k.leftArrow.isDown || touch.left)) || (upJustPressed && onFloor))) {
+            this.setActiveLevel1Chunk(p.targetChunkId, p.targetX, p.targetY, true);
+            return;
+          }
+
+          // 2. Interactive portal trigger via Up [▲] or Down [▼] on trapdoors/stairs/ladders
+          const groundedNearPortal = onFloor || Math.abs(py - (p.y - 26)) < 34;
+          if (p.allowDownKey && (downJustPressed || (upJustPressed && groundedNearPortal))) {
+            this.setActiveLevel1Chunk(p.targetChunkId, p.targetX, p.targetY, true);
+          } else if (!p.allowDownKey && upJustPressed && groundedNearPortal) {
+            this.setActiveLevel1Chunk(p.targetChunkId, p.targetX, p.targetY, true);
+          }
+        });
+      }
+
+      damageBreakableWall(wall, dmgAmount, sourceX) {
+        if (!wall || wall.isBroken) return;
+        const now = this.time.now;
+        if (wall.lastHitTime && now - wall.lastHitTime < 150) return;
+        wall.lastHitTime = now;
+
+        wall.hp -= dmgAmount;
+        this.triggerHitStop(35);
+        this.cameras.main.shake(95, 0.007);
+        this.spawnHitParticles(wall.x + (sourceX > wall.x ? 14 : -14), wall.y, 7);
+        SFX.panHit(false);
+
+        // Spawn wooden splinters on impact
+        for (let i = 0; i < 6; i++) {
+          const sp = this.add.rectangle(
+            wall.x + Phaser.Math.Between(-14, 14),
+            wall.y + Phaser.Math.Between(-42, 42),
+            Phaser.Math.Between(10, 18),
+            4,
+            i % 2 === 0 ? 0x8a5a36 : 0xd4a373
+          ).setDepth(38);
+          this.tweens.add({
+            targets: sp,
+            x: sp.x + Phaser.Math.Between(-65, 65),
+            y: sp.y + Phaser.Math.Between(-55, 35),
+            angle: Phaser.Math.Between(-220, 220),
+            alpha: 0,
+            duration: 380,
+            onComplete: () => sp.destroy()
+          });
+        }
+
+        if (wall.hp > 0) {
+          if (wall.container) {
+            this.tweens.add({
+              targets: wall.container,
+              x: wall.x + (sourceX > wall.x ? -5 : 5),
+              duration: 55,
+              yoyo: true,
+              repeat: 1
+            });
+          }
+          if (wall.hintTxt) {
+            wall.hintTxt.setText(`💥 [${wall.hp}/${wall.maxHp}]`);
+          }
+        } else {
+          // Wall shattered! Reveal the Secret Cellar Room!
+          wall.isBroken = true;
+          if (this.brokenWallIds) this.brokenWallIds.add(wall.id);
+          if (wall.blocker) wall.blocker.destroy();
+          if (wall.container) wall.container.destroy();
+          SFX.finisher();
+          SFX.itemFanfare();
+          this.cameras.main.shake(180, 0.012);
+          this.showOmelkoSpeech(STRINGS.OMELKO_REMARK_SECRET_FOUND, 4800);
+        }
+      }
+
+      showChunkArtifactBanner(text, borderColorHex = '#ffd166') {
+        if (this.activeArtifactBanner && this.activeArtifactBanner.active) {
+          this.activeArtifactBanner.destroy();
+        }
+        const banner = this.add.container(CONFIG.WIDTH / 2, 108).setScrollFactor(0).setDepth(178);
+        const txt = this.add.text(0, 0, text, {
+          fontFamily: "'Montserrat', sans-serif",
+          fontSize: '14px',
+          fontStyle: 'bold',
+          color: '#fefae0',
+          align: 'center',
+          wordWrap: { width: 680 }
+        }).setOrigin(0.5);
+        const bw = Math.min(740, Math.max(360, txt.width + 44));
+        const bh = Math.max(42, txt.height + 20);
+        const bg = this.add.graphics();
+        bg.fillStyle(0x141622, 0.95);
+        const borderNum = parseInt(String(borderColorHex).replace('#', '0x'), 16) || 0xffd166;
+        bg.lineStyle(2.5, borderNum, 1);
+        bg.fillRoundedRect(-bw / 2, -bh / 2, bw, bh, 10);
+        bg.strokeRoundedRect(-bw / 2, -bh / 2, bw, bh, 10);
+        banner.add([bg, txt]);
+        banner.setAlpha(0).setScale(0.9);
+        this.activeArtifactBanner = banner;
+
+        this.tweens.add({
+          targets: banner,
+          alpha: 1,
+          scale: 1,
+          duration: 220,
+          ease: 'Back.easeOut'
+        });
+
+        this.time.delayedCall(4200, () => {
+          if (banner && banner.active) {
+            this.tweens.add({
+              targets: banner,
+              alpha: 0,
+              y: 92,
+              duration: 260,
+              onComplete: () => {
+                if (banner.active) banner.destroy();
+              }
+            });
+          }
+        });
+      }
+
       respawnAtCheckpointFromDeath() {
         if (!this.isDeathModalOpen) return;
         this.isDeathModalOpen = false;
@@ -2135,12 +3580,15 @@
           this.deathDizzyStars = [];
         }
 
+        this.resetAndRespawnEnemiesAtCheckpoint();
+
         this.player.sprite.setAngle(0);
         this.player.sprite.setScale(1, 1);
         this.player.sprite.setPosition(this.activeCheckpoint.x, this.activeCheckpoint.y);
         this.player.sprite.body.setVelocity(0, 0);
         this.player.stamina = CONFIG.PLAYER.MAX_STAMINA;
         this.player.uzvarCharges = CONFIG.PLAYER.UZVAR_CHARGES;
+        this.player.galushkas = Math.max(this.player.galushkas, CONFIG.PLAYER.START_GALUSHKAS);
         this.player.invulnUntil = this.time.now + 1000;
         this.player.isTiredRespawning = false;
         this.lastSafePerch = { x: this.activeCheckpoint.x, y: this.activeCheckpoint.y };
@@ -2206,10 +3654,12 @@
         if (this.isPaused) {
           this.togglePause();
         }
+        this.resetAndRespawnEnemiesAtCheckpoint();
         this.player.sprite.setPosition(this.activeCheckpoint.x, this.activeCheckpoint.y);
         this.player.sprite.body.setVelocity(0, 0);
         this.player.stamina = CONFIG.PLAYER.MAX_STAMINA;
         this.player.uzvarCharges = CONFIG.PLAYER.UZVAR_CHARGES;
+        this.player.galushkas = Math.max(this.player.galushkas, CONFIG.PLAYER.START_GALUSHKAS);
         this.lastSafePerch = { x: this.activeCheckpoint.x, y: this.activeCheckpoint.y };
         SFX.checkpoint();
         this.showFloatingText(this.player.sprite.x, this.player.sprite.y - 45, STRINGS.TIRED_MESSAGE, '#00f5d4');
@@ -2450,11 +3900,21 @@
         if (this.tweens) this.tweens.resumeAll();
         GAME_STATE.currentLevel = targetLevel;
         GAME_STATE.hasSeenVodyanykIntro = false;
-        if (targetLevel >= 2) {
+        if (targetLevel === 1) {
+          GAME_STATE.hasSaber = false;
+          GAME_STATE.hasSwampFrogs = false;
+          GAME_STATE.hasRollStunBoots = false;
+          GAME_STATE.hasDefeatedLykho = false;
+        } else if (targetLevel === 2) {
           GAME_STATE.hasSaber = true;
-        }
-        if (targetLevel >= 3) {
+          GAME_STATE.hasSwampFrogs = false;
+          GAME_STATE.hasRollStunBoots = false;
+          GAME_STATE.hasDefeatedLykho = false;
+        } else if (targetLevel >= 3) {
+          GAME_STATE.hasSaber = true;
           GAME_STATE.hasSwampFrogs = true;
+          GAME_STATE.hasRollStunBoots = true;
+          GAME_STATE.hasDefeatedLykho = true;
         }
         this.scene.restart({ level: targetLevel, coins: this.player ? this.player.coins : 0 });
       }
@@ -2466,6 +3926,10 @@
         }
         this.isPaused = false;
         GAME_STATE.hasSeenVodyanykIntro = false;
+        if (this.currentLevel === 2) {
+          GAME_STATE.hasRollStunBoots = false;
+          GAME_STATE.hasDefeatedLykho = false;
+        }
         if (this.physics && this.physics.world) this.physics.world.resume();
         if (this.tweens) this.tweens.resumeAll();
         this.scene.restart({ level: this.currentLevel, coins: this.initialCoins });
@@ -2480,6 +3944,8 @@
         GAME_STATE.currentLevel = 1;
         GAME_STATE.hasSaber = false;
         GAME_STATE.hasSwampFrogs = false;
+        GAME_STATE.hasRollStunBoots = false;
+        GAME_STATE.hasDefeatedLykho = false;
         GAME_STATE.hasSeenVodyanykIntro = false;
         GAME_STATE.savedCoins = 0;
         this.scene.start('HutScene');

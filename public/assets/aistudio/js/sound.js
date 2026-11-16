@@ -260,6 +260,30 @@
         this.playTone(620, 740, 0.09, 'square', 0.09);
       }
 
+      hit(isHeavy = false) {
+        this.panHit(isHeavy);
+      }
+
+      gooseHonk() {
+        this.playTone(340, 250, 0.11, 'sawtooth', 0.13);
+        setTimeout(() => this.playTone(420, 290, 0.12, 'sawtooth', 0.12), 65);
+      }
+
+      chortLaugh() {
+        this.playTone(460, 320, 0.09, 'sawtooth', 0.13);
+        setTimeout(() => this.playTone(540, 360, 0.1, 'square', 0.12), 60);
+      }
+
+      chortTeleport() {
+        this.playTone(520, 140, 0.12, 'triangle', 0.14);
+        setTimeout(() => this.playTone(220, 660, 0.11, 'sine', 0.13), 70);
+      }
+
+      dulyaRoll() {
+        this.playTone(145, 240, 0.12, 'triangle', 0.14);
+        setTimeout(() => this.playTone(195, 115, 0.12, 'sine', 0.13), 75);
+      }
+
       roosterCrow() {
         [420, 560, 490, 760].forEach((f, i) => {
           setTimeout(() => this.playTone(f, f * 0.92, 0.14, 'sawtooth', 0.14), i * 95);

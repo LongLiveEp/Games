@@ -1,8 +1,8 @@
 
     /**
      * GLOBAL DIFFICULTY & PROGRESSION STATE
-     * 'casual'   -> Standard checkpoints, 1x enemy HP & damage
-     * 'hardcore' -> One life (no checkpoints), 2x enemy HP & 1.5x enemy damage
+     * 'casual'   -> Standard checkpoints, 1x enemy HP & damage (enemies respawn when returning to checkpoint)
+     * 'hardcore' -> One life (no checkpoints), 1x enemy HP & 1x enemy damage
      */
     const GAME_STATE = {
       language: 'uk',
@@ -10,16 +10,18 @@
       currentLevel: 1,
       hasSaber: false,
       hasSwampFrogs: false,
+      hasRollStunBoots: false,
+      hasDefeatedLykho: false,
       savedCoins: 0,
       hasSeenVodyanykIntro: false,
       isHardcore() {
         return this.difficulty === 'hardcore';
       },
       getEnemyHpMultiplier() {
-        return this.difficulty === 'hardcore' ? 2 : 1;
+        return 1;
       },
       getEnemyDamageMultiplier() {
-        return this.difficulty === 'hardcore' ? 1.5 : 1;
+        return 1;
       }
     };
 

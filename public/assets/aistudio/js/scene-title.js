@@ -306,20 +306,28 @@
         // 6. Create Difficulty Selection Modal (shown after Wife calls Omelko into the Khata)
         this.createDifficultyModal();
 
+        // 6B. Create Cossack Bestiary Modal
+        this.bestiaryModal = (typeof BestiaryModal !== 'undefined') ? new BestiaryModal(this) : null;
+
         // 7. Input Handling (Enter, Space, Arrows, Click/Tap)
         this.input.keyboard.on('keydown-UP', () => {
+          if (this.bestiaryModal && this.bestiaryModal.isOpen) return;
           if (this.difficultyModalOpen) this.moveDifficultySelection(-1);
         });
         this.input.keyboard.on('keydown-DOWN', () => {
+          if (this.bestiaryModal && this.bestiaryModal.isOpen) return;
           if (this.difficultyModalOpen) this.moveDifficultySelection(1);
         });
         this.input.keyboard.on('keydown-W', () => {
+          if (this.bestiaryModal && this.bestiaryModal.isOpen) return;
           if (this.difficultyModalOpen) this.moveDifficultySelection(-1);
         });
         this.input.keyboard.on('keydown-S', () => {
+          if (this.bestiaryModal && this.bestiaryModal.isOpen) return;
           if (this.difficultyModalOpen) this.moveDifficultySelection(1);
         });
         this.input.keyboard.on('keydown-ENTER', () => {
+          if (this.bestiaryModal && this.bestiaryModal.isOpen) return;
           if (this.difficultyModalOpen) {
             this.confirmDifficultySelection();
           } else {
@@ -327,6 +335,7 @@
           }
         });
         this.input.keyboard.on('keydown-SPACE', () => {
+          if (this.bestiaryModal && this.bestiaryModal.isOpen) return;
           if (this.difficultyModalOpen) {
             this.confirmDifficultySelection();
           } else {
@@ -334,7 +343,15 @@
           }
         });
         this.input.on('pointerdown', (pointer) => {
+          if (this.bestiaryModal && this.bestiaryModal.isOpen) return;
           if (pointer && pointer.x > 840 && pointer.y < 145) return;
+          // Ignore click if clicking on the Title Bestiary button
+          if (pointer && !this.startingGame && !this.difficultyModalOpen) {
+            const cx = CONFIG.WIDTH / 2;
+            if (Math.abs(pointer.x - cx) <= 155 && Math.abs(pointer.y - (CONFIG.HEIGHT - 122)) <= 22) {
+              return;
+            }
+          }
           if (this.difficultyModalOpen) {
             const cx = CONFIG.WIDTH / 2;
             const cy = CONFIG.HEIGHT / 2;
@@ -1028,6 +1045,40 @@
           color: '#f8f9fa',
           letterSpacing: 2
         }).setOrigin(0.5);
+
+        // Ornate Cossack Bestiary Button right above the footer plaque
+        const bestiaryY = CONFIG.HEIGHT - 122;
+        this.titleBestiaryBg = this.add.rectangle(cx, bestiaryY, 290, 34, 0x2b2118, 0.94)
+          .setStrokeStyle(2, 0xffd166)
+          .setDepth(110)
+          .setInteractive({ useHandCursor: true });
+
+        this.titleBestiaryTxt = this.add.text(
+          cx,
+          bestiaryY,
+          STRINGS.TITLE_BESTIARY_BTN || '📖 Козацький Бестіарій [B]',
+          {
+            fontFamily: "'Cormorant Infant', Georgia, serif",
+            fontSize: '19px',
+            fontStyle: 'bold',
+            color: '#ffd166'
+          }
+        ).setOrigin(0.5).setDepth(111);
+
+        this.titleBestiaryBg.on('pointerover', () => {
+          this.titleBestiaryBg.setFillStyle(0x4a2c11, 0.98).setStrokeStyle(2.5, 0xffea00).setScale(1.04);
+          this.titleBestiaryTxt.setColor('#ffea00').setScale(1.04);
+        });
+        this.titleBestiaryBg.on('pointerout', () => {
+          this.titleBestiaryBg.setFillStyle(0x2b2118, 0.94).setStrokeStyle(2, 0xffd166).setScale(1);
+          this.titleBestiaryTxt.setColor('#ffd166').setScale(1);
+        });
+        this.titleBestiaryBg.on('pointerdown', (pointer, lx, ly, event) => {
+          if (event && event.stopPropagation) event.stopPropagation();
+          if (this.bestiaryModal) {
+            this.bestiaryModal.open(0, 0);
+          }
+        });
       }
 
       createDifficultyModal() {
@@ -1207,7 +1258,7 @@
 
         // Hide bottom prompt plaque so the scene feels cinematic
         this.tweens.add({
-          targets: [this.footerBg, this.enterPrompt, this.authorText],
+          targets: [this.footerBg, this.enterPrompt, this.authorText, this.titleBestiaryBg, this.titleBestiaryTxt].filter(Boolean),
           alpha: 0,
           duration: 280
         });

@@ -31,7 +31,7 @@
             this.sprite.x + Phaser.Math.Between(-12, 12),
             this.sprite.y + 16,
             'particle_dust'
-          ).setScale(0.75);
+          ).setScale(0.75).setDepth(29);
           this.scene.tweens.add({
             targets: p,
             y: p.y + 14,
@@ -125,10 +125,11 @@
      * can leap back up to the surface, and hurls stones!
      */
     class LeshyEnemy extends Enemy {
-      constructor(scene, x, y, minX, maxX) {
+      constructor(scene, x, y, minX, maxX, stayOnSurface = false) {
         super(scene, x, y, 'enemy_leshy', CONFIG.ENEMY.LESHY.MAX_STUN);
         this.minX = minX !== undefined ? minX : Math.max(100, x - 180);
         this.maxX = maxX !== undefined ? maxX : Math.min((this.scene.worldWidth || CONFIG.WORLD_WIDTH) - 100, x + 180);
+        this.stayOnSurface = Boolean(stayOnSurface || (scene && scene.currentLevel === 1) || x >= 4200);
         this.walkDir = -1;
         this.state = 'PATROL'; // PATROL, TELEGRAPH, COOLDOWN
         this.stateEndTime = 0;
@@ -138,10 +139,12 @@
       }
 
       isUnderground() {
+        if (this.stayOnSurface) return false;
         return this.sprite.body.bottom > CONFIG.GROUND_Y + 22;
       }
 
       diveUnderground(time) {
+        if (this.stayOnSurface) return;
         this.burrowPassUntil = time + 480;
         this.nextBurrowTime = time + CONFIG.ENEMY.LESHY.BURROW_COOLDOWN_MS;
         this.sprite.y += 10;

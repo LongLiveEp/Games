@@ -8,6 +8,7 @@
       constructor(scene, x, y, texture, maxStun) {
         this.scene = scene;
         this.sprite = scene.physics.add.sprite(x, y, texture);
+        this.sprite.setDepth(30);
         this.sprite.setCollideWorldBounds(true);
         this.sprite.enemyRef = this;
 
@@ -19,7 +20,7 @@
         this.isTelegraphing = false;
 
         // Overhead UI: Classic Red Health Bar (starts full red and decreases to 0) + Telegraph Warning ("!") + Dizzy Stars
-        this.uiContainer = scene.add.container(x, y - 42);
+        this.uiContainer = scene.add.container(x, y - 42).setDepth(32);
         this.barBg = scene.add.rectangle(0, 0, 44, 7, 0x1b1d24).setStrokeStyle(1, 0xffffff);
         this.barFill = scene.add.rectangle(-21, 0, 42, 5, 0xe63946).setOrigin(0, 0.5);
         this.telegraphLabel = scene.add.text(0, -18, '!', {
@@ -165,7 +166,8 @@
           // Stuffed into a Barrel or Clay Pot that hops & wiggles!
           const propKey = roll === 0 ? 'prop_barrel' : 'prop_pot';
 
-          const prop = this.scene.add.image(this.sprite.x, this.sprite.y + 4, propKey);
+          const prop = this.scene.add.image(this.sprite.x, this.sprite.y + 4, propKey).setDepth(29);
+          this.finisherProp = prop;
           this.sprite.setPosition(prop.x, prop.y - 22);
           this.sprite.setFlipY(true); // Feet sticking out!
           this.sprite.setScale(0.8);
@@ -191,7 +193,7 @@
             onComplete: () => {
               if (!this.scene || !this.scene.sys || !this.scene.sys.isActive()) return;
               // Twinkle star in the sky
-              const twinkle = this.scene.add.image(this.sprite.x, 55, 'particle_star').setScale(2.8);
+              const twinkle = this.scene.add.image(this.sprite.x, 55, 'particle_star').setScale(2.8).setDepth(40);
               this.scene.tweens.add({
                 targets: twinkle,
                 scale: 0,
@@ -201,9 +203,57 @@
                   if (twinkle && twinkle.active) twinkle.destroy();
                 }
               });
-              if (this.sprite && this.sprite.active) this.sprite.destroy();
+              if (this.sprite && this.sprite.active) {
+                this.sprite.setVisible(false);
+                this.sprite.setActive(false);
+              }
             }
           });
+        }
+      }
+
+      destroyEnemy() {
+        this.isFinished = true;
+        if (this.scene && this.scene.tweens) {
+          if (this.sprite) this.scene.tweens.killTweensOf(this.sprite);
+          if (this.finisherProp) this.scene.tweens.killTweensOf(this.finisherProp);
+        }
+        if (this.finisherProp && this.finisherProp.active) {
+          this.finisherProp.destroy();
+          this.finisherProp = null;
+        }
+        if (this.surfaceWreath && this.surfaceWreath.active) {
+          this.surfaceWreath.destroy();
+          this.surfaceWreath = null;
+        }
+        if (this.pullVortexGraphic) {
+          this.pullVortexGraphic.destroy();
+          this.pullVortexGraphic = null;
+        }
+        if (this.activeThunderStrike) {
+          if (this.activeThunderStrike.warningLine) this.activeThunderStrike.warningLine.destroy();
+          if (this.activeThunderStrike.boltGraphic) this.activeThunderStrike.boltGraphic.destroy();
+          if (this.activeThunderStrike.impactCircle) this.activeThunderStrike.impactCircle.destroy();
+          this.activeThunderStrike = null;
+        }
+        if (Array.isArray(this.submergeBubbles)) {
+          this.submergeBubbles.forEach(b => {
+            if (b && b.sprite && b.sprite.active) b.sprite.destroy();
+          });
+          this.submergeBubbles = [];
+        }
+        if (Array.isArray(this.rainDrops)) {
+          this.rainDrops.forEach(r => {
+            if (r && r.sprite && r.sprite.active) r.sprite.destroy();
+          });
+          this.rainDrops = [];
+        }
+        if (this.uiContainer && this.uiContainer.active) {
+          this.uiContainer.destroy();
+          this.uiContainer = null;
+        }
+        if (this.sprite && this.sprite.active) {
+          this.sprite.destroy();
         }
       }
     }

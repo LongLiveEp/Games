@@ -1,232 +1,754 @@
 
     /**
      * ============================================================================
-     * 3. LEVEL 1 DESIGN DATA (3 PLATFORM HEIGHTS + ENEMIES + CHECKPOINTS)
+     * 3. LEVEL 1 HYBRID ROOM GRAPH (`LEVEL1_CHUNKS` — DEAD CELLS STYLE)
      * ============================================================================
-     * Heights adjusted for GROUND_Y = 405: Low (~320), Mid (~235), High (~150)
+     * Multi-layered branching room graph for Act I («Хутір і узлісся»):
+     *  - Node 1 (`chunk_village_start`, 1440×540, x: 0..1440):
+     *      Calm village lane, wattle fences/platforms, 3 unruly Geese, Old Well / Cellar Trapdoor
+     *      (down to `chunk_cellar_dungeon`), High Fence & Roof (up to `chunk_mill_upper`),
+     *      and main road east to `chunk_pond_road`.
+     *  - Node 2A (`chunk_pond_road`, 1600×540, x: 1440..3040):
+     *      Main route along the pond with multi-tiered wooden decks, flocks of Geese &
+     *      rock/cone-lobbing Pesyholovtsi, upper access to `chunk_mill_upper`, cellar exit stairs,
+     *      and gate to `chunk_boss_rooster`.
+     *  - Node 2B (`chunk_cellar_dungeon`, 1920×540, x: 4200..6120):
+     *      Abandoned Cossack underground cellar with dark timber beams, cobwebs, barrels,
+     *      subterranean Pesyholovtsi + 1 sentry Goose, a Breakable False Wall (`breakableWalls`)
+     *      hiding a Secret Stash (Cherry Kissel Jug full heal, +3 Galushkas, and the
+     *      "Ancient Chronicle of the Pesyholovtsi" Bestiary artifact), and right stairs emerging
+     *      into the final third of `chunk_pond_road`.
+     *  - Node 2C (`chunk_mill_upper`, 1280×540, x: 6400..7680):
+     *      Old Windmill Attic upper corridor accessible from high roofs in Node 1 or Node 2A.
+     *      Platforming challenge across high rafters with 1 flying sentry Goose, rewarding the
+     *      Sizzling Frying Pan with Cracklings (`shkvarky_pan`, +40% attack power + bonus coins)
+     *      and a spectacular drop hatch straight down into `chunk_boss_rooster`.
+     *  - Node 3 (`chunk_boss_rooster`, 960×540, x: 3040..4000):
+     *      Enclosed courtyard in front of Kum Hrytsko's hut — Boss Arena of Mad Rooster Korniy.
      */
-    const LEVEL_1_DATA = {
-      platforms: [
-        // Screen 1: Village outskirts (Introduction to jumping & Goose)
-        { x: 380, y: 320, w: 180, tier: 1 },
-        { x: 640, y: 235, w: 200, tier: 2 },
-        { x: 920, y: 320, w: 180, tier: 1 },
-        { x: 1150, y: 150, w: 220, tier: 3 },
+    const LEVEL1_CHUNKS = {
+      chunk_village_start: {
+        id: 'chunk_village_start',
+        type: 'combat',
+        bounds: { x: 0, y: 0, width: 1440, height: 540 },
+        platforms: [
+          { x: 360, y: 320, w: 180, tier: 1 },
+          { x: 630, y: 235, w: 200, tier: 2 },
+          { x: 920, y: 315, w: 190, tier: 1 },
+          { x: 1060, y: 230, w: 170, tier: 2 },
+          { x: 1230, y: 150, w: 220, tier: 3 }
+        ],
+        breakableWalls: [],
+        loot: [
+          { type: 'coin', x: 630, y: 200 },
+          { type: 'galushka', x: 920, y: 280 }
+        ],
+        checkpoints: [
+          { id: 1, type: 'well', x: 1130, y: CONFIG.GROUND_Y, chunkId: 'chunk_village_start' }
+        ],
+        enemies: [
+          { type: 'goose', x: 460, y: 370, minX: 280, maxX: 660, chunkId: 'chunk_village_start' },
+          { type: 'goose', x: 640, y: 200, minX: 530, maxX: 740, chunkId: 'chunk_village_start' },
+          { type: 'goose', x: 960, y: 370, minX: 780, maxX: 1110, chunkId: 'chunk_village_start' }
+        ],
+        portals: [
+          {
+            id: 'village_to_cellar',
+            x: 1265,
+            y: CONFIG.GROUND_Y,
+            targetChunkId: 'chunk_cellar_dungeon',
+            targetX: 4680,
+            targetY: CONFIG.GROUND_Y - 45,
+            allowShiftDown: true,
+            allowDownKey: true,
+            visualType: 'trapdoor',
+            promptKey: 'PORTAL_CELLAR_DOWN'
+          },
+          {
+            id: 'village_to_mill',
+            x: 1245,
+            y: 150,
+            targetChunkId: 'chunk_mill_upper',
+            targetX: 6510,
+            targetY: CONFIG.GROUND_Y - 45,
+            visualType: 'roof_ladder',
+            promptKey: 'PORTAL_MILL_UP'
+          },
+          {
+            id: 'village_to_pond',
+            x: 1395,
+            y: CONFIG.GROUND_Y,
+            targetChunkId: 'chunk_pond_road',
+            targetX: 1510,
+            targetY: CONFIG.GROUND_Y - 45,
+            autoEdge: 'right',
+            visualType: 'road_gate',
+            promptKey: 'PORTAL_POND_ROAD'
+          }
+        ]
+      },
 
-        // Screen 2: Around the Well Checkpoint & Forest edge
-        { x: 1480, y: 320, w: 220, tier: 1 },
-        { x: 1760, y: 235, w: 240, tier: 2 },
-        { x: 2040, y: 150, w: 200, tier: 3 },
-        { x: 2100, y: 320, w: 180, tier: 1 },
+      chunk_pond_road: {
+        id: 'chunk_pond_road',
+        type: 'combat',
+        bounds: { x: 1440, y: 0, width: 1600, height: 540 },
+        platforms: [
+          { x: 1640, y: 320, w: 200, tier: 1 },
+          { x: 1870, y: 235, w: 220, tier: 2 },
+          { x: 2090, y: 150, w: 210, tier: 3 },
+          { x: 2170, y: 320, w: 190, tier: 1 },
+          { x: 2430, y: 235, w: 230, tier: 2 },
+          { x: 2680, y: 320, w: 200, tier: 1 }
+        ],
+        breakableWalls: [],
+        loot: [
+          { type: 'coin', x: 1870, y: 200 },
+          { type: 'food', x: 2430, y: 200 }
+        ],
+        checkpoints: [
+          { id: 2, type: 'pillar', x: 2880, y: CONFIG.GROUND_Y, chunkId: 'chunk_pond_road' }
+        ],
+        enemies: [
+          { type: 'goose', x: 1680, y: 370, minX: 1520, maxX: 1840, chunkId: 'chunk_pond_road' },
+          { type: 'leshy', x: 1920, y: 370, minX: 1740, maxX: 2120, chunkId: 'chunk_pond_road' },
+          { type: 'goose', x: 1880, y: 200, minX: 1770, maxX: 1980, chunkId: 'chunk_pond_road' },
+          { type: 'leshy', x: 2260, y: 370, minX: 2080, maxX: 2460, chunkId: 'chunk_pond_road' },
+          { type: 'goose', x: 2440, y: 200, minX: 2320, maxX: 2540, chunkId: 'chunk_pond_road' },
+          { type: 'leshy', x: 2590, y: 370, minX: 2420, maxX: 2780, chunkId: 'chunk_pond_road' }
+        ],
+        portals: [
+          {
+            id: 'pond_to_village',
+            x: 1475,
+            y: CONFIG.GROUND_Y,
+            targetChunkId: 'chunk_village_start',
+            targetX: 1345,
+            targetY: CONFIG.GROUND_Y - 45,
+            autoEdge: 'left',
+            visualType: 'road_gate',
+            promptKey: 'PORTAL_VILLAGE_BACK'
+          },
+          {
+            id: 'pond_to_mill',
+            x: 2090,
+            y: 150,
+            targetChunkId: 'chunk_mill_upper',
+            targetX: 6510,
+            targetY: CONFIG.GROUND_Y - 45,
+            visualType: 'roof_ladder',
+            promptKey: 'PORTAL_MILL_UP'
+          },
+          {
+            id: 'pond_to_cellar',
+            x: 2760,
+            y: CONFIG.GROUND_Y,
+            targetChunkId: 'chunk_cellar_dungeon',
+            targetX: 5960,
+            targetY: CONFIG.GROUND_Y - 45,
+            allowShiftDown: true,
+            allowDownKey: true,
+            visualType: 'trapdoor',
+            promptKey: 'PORTAL_CELLAR_DOWN'
+          },
+          {
+            id: 'pond_to_boss',
+            x: 2995,
+            y: CONFIG.GROUND_Y,
+            targetChunkId: 'chunk_boss_rooster',
+            targetX: 3120,
+            targetY: CONFIG.GROUND_Y - 45,
+            autoEdge: 'right',
+            visualType: 'road_gate',
+            promptKey: 'PORTAL_BOSS_YARD'
+          }
+        ]
+      },
 
-        // Screen 3: Deep Forest (Multi-tiered verticality with Pesyholovets & Geese)
-        { x: 2400, y: 320, w: 200, tier: 1 },
-        { x: 2640, y: 235, w: 240, tier: 2 },
-        { x: 2900, y: 150, w: 220, tier: 3 },
-        { x: 2920, y: 320, w: 180, tier: 1 },
+      chunk_cellar_dungeon: {
+        id: 'chunk_cellar_dungeon',
+        type: 'dungeon',
+        bounds: { x: 4200, y: 0, width: 1920, height: 540 },
+        platforms: [
+          // Secret stash shelf on far left behind breakable wall
+          { x: 4350, y: 315, w: 170, tier: 1, isCellarPlatform: true },
+          // Cellar oak storage racks & barrel shelves
+          { x: 4860, y: 320, w: 190, tier: 1, isCellarPlatform: true },
+          { x: 5140, y: 245, w: 210, tier: 2, isCellarPlatform: true },
+          { x: 5440, y: 320, w: 200, tier: 1, isCellarPlatform: true },
+          { x: 5720, y: 245, w: 190, tier: 2, isCellarPlatform: true }
+        ],
+        breakableWalls: [
+          {
+            id: 'cellar_secret_wall',
+            x: 4545,
+            y: CONFIG.GROUND_Y - 62,
+            width: 38,
+            height: 124,
+            hp: 3
+          }
+        ],
+        loot: [
+          // Secret room rewards behind the breakable false wall (x: 4240..4500)
+          { type: 'secret_kissel_jug', x: 4455, y: CONFIG.GROUND_Y - 22, isSecret: true },
+          { type: 'secret_galushka_stash', x: 4370, y: CONFIG.GROUND_Y - 22, isSecret: true },
+          { type: 'secret_bestiary_scroll', x: 4285, y: CONFIG.GROUND_Y - 26, isSecret: true }
+        ],
+        checkpoints: [],
+        enemies: [
+          { type: 'leshy', x: 4920, y: 370, minX: 4720, maxX: 5120, chunkId: 'chunk_cellar_dungeon', stayOnSurface: true },
+          { type: 'leshy', x: 5240, y: 370, minX: 5040, maxX: 5420, chunkId: 'chunk_cellar_dungeon', stayOnSurface: true },
+          { type: 'goose', x: 5450, y: 285, minX: 5350, maxX: 5540, chunkId: 'chunk_cellar_dungeon' },
+          { type: 'leshy', x: 5620, y: 370, minX: 5420, maxX: 5820, chunkId: 'chunk_cellar_dungeon', stayOnSurface: true },
+          { type: 'leshy', x: 5850, y: 370, minX: 5680, maxX: 5980, chunkId: 'chunk_cellar_dungeon', stayOnSurface: true }
+        ],
+        portals: [
+          {
+            id: 'cellar_to_village',
+            x: 4660,
+            y: CONFIG.GROUND_Y,
+            targetChunkId: 'chunk_village_start',
+            targetX: 1265,
+            targetY: CONFIG.GROUND_Y - 45,
+            visualType: 'cellar_stairs_up',
+            promptKey: 'PORTAL_CELLAR_UP_WELL'
+          },
+          {
+            id: 'cellar_to_pond_end',
+            x: 6015,
+            y: CONFIG.GROUND_Y,
+            targetChunkId: 'chunk_pond_road',
+            targetX: 2760,
+            targetY: CONFIG.GROUND_Y - 45,
+            visualType: 'cellar_stairs_up',
+            promptKey: 'PORTAL_CELLAR_UP_POND'
+          }
+        ]
+      },
 
-        // Screen 4: Approach to Boss Courtyard & Pillar Checkpoint
-        { x: 3280, y: 320, w: 200, tier: 1 },
-        { x: 3540, y: 235, w: 220, tier: 2 },
-        { x: 3740, y: 150, w: 180, tier: 3 },
+      chunk_mill_upper: {
+        id: 'chunk_mill_upper',
+        type: 'combat',
+        bounds: { x: 6400, y: 0, width: 1280, height: 540 },
+        platforms: [
+          { x: 6660, y: 325, w: 170, tier: 1 },
+          { x: 6890, y: 245, w: 180, tier: 2 },
+          { x: 7130, y: 175, w: 190, tier: 3 },
+          { x: 7390, y: 240, w: 220, tier: 2 }
+        ],
+        breakableWalls: [],
+        loot: [
+          { type: 'coin', x: 6890, y: 210 },
+          { type: 'coin', x: 7130, y: 140 },
+          { type: 'shkvarky_pan', x: 7410, y: 200 }
+        ],
+        checkpoints: [],
+        enemies: [
+          { type: 'goose', x: 7130, y: 140, minX: 7020, maxX: 7240, chunkId: 'chunk_mill_upper' }
+        ],
+        portals: [
+          {
+            id: 'mill_to_village',
+            x: 6485,
+            y: CONFIG.GROUND_Y,
+            targetChunkId: 'chunk_village_start',
+            targetX: 1230,
+            targetY: 105,
+            allowDownKey: true,
+            visualType: 'trapdoor',
+            promptKey: 'PORTAL_MILL_DOWN_START'
+          },
+          {
+            id: 'mill_to_boss',
+            x: 7575,
+            y: CONFIG.GROUND_Y,
+            targetChunkId: 'chunk_boss_rooster',
+            targetX: 3150,
+            targetY: 165,
+            allowShiftDown: true,
+            allowDownKey: true,
+            visualType: 'chute_drop',
+            promptKey: 'PORTAL_MILL_DROP_BOSS'
+          }
+        ]
+      },
 
-        // Screen 5: Boss Arena side perches (High enough to dodge shockwaves)
-        { x: 4060, y: 300, w: 150, tier: 1 },
-        { x: 4540, y: 300, w: 150, tier: 1 },
-        { x: 4300, y: 200, w: 180, tier: 2 }
-      ],
-      checkpoints: [
-        { id: 1, type: 'well', x: 1400, y: CONFIG.GROUND_Y, name: STRINGS.CHECKPOINT_WELL },
-        { id: 2, type: 'pillar', x: 3150, y: CONFIG.GROUND_Y, name: STRINGS.CHECKPOINT_PILLAR }
-      ],
-      enemies: [
-        // First 10 enemies (Village & Outskirts up to ~1/3 of the map): ONLY Hrytsko's unruly geese!
-        { type: 'goose', x: 430, y: 370, minX: 300, maxX: 620 },
-        { type: 'goose', x: 590, y: 205, minX: 540, maxX: 740 },
-        { type: 'goose', x: 740, y: 370, minX: 560, maxX: 920 },
-        { type: 'goose', x: 920, y: 290, minX: 830, maxX: 1010 },
-        { type: 'goose', x: 1050, y: 370, minX: 880, maxX: 1220 },
-        { type: 'goose', x: 1150, y: 120, minX: 1040, maxX: 1260 },
-        { type: 'goose', x: 1260, y: 370, minX: 1080, maxX: 1380 },
-        { type: 'goose', x: 1480, y: 290, minX: 1380, maxX: 1580 },
-        { type: 'goose', x: 1560, y: 370, minX: 1420, maxX: 1680 },
-        { type: 'goose', x: 1660, y: 205, minX: 1640, maxX: 1870 },
-
-        // From 1/3 of the map onward (x >= 1740, Forest section): Pesyholovtsi appear on the ground & hide underground!
-        { type: 'leshy', x: 1760, y: 370, minX: 1560, maxX: 1980 },
-        { type: 'leshy', x: 2080, y: 370, minX: 1880, maxX: 2280 },
-        { type: 'goose', x: 2260, y: 370, minX: 2020, maxX: 2480 },
-        { type: 'leshy', x: 2520, y: 370, minX: 2340, maxX: 2760 },
-        { type: 'leshy', x: 2860, y: 370, minX: 2640, maxX: 3080 },
-        { type: 'goose', x: 2940, y: 290, minX: 2820, maxX: 3020 },
-        { type: 'leshy', x: 3380, y: 370, minX: 3200, maxX: 3620 },
-        { type: 'goose', x: 3540, y: 205, minX: 3430, maxX: 3650 },
-        { type: 'leshy', x: 3680, y: 370, minX: 3460, maxX: 3820 }
-      ],
-      bossArenaStartX: 3880,
-      bossSpawnX: 4460
+      chunk_boss_rooster: {
+        id: 'chunk_boss_rooster',
+        type: 'boss',
+        bounds: { x: 3040, y: 0, width: 960, height: 540 },
+        platforms: [
+          { x: 3220, y: 300, w: 150, tier: 1 },
+          { x: 3740, y: 300, w: 150, tier: 1 },
+          { x: 3480, y: 200, w: 180, tier: 2 }
+        ],
+        breakableWalls: [],
+        loot: [],
+        checkpoints: [],
+        enemies: [],
+        portals: []
+      }
     };
+
+    function buildAct1ChunkLevelData() {
+      const platforms = [];
+      const checkpoints = [];
+      const enemies = [];
+      const breakableWalls = [];
+      const chunkLoot = [];
+      const portals = [];
+
+      Object.values(LEVEL1_CHUNKS).forEach(chunk => {
+        (chunk.platforms || []).forEach(p => platforms.push({ ...p, chunkId: chunk.id }));
+        (chunk.checkpoints || []).forEach(cp => checkpoints.push({ ...cp, chunkId: chunk.id }));
+        (chunk.enemies || []).forEach(en => enemies.push({ ...en, chunkId: chunk.id }));
+        (chunk.breakableWalls || []).forEach(bw => breakableWalls.push({ ...bw, chunkId: chunk.id }));
+        (chunk.loot || []).forEach(lt => chunkLoot.push({ ...lt, chunkId: chunk.id }));
+        (chunk.portals || []).forEach(pt => portals.push({ ...pt, chunkId: chunk.id }));
+      });
+
+      return {
+        worldWidth: 7680,
+        chunks: LEVEL1_CHUNKS,
+        initialChunkId: 'chunk_village_start',
+        platforms,
+        checkpoints,
+        enemies,
+        breakableWalls,
+        chunkLoot,
+        portals,
+        bossArenaStartX: 3040,
+        bossSpawnX: 3680
+      };
+    }
+
+    const LEVEL_1_DATA = buildAct1ChunkLevelData();
 
     /**
      * ============================================================================
-     * 3B. LEVEL 2 («ЗЛИЙ ЛІС») HYBRID CHUNK GENERATOR
-     * Inspired by Sébastien Bénard's "The Level Design of Dead Cells: A Hybrid Approach":
-     *  - Fixed Macro Biome Graph (Entrance Thicket -> Ravine Ambush -> Shrine Checkpoint ->
-     *    Rotting Mire -> Labyrinth of Blud -> Ancient Oak Checkpoint -> Thorn Gauntlet -> Boss Lair)
-     *  - Handcrafted Room Templates with micro-variations per run
-     *  - Tactical enemy pairing on combat floors (Shielded Моховик-Щитоносець paired with
-     *    aerial Лісова Нявка, mire-lobbing Болотяник, and subterranean Песиголовець).
+     * 3B. LEVEL 2 («ЗЛИЙ ЛІС» & КОРЧМА «КУЦИЙ ХВІСТ») HYBRID CHUNK ARCHITECTURE
+     *  - Node 1 (`chunk_forest_edge`, 1600×540): Узлісся Моховиків (вхід у ліс, вибір шляху)
+     *  - Node 2A (`chunk_forest_glade`, 1920×540): Крива Галявина та Корчма «Куций Хвіст» (посередині рівня!)
+     *  - Node 2B (`chunk_root_catacombs`, 1600×540): Корінні Катакомби під Дубами + Секретна кімната за корінням
+     *  - Node 2C (`chunk_canopy_walk`, 1280×540): Верховіття Вікових Дубів (верхній маршрут по гілках)
+     *  - Node 2D (`chunk_korchma_hall`, 1600×540): Корчма «Куций Хвіст» — Коридор із куцими чортами
+     *  - Node 2E (`chunk_korchma_boss`, 1100×540): Бенкетна Зала Корчми — Міні-бос ЛИХО (дає Червоні Чоботи!)
+     *  - Node 3 (`chunk_boss_lisovyk`, 1080×540): Серце Хащі — Арена Прадавнього Лісовика Чорнобора
      * ============================================================================
      */
-    function buildEvilForestLevelData() {
-      const pickVariant = (arr) => arr[Math.floor(Math.random() * arr.length)];
-
-      // Handcrafted Chunk 1 Variants: Урочище Моховиків (Introduces Shield Guardian + Nyavka)
-      const chunk1 = pickVariant([
-        {
-          platforms: [
-            { x: 350, y: 315, w: 170, tier: 1 },
-            { x: 610, y: 230, w: 210, tier: 2 },
-            { x: 890, y: 315, w: 190, tier: 1 },
-            { x: 1140, y: 155, w: 220, tier: 3 },
-            { x: 1180, y: 315, w: 170, tier: 1 }
-          ],
-          enemies: [
-            // First Shield Guardian on flat ground so player learns to roll [Shift] behind him!
-            { type: 'shield_guardian', x: 470, y: 365, minX: 310, maxX: 650 },
-            { type: 'nyavka', x: 640, y: 185, minX: 500, maxX: 820 },
-            { type: 'leshy', x: 860, y: 370, minX: 700, maxX: 1040 },
-            { type: 'shield_guardian', x: 1090, y: 365, minX: 930, maxX: 1290 },
-            { type: 'nyavka', x: 1160, y: 115, minX: 1010, maxX: 1310 }
-          ]
-        },
-        {
-          platforms: [
-            { x: 370, y: 310, w: 190, tier: 1 },
-            { x: 660, y: 225, w: 190, tier: 2 },
-            { x: 940, y: 150, w: 210, tier: 3 },
-            { x: 960, y: 315, w: 200, tier: 1 },
-            { x: 1210, y: 235, w: 180, tier: 2 }
-          ],
-          enemies: [
-            { type: 'shield_guardian', x: 460, y: 365, minX: 300, maxX: 640 },
-            { type: 'leshy', x: 740, y: 370, minX: 580, maxX: 920 },
-            { type: 'nyavka', x: 940, y: 115, minX: 800, maxX: 1100 },
-            { type: 'shield_guardian', x: 1040, y: 365, minX: 880, maxX: 1260 },
-            { type: 'nyavka', x: 1210, y: 190, minX: 1080, maxX: 1340 }
-          ]
-        }
-      ]);
-
-      // Handcrafted Chunk 2 Variants: Гниле Болото і Трясовина (Introduces Bolotyanyk + Shield synergy)
-      const chunk2 = pickVariant([
-        {
-          platforms: [
-            { x: 1580, y: 315, w: 200, tier: 1 },
-            { x: 1850, y: 230, w: 230, tier: 2 },
-            { x: 2130, y: 150, w: 210, tier: 3 },
-            { x: 2160, y: 315, w: 190, tier: 1 }
-          ],
-          enemies: [
-            { type: 'bolotyanyk', x: 1690, y: 365, minX: 1520, maxX: 1860 },
-            { type: 'shield_guardian', x: 1890, y: 365, minX: 1720, maxX: 2080 },
-            { type: 'nyavka', x: 1860, y: 185, minX: 1720, maxX: 2020 },
-            { type: 'leshy', x: 2090, y: 370, minX: 1920, maxX: 2290 },
-            { type: 'bolotyanyk', x: 2260, y: 365, minX: 2080, maxX: 2390 }
-          ]
-        },
-        {
-          platforms: [
-            { x: 1560, y: 240, w: 190, tier: 2 },
-            { x: 1820, y: 315, w: 220, tier: 1 },
-            { x: 2090, y: 225, w: 220, tier: 2 },
-            { x: 2290, y: 150, w: 180, tier: 3 }
-          ],
-          enemies: [
-            { type: 'shield_guardian', x: 1660, y: 365, minX: 1500, maxX: 1840 },
-            { type: 'bolotyanyk', x: 1880, y: 365, minX: 1720, maxX: 2050 },
-            { type: 'leshy', x: 2040, y: 370, minX: 1880, maxX: 2240 },
-            { type: 'nyavka', x: 2100, y: 180, minX: 1960, maxX: 2260 },
-            { type: 'shield_guardian', x: 2250, y: 365, minX: 2080, maxX: 2390 }
-          ]
-        }
-      ]);
-
-      // Handcrafted Chunk 3 Variants: Нетрі Блуду (High-intensity Dead Cells combat room)
-      const chunk3 = pickVariant([
-        {
-          platforms: [
-            { x: 2480, y: 315, w: 200, tier: 1 },
-            { x: 2740, y: 230, w: 230, tier: 2 },
-            { x: 3000, y: 150, w: 210, tier: 3 },
-            { x: 3020, y: 315, w: 190, tier: 1 }
-          ],
-          enemies: [
-            { type: 'shield_guardian', x: 2540, y: 365, minX: 2400, maxX: 2740 },
-            { type: 'nyavka', x: 2740, y: 180, minX: 2580, maxX: 2900 },
-            { type: 'bolotyanyk', x: 2820, y: 365, minX: 2660, maxX: 3020 },
-            { type: 'leshy', x: 2980, y: 370, minX: 2800, maxX: 3140 },
-            { type: 'shield_guardian', x: 3060, y: 280, minX: 2930, maxX: 3110 }
-          ]
-        },
-        {
-          platforms: [
-            { x: 2460, y: 235, w: 210, tier: 2 },
-            { x: 2720, y: 315, w: 210, tier: 1 },
-            { x: 2960, y: 225, w: 220, tier: 2 },
-            { x: 2980, y: 145, w: 180, tier: 3 }
-          ],
-          enemies: [
-            { type: 'bolotyanyk', x: 2560, y: 365, minX: 2400, maxX: 2740 },
-            { type: 'shield_guardian', x: 2760, y: 365, minX: 2600, maxX: 2940 },
-            { type: 'nyavka', x: 2960, y: 175, minX: 2820, maxX: 3120 },
-            { type: 'shield_guardian', x: 3040, y: 365, minX: 2880, maxX: 3150 }
-          ]
-        }
-      ]);
-
-      // Handcrafted Chunk 4: Переддень Чорнобора (Final gauntlet before the Boss Lair)
-      const chunk4 = {
+    const LEVEL2_CHUNKS = {
+      chunk_forest_edge: {
+        id: 'chunk_forest_edge',
+        type: 'combat',
+        bounds: { x: 0, y: 0, width: 1600, height: 540 },
         platforms: [
-          { x: 3360, y: 315, w: 190, tier: 1 },
-          { x: 3600, y: 230, w: 210, tier: 2 },
-          { x: 3780, y: 155, w: 170, tier: 3 }
+          { x: 350, y: 315, w: 180, tier: 1 },
+          { x: 610, y: 230, w: 200, tier: 2 },
+          { x: 890, y: 315, w: 190, tier: 1 },
+          { x: 1180, y: 310, w: 170, tier: 1 },
+          { x: 1310, y: 230, w: 170, tier: 2 },
+          { x: 1410, y: 150, w: 210, tier: 3 }
         ],
-        enemies: [
-          { type: 'shield_guardian', x: 3440, y: 365, minX: 3300, maxX: 3620 },
-          { type: 'bolotyanyk', x: 3640, y: 365, minX: 3480, maxX: 3820 },
-          { type: 'nyavka', x: 3620, y: 180, minX: 3480, maxX: 3780 },
-          { type: 'shield_guardian', x: 3760, y: 365, minX: 3600, maxX: 3850 }
-        ]
-      };
-
-      // Boss Arena Perches (Лігво Прадавнього Лісовика Чорнобора)
-      const bossPerches = [
-        { x: 4060, y: 300, w: 155, tier: 1 },
-        { x: 4540, y: 300, w: 155, tier: 1 },
-        { x: 4300, y: 195, w: 190, tier: 2 }
-      ];
-
-      return {
-        platforms: [
-          ...chunk1.platforms,
-          ...chunk2.platforms,
-          ...chunk3.platforms,
-          ...chunk4.platforms,
-          ...bossPerches
+        breakableWalls: [],
+        loot: [
+          { type: 'coin', x: 610, y: 194 },
+          { type: 'coin', x: 1410, y: 114 }
         ],
         checkpoints: [
-          { id: 1, type: 'well', x: 1400, y: CONFIG.GROUND_Y, name: STRINGS.CHECKPOINT_SHRINE },
-          { id: 2, type: 'pillar', x: 3180, y: CONFIG.GROUND_Y, name: STRINGS.CHECKPOINT_OAK }
+          { id: 1, type: 'well', x: 1150, y: CONFIG.GROUND_Y, name: STRINGS.CHECKPOINT_SHRINE }
         ],
         enemies: [
-          ...chunk1.enemies,
-          ...chunk2.enemies,
-          ...chunk3.enemies,
-          ...chunk4.enemies
+          { type: 'shield_guardian', x: 470, y: 365, minX: 300, maxX: 660, chunkId: 'chunk_forest_edge' },
+          { type: 'nyavka', x: 640, y: 185, minX: 480, maxX: 830, chunkId: 'chunk_forest_edge' },
+          { type: 'leshy', x: 880, y: 370, minX: 720, maxX: 1060, stayOnSurface: true, chunkId: 'chunk_forest_edge' },
+          { type: 'shield_guardian', x: 1060, y: 365, minX: 900, maxX: 1250, chunkId: 'chunk_forest_edge' }
         ],
-        bossArenaStartX: 3880,
-        bossSpawnX: 4460
+        portals: [
+          {
+            id: 'forest_to_catacombs',
+            x: 1380,
+            y: CONFIG.GROUND_Y,
+            targetChunkId: 'chunk_root_catacombs',
+            targetX: 5220,
+            targetY: 360,
+            allowShiftDown: true,
+            allowDownKey: true,
+            visualType: 'trapdoor',
+            promptKey: 'PORTAL_FOREST_TO_CATACOMBS'
+          },
+          {
+            id: 'forest_to_canopy',
+            x: 1420,
+            y: 150,
+            targetChunkId: 'chunk_canopy_walk',
+            targetX: 6690,
+            targetY: 360,
+            visualType: 'roof_ladder',
+            promptKey: 'PORTAL_FOREST_TO_CANOPY'
+          },
+          {
+            id: 'forest_to_glade',
+            x: 1555,
+            y: CONFIG.GROUND_Y,
+            targetChunkId: 'chunk_forest_glade',
+            targetX: 1680,
+            targetY: 360,
+            autoEdge: 'right',
+            visualType: 'road_gate',
+            promptKey: 'PORTAL_FOREST_TO_GLADE'
+          }
+        ]
+      },
+
+      chunk_forest_glade: {
+        id: 'chunk_forest_glade',
+        type: 'combat',
+        bounds: { x: 1600, y: 0, width: 1920, height: 540 },
+        platforms: [
+          { x: 1840, y: 315, w: 190, tier: 1 },
+          { x: 2080, y: 230, w: 210, tier: 2 },
+          { x: 2260, y: 150, w: 190, tier: 3 },
+          { x: 2820, y: 315, w: 200, tier: 1 },
+          { x: 3080, y: 230, w: 210, tier: 2 },
+          { x: 3310, y: 315, w: 180, tier: 1 }
+        ],
+        breakableWalls: [],
+        loot: [
+          { type: 'coin', x: 2080, y: 194 },
+          { type: 'food', x: 3080, y: 194 }
+        ],
+        checkpoints: [
+          { id: 2, type: 'pillar', x: 2320, y: CONFIG.GROUND_Y, name: STRINGS.CHECKPOINT_OAK }
+        ],
+        enemies: [
+          { type: 'bolotyanyk', x: 1860, y: 365, minX: 1700, maxX: 2040, chunkId: 'chunk_forest_glade' },
+          { type: 'shield_guardian', x: 2100, y: 365, minX: 1940, maxX: 2260, chunkId: 'chunk_forest_glade' },
+          { type: 'nyavka', x: 2080, y: 180, minX: 1920, maxX: 2250, chunkId: 'chunk_forest_glade' },
+          { type: 'bolotyanyk', x: 2880, y: 365, minX: 2720, maxX: 3060, chunkId: 'chunk_forest_glade' },
+          { type: 'shield_guardian', x: 3180, y: 365, minX: 3000, maxX: 3360, chunkId: 'chunk_forest_glade' },
+          { type: 'nyavka', x: 3100, y: 175, minX: 2940, maxX: 3280, chunkId: 'chunk_forest_glade' }
+        ],
+        portals: [
+          {
+            id: 'glade_to_forest',
+            x: 1635,
+            y: CONFIG.GROUND_Y,
+            targetChunkId: 'chunk_forest_edge',
+            targetX: 1490,
+            targetY: 360,
+            autoEdge: 'left',
+            visualType: 'road_gate',
+            promptKey: 'PORTAL_GLADE_TO_FOREST'
+          },
+          {
+            id: 'glade_to_canopy',
+            x: 2260,
+            y: 150,
+            targetChunkId: 'chunk_canopy_walk',
+            targetX: 6690,
+            targetY: 360,
+            visualType: 'roof_ladder',
+            promptKey: 'PORTAL_FOREST_TO_CANOPY'
+          },
+          {
+            id: 'glade_to_korchma',
+            x: 2500,
+            y: CONFIG.GROUND_Y,
+            targetChunkId: 'chunk_korchma_hall',
+            targetX: 8220,
+            targetY: 360,
+            visualType: 'korchma_door',
+            promptKey: 'PORTAL_ENTER_KORCHMA'
+          },
+          {
+            id: 'glade_to_catacombs',
+            x: 3020,
+            y: CONFIG.GROUND_Y,
+            targetChunkId: 'chunk_root_catacombs',
+            targetX: 6260,
+            targetY: 360,
+            allowShiftDown: true,
+            allowDownKey: true,
+            visualType: 'trapdoor',
+            promptKey: 'PORTAL_FOREST_TO_CATACOMBS'
+          },
+          {
+            id: 'glade_to_boss',
+            x: 3475,
+            y: CONFIG.GROUND_Y,
+            targetChunkId: 'chunk_boss_lisovyk',
+            targetX: 3610,
+            targetY: 360,
+            autoEdge: 'right',
+            visualType: 'road_gate',
+            promptKey: 'PORTAL_GLADE_TO_BOSS'
+          }
+        ]
+      },
+
+      chunk_root_catacombs: {
+        id: 'chunk_root_catacombs',
+        type: 'dungeon',
+        bounds: { x: 4800, y: 0, width: 1600, height: 540 },
+        platforms: [
+          { x: 4960, y: 295, w: 170, tier: 1, isCellarPlatform: true },
+          { x: 5420, y: 315, w: 190, tier: 1, isCellarPlatform: true },
+          { x: 5690, y: 240, w: 190, tier: 2, isCellarPlatform: true },
+          { x: 5980, y: 315, w: 200, tier: 1, isCellarPlatform: true }
+        ],
+        breakableWalls: [
+          {
+            id: 'wall_catacombs_secret',
+            x: 5155,
+            y: 345,
+            width: 38,
+            height: 120,
+            hp: 3
+          }
+        ],
+        loot: [
+          { type: 'secret_kissel_jug', x: 4880, y: 368 },
+          { type: 'secret_galushka_stash', x: 4960, y: 258 },
+          { type: 'coin', x: 5030, y: 368 },
+          { type: 'coin', x: 5690, y: 204 }
+        ],
+        checkpoints: [],
+        enemies: [
+          { type: 'leshy', x: 5480, y: 370, minX: 5310, maxX: 5680, stayOnSurface: true, chunkId: 'chunk_root_catacombs' },
+          { type: 'bolotyanyk', x: 5820, y: 365, minX: 5640, maxX: 6020, chunkId: 'chunk_root_catacombs' },
+          { type: 'shield_guardian', x: 6080, y: 365, minX: 5900, maxX: 6220, chunkId: 'chunk_root_catacombs' }
+        ],
+        portals: [
+          {
+            id: 'catacombs_to_forest',
+            x: 5220,
+            y: CONFIG.GROUND_Y,
+            targetChunkId: 'chunk_forest_edge',
+            targetX: 1380,
+            targetY: 360,
+            visualType: 'cellar_stairs_up',
+            promptKey: 'PORTAL_CATACOMBS_TO_FOREST'
+          },
+          {
+            id: 'catacombs_to_glade',
+            x: 6290,
+            y: CONFIG.GROUND_Y,
+            targetChunkId: 'chunk_forest_glade',
+            targetX: 3020,
+            targetY: 360,
+            visualType: 'cellar_stairs_up',
+            promptKey: 'PORTAL_CATACOMBS_TO_GLADE'
+          }
+        ]
+      },
+
+      chunk_canopy_walk: {
+        id: 'chunk_canopy_walk',
+        type: 'combat',
+        bounds: { x: 6600, y: 0, width: 1280, height: 540 },
+        platforms: [
+          { x: 6860, y: 320, w: 180, tier: 1 },
+          { x: 7110, y: 240, w: 190, tier: 2 },
+          { x: 7370, y: 175, w: 200, tier: 3 },
+          { x: 7610, y: 245, w: 200, tier: 2 }
+        ],
+        breakableWalls: [],
+        loot: [
+          { type: 'coin', x: 6860, y: 284 },
+          { type: 'food', x: 7110, y: 204 },
+          { type: 'secret_galushka_stash', x: 7370, y: 138 },
+          { type: 'coin', x: 7610, y: 208 }
+        ],
+        checkpoints: [],
+        enemies: [
+          { type: 'nyavka', x: 7120, y: 180, minX: 6940, maxX: 7320, chunkId: 'chunk_canopy_walk' },
+          { type: 'nyavka', x: 7520, y: 170, minX: 7340, maxX: 7720, chunkId: 'chunk_canopy_walk' }
+        ],
+        portals: [
+          {
+            id: 'canopy_to_forest',
+            x: 6685,
+            y: CONFIG.GROUND_Y,
+            targetChunkId: 'chunk_forest_edge',
+            targetX: 1410,
+            targetY: 105,
+            allowDownKey: true,
+            visualType: 'trapdoor',
+            promptKey: 'PORTAL_CANOPY_TO_FOREST'
+          },
+          {
+            id: 'canopy_to_boss',
+            x: 7775,
+            y: CONFIG.GROUND_Y,
+            targetChunkId: 'chunk_boss_lisovyk',
+            targetX: 3640,
+            targetY: 165,
+            allowShiftDown: true,
+            allowDownKey: true,
+            visualType: 'chute_drop',
+            promptKey: 'PORTAL_CANOPY_TO_BOSS'
+          }
+        ]
+      },
+
+      chunk_korchma_hall: {
+        id: 'chunk_korchma_hall',
+        type: 'dungeon',
+        bounds: { x: 8100, y: 0, width: 2600, height: 540 },
+        platforms: [
+          { x: 8420, y: 315, w: 210, tier: 1, isCellarPlatform: true },
+          { x: 8690, y: 230, w: 200, tier: 2, isCellarPlatform: true },
+          { x: 8960, y: 315, w: 220, tier: 1, isCellarPlatform: true },
+          { x: 9230, y: 225, w: 210, tier: 2, isCellarPlatform: true },
+          { x: 9480, y: 145, w: 200, tier: 3, isCellarPlatform: true },
+          { x: 9520, y: 315, w: 210, tier: 1, isCellarPlatform: true },
+          { x: 9820, y: 230, w: 210, tier: 2, isCellarPlatform: true },
+          { x: 10110, y: 315, w: 220, tier: 1, isCellarPlatform: true },
+          { x: 10380, y: 225, w: 200, tier: 2, isCellarPlatform: true }
+        ],
+        breakableWalls: [],
+        loot: [
+          { type: 'coin', x: 8420, y: 280 },
+          { type: 'food', x: 8690, y: 194 },
+          { type: 'galushka', x: 9230, y: 190 },
+          { type: 'secret_kissel_jug', x: 9480, y: 108 },
+          { type: 'coin', x: 9820, y: 194 },
+          { type: 'food', x: 10110, y: 280 },
+          { type: 'galushka', x: 10380, y: 190 }
+        ],
+        checkpoints: [
+          { id: 3, type: 'kobzar', x: 9380, y: CONFIG.GROUND_Y, name: STRINGS.CHECKPOINT_KORCHMA }
+        ],
+        enemies: [
+          { type: 'chort', x: 8460, y: 365, minX: 8280, maxX: 8660, chunkId: 'chunk_korchma_hall' },
+          { type: 'dulya', x: 8740, y: 365, minX: 8520, maxX: 8980, chunkId: 'chunk_korchma_hall' },
+          { type: 'chort', x: 8690, y: 190, minX: 8590, maxX: 8790, chunkId: 'chunk_korchma_hall' },
+          { type: 'chort', x: 9040, y: 365, minX: 8860, maxX: 9260, chunkId: 'chunk_korchma_hall' },
+          { type: 'dulya', x: 9280, y: 365, minX: 9060, maxX: 9520, chunkId: 'chunk_korchma_hall' },
+          { type: 'chort', x: 9230, y: 185, minX: 9130, maxX: 9330, chunkId: 'chunk_korchma_hall' },
+          { type: 'chort', x: 9680, y: 365, minX: 9480, maxX: 9900, chunkId: 'chunk_korchma_hall' },
+          { type: 'dulya', x: 9980, y: 365, minX: 9740, maxX: 10220, chunkId: 'chunk_korchma_hall' },
+          { type: 'chort', x: 9820, y: 190, minX: 9720, maxX: 9920, chunkId: 'chunk_korchma_hall' },
+          { type: 'dulya', x: 10360, y: 365, minX: 10120, maxX: 10540, chunkId: 'chunk_korchma_hall' },
+          { type: 'chort', x: 10440, y: 365, minX: 10220, maxX: 10560, chunkId: 'chunk_korchma_hall' }
+        ],
+        portals: [
+          {
+            id: 'korchma_to_glade',
+            x: 8175,
+            y: CONFIG.GROUND_Y,
+            targetChunkId: 'chunk_forest_glade',
+            targetX: 2500,
+            targetY: 360,
+            autoEdge: 'left',
+            visualType: 'korchma_exit_door',
+            promptKey: 'PORTAL_EXIT_KORCHMA'
+          },
+          {
+            id: 'korchma_to_lykho',
+            x: 10615,
+            y: CONFIG.GROUND_Y,
+            targetChunkId: 'chunk_korchma_boss',
+            targetX: 10990,
+            targetY: 360,
+            autoEdge: 'right',
+            visualType: 'korchma_boss_door',
+            promptKey: 'PORTAL_KORCHMA_TO_LYKHO'
+          }
+        ]
+      },
+
+      chunk_korchma_boss: {
+        id: 'chunk_korchma_boss',
+        type: 'dungeon',
+        bounds: { x: 10900, y: 0, width: 1400, height: 540 },
+        platforms: [
+          { x: 11180, y: 305, w: 180, tier: 1, isCellarPlatform: true },
+          { x: 11480, y: 215, w: 200, tier: 2, isCellarPlatform: true },
+          { x: 11790, y: 305, w: 185, tier: 1, isCellarPlatform: true },
+          { x: 12060, y: 220, w: 180, tier: 2, isCellarPlatform: true }
+        ],
+        breakableWalls: [],
+        loot: [
+          { type: 'secret_kissel_jug', x: 11480, y: 176 },
+          { type: 'galushka', x: 12060, y: 184 }
+        ],
+        checkpoints: [],
+        enemies: [
+          { type: 'dulya', x: 11260, y: 365, minX: 11060, maxX: 11480, chunkId: 'chunk_korchma_boss' },
+          { type: 'chort', x: 11460, y: 365, minX: 11220, maxX: 11680, chunkId: 'chunk_korchma_boss' },
+          { type: 'boss_lykho', x: 11880, y: 350, minX: 11040, maxX: 12180, chunkId: 'chunk_korchma_boss' }
+        ],
+        portals: [
+          {
+            id: 'lykho_to_hall',
+            x: 10960,
+            y: CONFIG.GROUND_Y,
+            targetChunkId: 'chunk_korchma_hall',
+            targetX: 10540,
+            targetY: 360,
+            autoEdge: 'left',
+            visualType: 'road_gate',
+            promptKey: 'PORTAL_LYKHO_TO_HALL'
+          },
+          {
+            id: 'lykho_to_forest_glade',
+            x: 12215,
+            y: CONFIG.GROUND_Y,
+            targetChunkId: 'chunk_forest_glade',
+            targetX: 2500,
+            targetY: 360,
+            visualType: 'korchma_exit_door',
+            promptKey: 'PORTAL_EXIT_KORCHMA'
+          }
+        ]
+      },
+
+      chunk_boss_lisovyk: {
+        id: 'chunk_boss_lisovyk',
+        type: 'boss',
+        bounds: { x: 3520, y: 0, width: 1080, height: 540 },
+        platforms: [
+          { x: 3720, y: 300, w: 155, tier: 1 },
+          { x: 4320, y: 300, w: 155, tier: 1 },
+          { x: 4020, y: 195, w: 190, tier: 2 }
+        ],
+        breakableWalls: [],
+        loot: [],
+        checkpoints: [],
+        enemies: [],
+        portals: []
+      }
+    };
+
+    function buildEvilForestLevelData() {
+      const platforms = [];
+      const checkpoints = [];
+      const enemies = [];
+      const breakableWalls = [];
+      const chunkLoot = [];
+      const portals = [];
+
+      Object.values(LEVEL2_CHUNKS).forEach(chunk => {
+        (chunk.platforms || []).forEach(p => platforms.push({ ...p, chunkId: chunk.id }));
+        (chunk.checkpoints || []).forEach(cp => checkpoints.push({ ...cp, chunkId: chunk.id }));
+        (chunk.enemies || []).forEach(en => enemies.push({ ...en, chunkId: chunk.id }));
+        (chunk.breakableWalls || []).forEach(bw => breakableWalls.push({ ...bw, chunkId: chunk.id }));
+        (chunk.loot || []).forEach(lt => chunkLoot.push({ ...lt, chunkId: chunk.id }));
+        (chunk.portals || []).forEach(pt => portals.push({ ...pt, chunkId: chunk.id }));
+      });
+
+      return {
+        worldWidth: 12400,
+        chunks: LEVEL2_CHUNKS,
+        initialChunkId: 'chunk_forest_edge',
+        platforms,
+        checkpoints,
+        enemies,
+        breakableWalls,
+        chunkLoot,
+        portals,
+        bossArenaStartX: 3520,
+        bossSpawnX: 4220
       };
     }
 
