@@ -3184,6 +3184,7 @@
         const chunk = this.levelData.chunks[chunkId];
         if (!chunk || !chunk.bounds) return;
 
+        const prevChunkId = this.currentChunkId;
         this.currentChunkId = chunkId;
         const b = chunk.bounds;
 
@@ -3251,7 +3252,8 @@
               this.showOmelkoSpeech(STRINGS.OMELKO_REMARK_MILL, 4600);
             });
           } else if (chunkId === 'chunk_korchma_hall' || chunkId === 'chunk_korchma_boss') {
-            SFX.playMusic('mus_korchma', { volume: 0.44, restart: true });
+            const cameFromKorchma = prevChunkId === 'chunk_korchma_hall' || prevChunkId === 'chunk_korchma_boss';
+            SFX.playMusic('mus_korchma', { volume: 0.44, restart: !cameFromKorchma });
             if (!this.hasEnteredKorchma) {
               this.hasEnteredKorchma = true;
               this.openKorchmaIntroModal();
@@ -3267,6 +3269,12 @@
               this.showOmelkoSpeech(STRINGS.OMELKO_REMARK_CANOPY, 4600);
             });
           }
+        }
+
+        const leftKorchma = (prevChunkId === 'chunk_korchma_hall' || prevChunkId === 'chunk_korchma_boss')
+          && chunkId !== 'chunk_korchma_hall' && chunkId !== 'chunk_korchma_boss';
+        if (leftKorchma) {
+          this.playLevelExplorationMusic();
         }
       }
 
