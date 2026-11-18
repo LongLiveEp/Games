@@ -293,7 +293,7 @@
         this.rollHitEnemies = new Set();
         this.rollEndTime = time + CONFIG.PLAYER.ROLL_DURATION_MS;
         this.nextRollAllowedTime = time + CONFIG.PLAYER.ROLL_COOLDOWN_MS;
-        this.invulnUntil = this.rollEndTime + 60; // i-frames during roll
+        this.invulnUntil = Math.max(this.invulnUntil || 0, this.rollEndTime + 60); // i-frames during roll
         this.counterWindowEndTime = this.rollEndTime + CONFIG.PLAYER.COUNTER_WINDOW_MS;
 
         this.sprite.setTexture('cossack_roll');
@@ -372,13 +372,27 @@
         }
       }
 
-      takeDamage(amount, sourceX) {
+      takeDamage(amount, sourceX, ignoreRoll = false) {
         const now = this.scene.time.now;
-        if (now < this.invulnUntil || this.isRolling || this.isTiredRespawning) return false;
+        if (this.isTiredRespawning) return false;
+        if (now < (this.damageInvulnUntil || 0)) return false;
+        if (!ignoreRoll && (now < this.invulnUntil || this.isRolling)) return false;
+
+        if (this.isRolling) {
+          this.isRolling = false;
+          this.sprite.setTexture('cossack');
+          this.sprite.setAngle(0);
+          this.sprite.clearTint();
+          if (this.sprite.body) {
+            this.sprite.body.setSize(26, 52);
+            this.sprite.body.setOffset(7, 6);
+          }
+        }
 
         const finalDamage = Math.round(amount * GAME_STATE.getEnemyDamageMultiplier());
         this.stamina = Math.max(0, this.stamina - finalDamage);
-        this.invulnUntil = now + CONFIG.PLAYER.INVULN_AFTER_HIT_MS;
+        this.damageInvulnUntil = now + CONFIG.PLAYER.INVULN_AFTER_HIT_MS;
+        this.invulnUntil = this.damageInvulnUntil;
         SFX.hurt();
 
         // Knockback & Camera Shake

@@ -372,10 +372,8 @@
     /**
      * SUBCLASS G: Куций Чортик з Корчми (Tavern Imp / Devil from "Куций Хвіст")
      * - Agile, mischievous imp feasting at the oak tables in the haunted tavern.
-     * - Hops onto tables, telegraphs with '!', and alternates between:
-     *   1) Shadow-Smoke Teleport behind Omelko's back ('POST_TELEPORT' -> 'LUNGE')
-     *   2) Hurling a foaming tavern tankard ('korchma_mug') in a parabola
-     *   3) Horned headbutt lunge
+     * - Teleports in sulfurous smoke directly behind Omelko's back and immediately strikes
+     *   with a tight reaction window ('POST_TELEPORT' -> 'BACKSTAB_LUNGE'), or hurls frothy mugs!
      */
     class ChortEnemy extends Enemy {
       constructor(scene, x, y, minX, maxX) {
@@ -385,11 +383,12 @@
         this.minX = minX !== undefined ? minX : Math.max(100, x - 160);
         this.maxX = maxX !== undefined ? maxX : Math.min((this.scene.worldWidth || CONFIG.WORLD_WIDTH) - 100, x + 160);
         this.walkDir = -1;
-        this.state = 'PATROL'; // PATROL, TELEGRAPH, POST_TELEPORT, LUNGE, COOLDOWN
+        this.state = 'PATROL'; // PATROL, TELEGRAPH, POST_TELEPORT, BACKSTAB_LUNGE, LUNGE, COOLDOWN
         this.stateEndTime = 0;
         this.nextHopTime = 0;
         this.attackCycle = 0;
-        this.lastTeleportTime = 0;
+        this.lastTeleportTime = -5000;
+        this.hasSpawnedBackstabSlash = false;
       }
 
       spawnSmokePuff(x, y) {
@@ -408,7 +407,7 @@
             y: puff.y - Phaser.Math.Between(18, 42),
             scale: 1.8,
             alpha: 0,
-            duration: 340,
+            duration: 300,
             onComplete: () => {
               if (puff && puff.active) puff.destroy();
             }
@@ -416,21 +415,41 @@
         }
       }
 
+      spawnBackstabSlashEffect() {
+        if (!this.scene || !this.scene.add) return;
+        const slashX = this.sprite.x + this.walkDir * 28;
+        const slashY = this.sprite.y - 2;
+        const slash = this.scene.add.image(slashX, slashY, 'saber_slash').setDepth(37);
+        slash.setFlipX(this.walkDir < 0);
+        slash.setTint(0xff0055);
+        slash.setScale(0.95);
+        this.scene.tweens.add({
+          targets: slash,
+          alpha: 0,
+          scaleX: 1.25,
+          scaleY: 1.25,
+          duration: 140,
+          onComplete: () => {
+            if (slash && slash.active) slash.destroy();
+          }
+        });
+      }
+
       teleportBehindPlayer(time, player) {
         if (!player || !player.sprite) return false;
         this.lastTeleportTime = time;
         this.spawnSmokePuff(this.sprite.x, this.sprite.y);
 
-        // Compute target X right behind Omelko's back, clamped safely inside chunk/patrol bounds
+        // Compute target X tightly behind Omelko's back (46px behind him) so the backstab strike connects immediately!
         const chunkObj = (this.scene.levelData && this.scene.levelData.chunks && this.chunkId)
           ? this.scene.levelData.chunks[this.chunkId]
           : null;
-        const boundMinX = chunkObj ? chunkObj.bounds.x + 85 : Math.max(80, this.minX - 90);
-        const boundMaxX = chunkObj ? (chunkObj.bounds.x + chunkObj.bounds.width - 85) : (this.maxX + 90);
+        const boundMinX = chunkObj ? chunkObj.bounds.x + 70 : Math.max(80, this.minX - 110);
+        const boundMaxX = chunkObj ? (chunkObj.bounds.x + chunkObj.bounds.width - 70) : (this.maxX + 110);
 
-        const desiredX = player.sprite.x - (player.facing || 1) * 84;
+        const desiredX = player.sprite.x - (player.facing || 1) * 46;
         const targetX = Phaser.Math.Clamp(desiredX, boundMinX, boundMaxX);
-        const targetY = Math.min(CONFIG.GROUND_Y - 38, player.sprite.y - 2);
+        const targetY = Math.min(CONFIG.GROUND_Y - 34, player.sprite.y);
 
         this.sprite.setPosition(targetX, targetY);
         if (this.sprite.body) {
@@ -438,26 +457,27 @@
         }
         this.walkDir = player.sprite.x >= this.sprite.x ? 1 : -1;
         this.sprite.setFlipX(this.walkDir < 0);
-        this.sprite.setScale(0.75, 1.28);
+        this.sprite.setScale(1.18, 0.84);
         this.spawnSmokePuff(targetX, targetY);
 
         if (SFX.chortTeleport) SFX.chortTeleport();
         if (this.scene && this.scene.showFloatingText) {
-          this.scene.showFloatingText(targetX, targetY - 52, STRINGS.CHORT_TELEPORT_WARN || '💨 Чорт за спиною!', '#ff9f1c');
+          this.scene.showFloatingText(targetX, targetY - 52, STRINGS.CHORT_TELEPORT_WARN || 'Чорт за спиною!', '#ff9f1c');
         }
 
-        // Brief post-teleport windup so Omelko can react (turn around or roll) before the lunge!
+        // Tight reaction window (~210ms) before the Chort immediately slashes Omelko in the back!
         this.state = 'POST_TELEPORT';
         this.isTelegraphing = true;
-        this.telegraphLabel.setText('💨!').setColor('#ff0055').setVisible(true);
-        this.sprite.setTint(0xff4d6d);
-        this.stateEndTime = time + (CONFIG.ENEMY.CHORT.POST_TELEPORT_MS || 340);
+        this.hasSpawnedBackstabSlash = false;
+        this.telegraphLabel.setText('!').setColor('#ff0055').setVisible(true);
+        this.sprite.setTint(0xff2a4b);
+        this.stateEndTime = time + (CONFIG.ENEMY.CHORT.POST_TELEPORT_MS || 210);
         return true;
       }
 
       receiveStunHit(stunAmount, fromX, isHeavy = false, isCounter = false, isFrog = false, fromRollBoots = false) {
         super.receiveStunHit(stunAmount, fromX, isHeavy, isCounter, isFrog, fromRollBoots);
-        // If still conscious and teleport is off cooldown, 45% chance to vanish in smoke behind Omelko!
+        // If still conscious and teleport is off cooldown, 65% chance to vanish in smoke behind Omelko and strike back!
         const now = this.scene ? this.scene.time.now : 0;
         if (
           !this.isFinished &&
@@ -465,8 +485,8 @@
           !fromRollBoots &&
           this.scene &&
           this.scene.player &&
-          now - this.lastTeleportTime > (CONFIG.ENEMY.CHORT.TELEPORT_COOLDOWN_MS || 3400) &&
-          Math.random() < 0.45
+          now - this.lastTeleportTime > (CONFIG.ENEMY.CHORT.TELEPORT_COOLDOWN_MS || 2100) &&
+          Math.random() < 0.65
         ) {
           this.teleportBehindPlayer(now, this.scene.player);
         }
@@ -489,22 +509,32 @@
           if (this.sprite.x <= this.minX || this.sprite.body.blocked.left) this.walkDir = 1;
 
           // Mischievous imp hops while patrolling
-          if (onFloor && time >= this.nextHopTime && Math.random() < 0.035) {
+          if (onFloor && time >= this.nextHopTime && Math.random() < 0.04) {
             this.sprite.body.setVelocityY(-280);
-            this.nextHopTime = time + 900;
+            this.nextHopTime = time + 800;
           }
 
-          if (dist < CONFIG.ENEMY.CHORT.AGGRO_RANGE && vertDist < 170) {
-            this.state = 'TELEGRAPH';
-            this.isTelegraphing = true;
-            this.walkDir = dirToPlayer;
-            this.sprite.setFlipX(this.walkDir < 0);
-            this.sprite.body.setVelocityX(0);
-            this.telegraphLabel.setText('!').setColor('#ffbe0b').setVisible(true);
-            this.sprite.setTint(0xff9f1c);
-            this.sprite.setScale(1.18, 0.84);
-            this.stateEndTime = time + CONFIG.ENEMY.CHORT.TELEGRAPH_MS;
-            SFX.telegraph();
+          if (dist < CONFIG.ENEMY.CHORT.AGGRO_RANGE && vertDist < 175) {
+            const canTeleportNow =
+              horizDist < 390 &&
+              vertDist < 145 &&
+              (time - this.lastTeleportTime > (CONFIG.ENEMY.CHORT.TELEPORT_COOLDOWN_MS || 2100));
+
+            if (canTeleportNow) {
+              // Immediately teleport behind Omelko's back and prepare backstab!
+              this.teleportBehindPlayer(time, player);
+            } else {
+              this.state = 'TELEGRAPH';
+              this.isTelegraphing = true;
+              this.walkDir = dirToPlayer;
+              this.sprite.setFlipX(this.walkDir < 0);
+              this.sprite.body.setVelocityX(0);
+              this.telegraphLabel.setText('!').setColor('#ffbe0b').setVisible(true);
+              this.sprite.setTint(0xff9f1c);
+              this.sprite.setScale(1.18, 0.84);
+              this.stateEndTime = time + CONFIG.ENEMY.CHORT.TELEGRAPH_MS;
+              SFX.telegraph();
+            }
           }
         } else if (this.state === 'TELEGRAPH') {
           this.sprite.body.setVelocityX(0);
@@ -515,30 +545,26 @@
             this.attackCycle++;
 
             const canTeleport =
-              horizDist < 340 &&
-              vertDist < 130 &&
-              (time - this.lastTeleportTime > (CONFIG.ENEMY.CHORT.TELEPORT_COOLDOWN_MS || 3400));
+              horizDist < 390 &&
+              vertDist < 145 &&
+              (time - this.lastTeleportTime > (CONFIG.ENEMY.CHORT.TELEPORT_COOLDOWN_MS || 2100));
 
-            if (canTeleport && (this.attackCycle % 2 === 0 || horizDist < 130)) {
-              // Teleport in sulfurous smoke right behind Omelko's back!
+            if (canTeleport && (this.attackCycle % 2 === 0 || horizDist < 170)) {
               this.teleportBehindPlayer(time, player);
-            } else if (horizDist > 135 && this.attackCycle % 2 === 1) {
-              // Hurl a frothy tavern mug in a parabola!
+            } else if (horizDist > 125 && this.attackCycle % 2 === 1) {
+              // Hurl a frothy tavern mug in a fast parabola!
               this.sprite.setScale(0.86, 1.2);
               if (this.scene && typeof this.scene.spawnKorchmaMug === 'function') {
-                this.scene.spawnKorchmaMug(this.sprite.x, this.sprite.y - 10, player.sprite.x, player.sprite.y);
+                this.scene.spawnKorchmaMug(this.sprite.x, this.sprite.y - 10, player.sprite.x, player.sprite.y - 8);
               }
               this.state = 'COOLDOWN';
               this.stateEndTime = time + CONFIG.ENEMY.CHORT.COOLDOWN_MS;
             } else {
-              // Horned headbutt lunge!
+              // Fast horned headbutt lunge!
               this.state = 'LUNGE';
               this.walkDir = dirToPlayer;
               this.sprite.setFlipX(this.walkDir < 0);
-              if (onFloor) {
-                this.sprite.body.setVelocityY(-240);
-              }
-              this.stateEndTime = time + 460;
+              this.stateEndTime = time + 380;
               if (SFX.chortLaugh) SFX.chortLaugh();
               else if (SFX.telegraph) SFX.telegraph();
             }
@@ -549,22 +575,45 @@
             this.isTelegraphing = false;
             this.telegraphLabel.setVisible(false);
             this.sprite.clearTint();
-            this.state = 'LUNGE';
+            // Lock onto Omelko's position and execute an immediate horizontal Backstab Strike!
+            this.state = 'BACKSTAB_LUNGE';
             this.walkDir = dirToPlayer;
             this.sprite.setFlipX(this.walkDir < 0);
-            if (onFloor) {
-              this.sprite.body.setVelocityY(-210);
-            }
-            this.stateEndTime = time + 430;
+            this.sprite.setScale(1.24, 0.82);
+            this.spawnBackstabSlashEffect();
+            if (SFX.swing) SFX.swing(2, true);
             if (SFX.chortLaugh) SFX.chortLaugh();
+
+            // Immediate close-range backstab hit check on the first frame of the strike
+            const strikeBox = new Phaser.Geom.Rectangle(
+              this.sprite.x + (this.walkDir > 0 ? 0 : -46),
+              this.sprite.y - 24,
+              46,
+              48
+            );
+            if (
+              Phaser.Geom.Intersects.RectangleToRectangle(strikeBox, player.sprite.getBounds()) ||
+              Phaser.Geom.Intersects.RectangleToRectangle(this.sprite.getBounds(), player.sprite.getBounds())
+            ) {
+              player.takeDamage(CONFIG.ENEMY.CHORT.DAMAGE, this.sprite.x);
+              this.state = 'COOLDOWN';
+              this.sprite.body.setVelocityX(-this.walkDir * 120);
+              this.stateEndTime = time + CONFIG.ENEMY.CHORT.COOLDOWN_MS;
+              return;
+            }
+
+            this.stateEndTime = time + 290;
           }
-        } else if (this.state === 'LUNGE') {
-          this.sprite.body.setVelocityX(this.walkDir * CONFIG.ENEMY.CHORT.LUNGE_SPEED);
+        } else if (this.state === 'BACKSTAB_LUNGE' || this.state === 'LUNGE') {
+          const speed = this.state === 'BACKSTAB_LUNGE'
+            ? CONFIG.ENEMY.CHORT.LUNGE_SPEED * 1.12
+            : CONFIG.ENEMY.CHORT.LUNGE_SPEED;
+          this.sprite.body.setVelocityX(this.walkDir * speed);
 
           if (Phaser.Geom.Intersects.RectangleToRectangle(this.sprite.getBounds(), player.sprite.getBounds())) {
             player.takeDamage(CONFIG.ENEMY.CHORT.DAMAGE, this.sprite.x);
             this.state = 'COOLDOWN';
-            this.sprite.body.setVelocityX(-this.walkDir * 110);
+            this.sprite.body.setVelocityX(-this.walkDir * 115);
             this.stateEndTime = time + CONFIG.ENEMY.CHORT.COOLDOWN_MS;
             return;
           }
@@ -585,34 +634,43 @@
 
     /**
      * SUBCLASS G2: КОРЧМАРСЬКА ДУЛЯ (DulyaEnemy)
-     * - Folkloric tavern creature from «Як козаки на весіллі гуляли»:
-     *   a giant one-eyed clenched fist ("дуля") wearing a white embroidered shirt with long sleeves.
-     * - Curls into a compact fist-ball and rolls rapidly across the tavern floor at Omelko!
-     * - Omelko must JUMP OVER [↑] the rolling ball and strike when Dulya stops to catch its breath!
+     * - Compact waist-high folkloric tavern creature (~32x34px) from «Як козаки на весіллі гуляли»:
+     *   a one-eyed clenched fist ("дуля") wearing a white embroidered shirt with long sleeves.
+     * - Curls into a round tucked ball ('enemy_dulya_roll', just like Omelko's 'cossack_roll')
+     *   and rolls at high speed across the tavern floor!
+     * - CANNOT be dodged by rolling [Shift] — Omelko MUST JUMP OVER [↑] the rolling ball!
      */
     class DulyaEnemy extends Enemy {
       constructor(scene, x, y, minX, maxX) {
         super(scene, x, y, 'enemy_dulya', CONFIG.ENEMY.DULYA.MAX_STUN);
-        this.sprite.body.setSize(38, 48);
-        this.sprite.body.setOffset(9, 10);
-        this.minX = minX !== undefined ? minX : Math.max(100, x - 200);
-        this.maxX = maxX !== undefined ? maxX : Math.min((this.scene.worldWidth || CONFIG.WORLD_WIDTH) - 100, x + 200);
+        this.sprite.body.setSize(24, 28);
+        this.sprite.body.setOffset(4, 5);
+        this.minX = minX !== undefined ? minX : Math.max(100, x - 220);
+        this.maxX = maxX !== undefined ? maxX : Math.min((this.scene.worldWidth || CONFIG.WORLD_WIDTH) - 100, x + 220);
         this.walkDir = -1;
         this.rollDir = -1;
         this.state = 'PATROL'; // PATROL, TELEGRAPH, ROLL_ATTACK, COOLDOWN
         this.stateEndTime = 0;
         this.lastBlockTextTime = 0;
+        this.nextRollDustTime = 0;
+        this.hasRebounded = false;
       }
 
       setRollingHitbox(isRolling) {
         if (!this.sprite || !this.sprite.body) return;
         if (isRolling) {
-          // Low compact ball hitbox so Omelko can cleanly jump over it!
-          this.sprite.body.setSize(36, 28);
-          this.sprite.body.setOffset(10, 26);
+          // Switch to round tucked ball texture just like Omelko's roll!
+          if (this.sprite.texture.key !== 'enemy_dulya_roll') {
+            this.sprite.setTexture('enemy_dulya_roll');
+          }
+          this.sprite.body.setSize(24, 24);
+          this.sprite.body.setOffset(2, 3);
         } else {
-          this.sprite.body.setSize(38, 48);
-          this.sprite.body.setOffset(9, 10);
+          if (this.sprite.texture.key !== 'enemy_dulya') {
+            this.sprite.setTexture('enemy_dulya');
+          }
+          this.sprite.body.setSize(24, 28);
+          this.sprite.body.setOffset(4, 5);
           this.sprite.setAngle(0);
         }
       }
@@ -629,14 +687,15 @@
           return;
         }
 
-        // While rolling as a clenched fist-ball on the floor, ground frontal melee strikes bounce off
-        // (unless Omelko is jumping over it from above, throwing a Galushka/Frog, or using Roll-Stun Boots!)
-        if (this.state === 'ROLL_ATTACK' && !fromRollBoots && !isFrog) {
+        // While rolling as a clenched fist-ball on the floor, ground attacks and roll-boots bounce off!
+        // Omelko must jump over it [↑] and strike when it stops (or hit from above while jumping)!
+        if (this.state === 'ROLL_ATTACK' && !isFrog) {
           const playerAbove =
             this.scene &&
             this.scene.player &&
             this.scene.player.sprite &&
-            this.scene.player.sprite.y < this.sprite.y - 22;
+            this.scene.player.sprite.body &&
+            this.scene.player.sprite.body.bottom < this.sprite.y - 6;
           if (!playerAbove) {
             SFX.shieldBlock();
             this.scene.spawnHitParticles(this.sprite.x, this.sprite.y, 4);
@@ -645,8 +704,8 @@
               this.lastBlockTextTime = now;
               this.scene.showFloatingText(
                 this.sprite.x,
-                this.sprite.y - 54,
-                STRINGS.DULYA_BLOCK_WARN || '✊ Дуля котиться кулаком! Перестрибуй [↑]!',
+                this.sprite.y - 44,
+                STRINGS.DULYA_BLOCK_WARN || 'Дуля котиться! Перестрибуй [↑]!',
                 '#ffd166'
               );
             }
@@ -667,22 +726,23 @@
         if (this.state === 'PATROL') {
           this.setRollingHitbox(false);
           this.sprite.body.setVelocityX(this.walkDir * CONFIG.ENEMY.DULYA.WALK_SPEED);
-          this.sprite.setFlipX(this.walkDir > 0); // Fist thumb faces forward
-          this.sprite.setAngle(Math.sin(time * 0.01) * 4);
+          this.sprite.setFlipX(this.walkDir > 0);
+          this.sprite.setAngle(Math.sin(time * 0.014) * 4);
 
           if (this.sprite.x >= this.maxX || this.sprite.body.blocked.right) this.walkDir = -1;
           if (this.sprite.x <= this.minX || this.sprite.body.blocked.left) this.walkDir = 1;
 
-          if (horizDist < CONFIG.ENEMY.DULYA.AGGRO_RANGE && vertDist < 120) {
+          if (horizDist < CONFIG.ENEMY.DULYA.AGGRO_RANGE && vertDist < 130) {
             this.state = 'TELEGRAPH';
             this.isTelegraphing = true;
+            this.hasRebounded = false;
             this.rollDir = dirToPlayer;
             this.sprite.setFlipX(this.rollDir > 0);
             this.sprite.body.setVelocityX(0);
             this.sprite.setAngle(0);
-            this.telegraphLabel.setText('✊!').setColor('#ffd166').setVisible(true);
+            this.telegraphLabel.setText('!').setColor('#ffd166').setVisible(true);
             this.sprite.setTint(0xff9f1c);
-            this.sprite.setScale(1.24, 0.76); // Curl into a tight ball!
+            this.sprite.setScale(1.22, 0.78);
             this.stateEndTime = time + CONFIG.ENEMY.DULYA.TELEGRAPH_MS;
             SFX.telegraph();
           }
@@ -695,39 +755,74 @@
             this.state = 'ROLL_ATTACK';
             this.rollDir = dirToPlayer;
             this.setRollingHitbox(true);
-            this.sprite.setScale(0.92, 0.88);
+            this.sprite.setScale(1.12, 0.88);
             this.stateEndTime = time + CONFIG.ENEMY.DULYA.ROLL_DURATION_MS;
             if (SFX.dulyaRoll) SFX.dulyaRoll();
+            else SFX.roll();
           }
         } else if (this.state === 'ROLL_ATTACK') {
           this.sprite.body.setVelocityX(this.rollDir * CONFIG.ENEMY.DULYA.ROLL_SPEED);
-          // Spin rapidly like a bowling ball!
-          this.sprite.angle += this.rollDir * 19;
+          // Spin rapidly as a tucked ball, matching Omelko's roll animation!
+          this.sprite.angle += this.rollDir * 24;
 
-          // Check collision with Omelko (if Omelko didn't jump over Dulya!)
-          if (Phaser.Geom.Intersects.RectangleToRectangle(this.sprite.getBounds(), player.sprite.getBounds())) {
-            player.takeDamage(CONFIG.ENEMY.DULYA.DAMAGE_ROLL, this.sprite.x);
+          if (time > this.nextRollDustTime && this.scene && this.scene.add) {
+            this.nextRollDustTime = time + 55;
+            const dust = this.scene.add.image(
+              this.sprite.x - this.rollDir * 8,
+              this.sprite.y + 10,
+              'particle_dust'
+            ).setDepth(33).setScale(0.75);
+            this.scene.tweens.add({
+              targets: dust,
+              y: dust.y - 12,
+              alpha: 0,
+              scale: 0.2,
+              duration: 210,
+              onComplete: () => {
+                if (dust && dust.active) dust.destroy();
+              }
+            });
+          }
+
+          // Check collision with Omelko: CANNOT be dodged by rolling [Shift] — Omelko MUST jump over the ball!
+          const pBody = player.sprite.body;
+          const dBody = this.sprite.body;
+          const horizOverlap = Math.abs(player.sprite.x - this.sprite.x) < 25;
+          const playerClearedAbove = pBody && dBody && (pBody.bottom <= dBody.top + 6);
+
+          if (horizOverlap && !playerClearedAbove && Phaser.Geom.Intersects.RectangleToRectangle(this.sprite.getBounds(), player.sprite.getBounds())) {
+            // Pass ignoreRoll = true so rolling on the ground does NOT dodge Dulya!
+            player.takeDamage(CONFIG.ENEMY.DULYA.DAMAGE_ROLL, this.sprite.x, true);
             this.setRollingHitbox(false);
             this.state = 'COOLDOWN';
-            this.sprite.body.setVelocityX(-this.rollDir * 120);
+            this.sprite.body.setVelocityX(-this.rollDir * 130);
             this.stateEndTime = time + CONFIG.ENEMY.DULYA.COOLDOWN_MS;
             return;
           }
 
           const hitBoundary =
-            (this.rollDir > 0 && (this.sprite.x >= this.maxX + 60 || this.sprite.body.blocked.right)) ||
-            (this.rollDir < 0 && (this.sprite.x <= this.minX - 60 || this.sprite.body.blocked.left));
+            (this.rollDir > 0 && (this.sprite.x >= this.maxX + 70 || this.sprite.body.blocked.right)) ||
+            (this.rollDir < 0 && (this.sprite.x <= this.minX - 70 || this.sprite.body.blocked.left));
 
           if (time >= this.stateEndTime || hitBoundary) {
+            // Demanding tavern rebound: 55% chance to immediately rebound back toward Omelko once!
+            if (!this.hasRebounded && horizDist < 320 && Math.random() < 0.55) {
+              this.hasRebounded = true;
+              this.rollDir = dirToPlayer;
+              this.sprite.setScale(1.16, 0.84);
+              this.stateEndTime = time + Math.round(CONFIG.ENEMY.DULYA.ROLL_DURATION_MS * 0.72);
+              if (SFX.dulyaRoll) SFX.dulyaRoll();
+              return;
+            }
             this.setRollingHitbox(false);
             this.state = 'COOLDOWN';
             this.sprite.body.setVelocityX(0);
-            this.sprite.setScale(0.88, 1.16);
+            this.sprite.setScale(0.9, 1.14);
             this.stateEndTime = time + CONFIG.ENEMY.DULYA.COOLDOWN_MS;
           }
         } else if (this.state === 'COOLDOWN') {
           this.sprite.body.setVelocityX(this.sprite.body.velocity.x * 0.8);
-          this.sprite.setAngle(Math.sin(time * 0.025) * 6); // Catching breath after rolling
+          this.sprite.setAngle(Math.sin(time * 0.025) * 5);
           if (time >= this.stateEndTime) {
             this.sprite.setAngle(0);
             this.state = 'PATROL';
@@ -738,28 +833,31 @@
 
     /**
      * SUBCLASS H: МІНІ-БОС ЛИХО З КОРЧМИ «КУЦИЙ ХВІСТ» (LykhoMiniBoss)
-     * - The crimson horned tavern chief wearing the legendary Red Cossack Boots (Червоні Чоботи-Сап'янці).
-     * - Attacks with:
-     *   1) Red-Booted Horned Charge across the banquet hall
-     *   2) Tavern Floor Slam sending dual shockwaves across the floor
-     *   3) Double Frothy Tankard Volley
+     * - Demanding 2-Stage crimson horned tavern chieftain wearing the Red Cossack Boots (Червоні Чоботи-Сап'янці).
+     * - Features counter-attack protection after 2 hits in a window, plus 4 fierce attacks:
+     *   1) Red-Booted Horned Charge (with Stage 2 reverse rebound blitz!)
+     *   2) Shadow-Smoke Teleport Backstab right behind Omelko's back
+     *   3) Tavern Floor Slam sending dual shockwaves + mug spray
+     *   4) Triple Frothy Tankard Fan Volley
      * - Defeating him drops the Red Boots of Lykho ('loot_boots_lykho'), unlocking Roll-Stun [Shift]!
      */
     class LykhoMiniBoss extends Enemy {
       constructor(scene, x, y, minX, maxX) {
         super(scene, x, y, 'boss_lykho', CONFIG.ENEMY.BOSS_LYKHO.MAX_STUN);
         this.isMiniBoss = true;
+        this.stage = 1;
+        this.stagesRequired = CONFIG.ENEMY.BOSS_LYKHO.STAGES_REQUIRED || 2;
         this.sprite.body.setSize(54, 72);
         this.sprite.body.setOffset(15, 10);
-        this.minX = minX !== undefined ? minX : 9990;
-        this.maxX = maxX !== undefined ? maxX : 10890;
+        this.minX = minX !== undefined ? minX : 11040;
+        this.maxX = maxX !== undefined ? maxX : 12180;
         this.facing = -1;
         this.sprite.setFlipX(true);
 
-        // Prominent Mini-Boss overhead name & wider health bar
-        this.barBg.setSize(88, 9);
-        this.barFill.setPosition(-42, 0).setSize(84, 7);
-        this.nameBadge = scene.add.text(0, -14, '🔥 ЛИХО З КОРЧМИ', {
+        // Prominent Mini-Boss overhead name & wider health bar (no emojis)
+        this.barBg.setSize(92, 9);
+        this.barFill.setPosition(-44, 0).setSize(88, 7);
+        this.nameBadge = scene.add.text(0, -14, 'ЛИХО З КОРЧМИ', {
           fontFamily: "'Montserrat', sans-serif",
           fontSize: '11px',
           fontStyle: 'bold',
@@ -769,39 +867,150 @@
         }).setOrigin(0.5);
         this.uiContainer.add(this.nameBadge);
 
-        this.state = 'STALK'; // STALK, TELEGRAPH, CHARGE, JUMP_SLAM, MUG_VOLLEY, COOLDOWN
+        this.state = 'STALK'; // STALK, TELEGRAPH, CHARGE, POST_TELEPORT, BACKSTAB_STRIKE, JUMP_SLAM, COOLDOWN
         this.stateEndTime = 0;
         this.attackIndex = 0;
+        this.nextMove = 'CHARGE';
         this.hasSpokenIntro = false;
+        this.hitsTakenInWindow = 0;
+        this.allowedWindowHits = 2;
+        this.invulnUntil = 0;
+        this.chargeReboundRemaining = 0;
+      }
+
+      spawnCrimsonSmoke(x, y) {
+        if (!this.scene || !this.scene.add) return;
+        for (let i = 0; i < 10; i++) {
+          const puff = this.scene.add.circle(
+            x + Phaser.Math.Between(-22, 22),
+            y + Phaser.Math.Between(-26, 16),
+            Phaser.Math.Between(8, 16),
+            i % 2 === 0 ? 0xd90429 : 0x3c096c,
+            0.85
+          ).setDepth(36);
+          this.scene.tweens.add({
+            targets: puff,
+            x: puff.x + Phaser.Math.Between(-36, 36),
+            y: puff.y - Phaser.Math.Between(22, 48),
+            scale: 1.9,
+            alpha: 0,
+            duration: 320,
+            onComplete: () => {
+              if (puff && puff.active) puff.destroy();
+            }
+          });
+        }
+      }
+
+      teleportBehindOmelko(time, player) {
+        if (!player || !player.sprite) return;
+        this.spawnCrimsonSmoke(this.sprite.x, this.sprite.y);
+
+        const desiredX = player.sprite.x - (player.facing || 1) * 56;
+        const targetX = Phaser.Math.Clamp(desiredX, this.minX + 60, this.maxX - 60);
+        const targetY = CONFIG.GROUND_Y - 42;
+
+        this.sprite.setPosition(targetX, targetY);
+        if (this.sprite.body) {
+          this.sprite.body.setVelocity(0, 0);
+        }
+        this.facing = player.sprite.x >= this.sprite.x ? 1 : -1;
+        this.sprite.setFlipX(this.facing < 0);
+        this.sprite.setScale(1.2, 0.84);
+        this.spawnCrimsonSmoke(targetX, targetY);
+
+        if (SFX.chortTeleport) SFX.chortTeleport();
+        this.state = 'POST_TELEPORT';
+        this.isTelegraphing = true;
+        this.telegraphLabel.setText('!').setColor('#ff0055').setVisible(true);
+        this.sprite.setTint(0xff0055);
+        const postTelMs = (CONFIG.ENEMY.BOSS_LYKHO.POST_TELEPORT_MS || 230) * (this.stage >= 2 ? 0.86 : 1);
+        this.stateEndTime = time + postTelMs;
+      }
+
+      receiveStunHit(stunAmount, fromX, isHeavy = false, isCounter = false, isFrog = false, fromRollBoots = false) {
+        if (this.isFinished) return;
+        const now = this.scene ? this.scene.time.now : 0;
+
+        if (now < this.invulnUntil) {
+          SFX.shieldBlock();
+          return;
+        }
+
+        if (this.isStunned) {
+          this.triggerFinisher(fromX);
+          return;
+        }
+
+        this.hitsTakenInWindow++;
+        const reduced = this.hitsTakenInWindow > this.allowedWindowHits
+          ? Math.max(6, Math.round(stunAmount * 0.35))
+          : stunAmount;
+
+        super.receiveStunHit(reduced, fromX, isHeavy, isCounter, isFrog, fromRollBoots);
+
+        // If still conscious after 2 hits, Lykho immediately counters so player cannot spam-lock him!
+        if (!this.isStunned && !this.isFinished && this.hitsTakenInWindow >= this.allowedWindowHits) {
+          this.hitsTakenInWindow = 0;
+          if (this.scene && this.scene.player) {
+            if (Math.random() < 0.55) {
+              this.teleportBehindOmelko(now, this.scene.player);
+            } else {
+              this.facing = this.scene.player.sprite.x >= this.sprite.x ? 1 : -1;
+              this.sprite.setFlipX(this.facing < 0);
+              this.state = 'TELEGRAPH';
+              this.isTelegraphing = true;
+              this.nextMove = 'CHARGE';
+              this.sprite.body.setVelocityX(0);
+              this.telegraphLabel.setText('!').setColor('#ff002b').setVisible(true);
+              this.sprite.setTint(0xffbe0b);
+              this.stateEndTime = now + (CONFIG.ENEMY.BOSS_LYKHO.COUNTER_TELEGRAPH_MS || 220);
+              SFX.telegraph();
+            }
+          }
+        }
       }
 
       update(time, player) {
         if (!this.updateBase(time)) return;
-        this.barFill.width = 84 * Phaser.Math.Clamp(1 - (this.stun / this.maxStun), 0, 1);
+        this.barFill.width = 88 * Phaser.Math.Clamp(1 - (this.stun / this.maxStun), 0, 1);
 
         const dist = Phaser.Math.Distance.Between(this.sprite.x, this.sprite.y, player.sprite.x, player.sprite.y);
+        const horizDist = Math.abs(player.sprite.x - this.sprite.x);
         const dirToPlayer = player.sprite.x >= this.sprite.x ? 1 : -1;
         const onFloor = this.sprite.body.blocked.down || this.sprite.body.touching.down;
+        const speedMult = this.stage >= 2 ? 1.18 : 1;
+        const cdMult = this.stage >= 2 ? 0.78 : 1;
 
-        if (!this.hasSpokenIntro && dist < 560) {
+        if (!this.hasSpokenIntro && dist < 600) {
           this.hasSpokenIntro = true;
-          this.scene.showOmelkoSpeech(STRINGS.OMELKO_REMARK_LYKHO_INTRO, 5000);
+          this.scene.showOmelkoSpeech(STRINGS.OMELKO_REMARK_LYKHO_INTRO, 4600);
           SFX.lisovykRoar();
+          return;
         }
 
         if (this.state === 'STALK') {
           this.facing = dirToPlayer;
           this.sprite.setFlipX(this.facing < 0);
-          this.sprite.body.setVelocityX(this.facing * CONFIG.ENEMY.BOSS_LYKHO.WALK_SPEED);
+          this.sprite.body.setVelocityX(this.facing * CONFIG.ENEMY.BOSS_LYKHO.WALK_SPEED * speedMult);
 
-          if (dist < 460) {
+          if (dist < 500) {
+            const moves = ['CHARGE', 'TELEPORT_BACKSTAB', 'JUMP_SLAM', 'MUG_VOLLEY'];
+            this.nextMove = moves[this.attackIndex % moves.length];
+            this.attackIndex++;
+
+            if (this.nextMove === 'TELEPORT_BACKSTAB') {
+              this.teleportBehindOmelko(time, player);
+              return;
+            }
+
             this.state = 'TELEGRAPH';
             this.isTelegraphing = true;
             this.sprite.body.setVelocityX(0);
             this.telegraphLabel.setText('!').setColor('#ff002b').setVisible(true);
             this.sprite.setTint(0xffbe0b);
-            this.sprite.setScale(1.16, 0.86);
-            this.stateEndTime = time + CONFIG.ENEMY.BOSS_LYKHO.TELEGRAPH_MS;
+            this.sprite.setScale(1.18, 0.84);
+            this.stateEndTime = time + CONFIG.ENEMY.BOSS_LYKHO.TELEGRAPH_MS * (this.stage >= 2 ? 0.82 : 1);
             SFX.telegraph();
           }
         } else if (this.state === 'TELEGRAPH') {
@@ -813,63 +1022,143 @@
             this.facing = dirToPlayer;
             this.sprite.setFlipX(this.facing < 0);
 
-            const move = this.attackIndex % 3;
-            this.attackIndex++;
-
-            if (move === 0) {
-              // Attack 1: Red-Booted Horned Charge!
+            if (this.nextMove === 'CHARGE') {
+              // Attack 1: Red-Booted Horned Charge (with rebound in Stage 2!)
               this.state = 'CHARGE';
+              this.chargeReboundRemaining = this.stage >= 2 ? 1 : 0;
               this.sprite.setTint(0xff4d6d);
-              this.stateEndTime = time + 620;
+              this.stateEndTime = time + 560;
               SFX.roosterCrow();
-            } else if (move === 1 && onFloor) {
-              // Attack 2: High Tavern Slam with Dual Shockwaves!
+            } else if (this.nextMove === 'JUMP_SLAM' && onFloor) {
+              // Attack 2: High Tavern Slam tracking Omelko's X position!
               this.state = 'JUMP_SLAM';
+              const jumpVx = Phaser.Math.Clamp((player.sprite.x - this.sprite.x) * 1.25, -280, 280);
               this.sprite.body.setVelocityY(CONFIG.ENEMY.BOSS_LYKHO.JUMP_VEL_Y);
-              this.sprite.body.setVelocityX(this.facing * 170);
-              this.slamLanded = false;
-              this.stateEndTime = time + 1200;
+              this.sprite.body.setVelocityX(jumpVx);
+              this.stateEndTime = time + 1150;
               SFX.jump(true);
             } else {
-              // Attack 3: Banquet Tankard Volley (throws 2 frothy mugs)!
+              // Attack 3: Triple Banquet Tankard Fan Volley!
               if (this.scene && typeof this.scene.spawnKorchmaMug === 'function') {
-                this.scene.spawnKorchmaMug(this.sprite.x, this.sprite.y - 18, player.sprite.x - 45, player.sprite.y);
-                this.scene.spawnKorchmaMug(this.sprite.x, this.sprite.y - 18, player.sprite.x + 45, player.sprite.y);
+                const offsets = this.stage >= 2 ? [-75, 0, 75, 135] : [-55, 10, 65];
+                offsets.forEach((offX, idx) => {
+                  this.scene.time.delayedCall(idx * 95, () => {
+                    if (this.sprite && this.sprite.active && !this.isStunned && !this.isFinished) {
+                      this.scene.spawnKorchmaMug(
+                        this.sprite.x + this.facing * 20,
+                        this.sprite.y - 18,
+                        player.sprite.x + offX,
+                        player.sprite.y - 10
+                      );
+                    }
+                  });
+                });
               }
               this.state = 'COOLDOWN';
-              this.stateEndTime = time + CONFIG.ENEMY.BOSS_LYKHO.COOLDOWN_MS;
+              this.hitsTakenInWindow = 0;
+              this.stateEndTime = time + CONFIG.ENEMY.BOSS_LYKHO.COOLDOWN_MS * cdMult;
             }
           }
+        } else if (this.state === 'POST_TELEPORT') {
+          this.sprite.body.setVelocityX(0);
+          if (time >= this.stateEndTime) {
+            this.isTelegraphing = false;
+            this.telegraphLabel.setVisible(false);
+            this.sprite.clearTint();
+            this.facing = dirToPlayer;
+            this.sprite.setFlipX(this.facing < 0);
+            this.state = 'BACKSTAB_STRIKE';
+            this.sprite.setScale(1.28, 0.8);
+            if (SFX.swing) SFX.swing(3, true);
+
+            const slash = this.scene.add.image(this.sprite.x + this.facing * 42, this.sprite.y, 'saber_slash')
+              .setDepth(37)
+              .setFlipX(this.facing < 0)
+              .setTint(0xff0055)
+              .setScale(1.35);
+            this.scene.tweens.add({
+              targets: slash,
+              alpha: 0,
+              scaleX: 1.65,
+              scaleY: 1.65,
+              duration: 160,
+              onComplete: () => { if (slash && slash.active) slash.destroy(); }
+            });
+
+            if (horizDist < 78 && Math.abs(player.sprite.y - this.sprite.y) < 68) {
+              player.takeDamage(CONFIG.ENEMY.BOSS_LYKHO.DAMAGE_BACKSTAB || 24, this.sprite.x);
+            }
+            this.stateEndTime = time + 320;
+          }
+        } else if (this.state === 'BACKSTAB_STRIKE') {
+          this.sprite.body.setVelocityX(this.facing * (CONFIG.ENEMY.BOSS_LYKHO.CHARGE_SPEED * 0.92));
+          if (Phaser.Geom.Intersects.RectangleToRectangle(this.sprite.getBounds(), player.sprite.getBounds())) {
+            player.takeDamage(CONFIG.ENEMY.BOSS_LYKHO.DAMAGE_BACKSTAB || 24, this.sprite.x);
+            this.state = 'COOLDOWN';
+            this.hitsTakenInWindow = 0;
+            this.sprite.body.setVelocityX(-this.facing * 120);
+            this.stateEndTime = time + CONFIG.ENEMY.BOSS_LYKHO.COOLDOWN_MS * cdMult;
+            return;
+          }
+          if (time >= this.stateEndTime) {
+            this.state = 'COOLDOWN';
+            this.hitsTakenInWindow = 0;
+            this.sprite.body.setVelocityX(0);
+            this.stateEndTime = time + CONFIG.ENEMY.BOSS_LYKHO.COOLDOWN_MS * cdMult;
+          }
         } else if (this.state === 'CHARGE') {
-          this.sprite.body.setVelocityX(this.facing * CONFIG.ENEMY.BOSS_LYKHO.CHARGE_SPEED);
+          this.sprite.body.setVelocityX(this.facing * CONFIG.ENEMY.BOSS_LYKHO.CHARGE_SPEED * speedMult);
 
           if (Phaser.Geom.Intersects.RectangleToRectangle(this.sprite.getBounds(), player.sprite.getBounds())) {
             player.takeDamage(CONFIG.ENEMY.BOSS_LYKHO.DAMAGE_CHARGE, this.sprite.x);
             this.state = 'COOLDOWN';
+            this.hitsTakenInWindow = 0;
             this.sprite.clearTint();
-            this.sprite.body.setVelocityX(-this.facing * 120);
-            this.stateEndTime = time + CONFIG.ENEMY.BOSS_LYKHO.COOLDOWN_MS;
+            this.sprite.body.setVelocityX(-this.facing * 130);
+            this.stateEndTime = time + CONFIG.ENEMY.BOSS_LYKHO.COOLDOWN_MS * cdMult;
             return;
           }
 
-          if (time >= this.stateEndTime || this.sprite.body.blocked.left || this.sprite.body.blocked.right) {
+          const hitEdge =
+            this.sprite.body.blocked.left ||
+            this.sprite.body.blocked.right ||
+            this.sprite.x <= this.minX + 45 ||
+            this.sprite.x >= this.maxX - 45;
+
+          if (time >= this.stateEndTime || hitEdge) {
+            if (this.chargeReboundRemaining > 0) {
+              this.chargeReboundRemaining--;
+              this.facing = dirToPlayer;
+              this.sprite.setFlipX(this.facing < 0);
+              this.sprite.setScale(1.22, 0.82);
+              this.stateEndTime = time + 480;
+              SFX.roosterCrow();
+              return;
+            }
             this.state = 'COOLDOWN';
+            this.hitsTakenInWindow = 0;
             this.sprite.clearTint();
             this.sprite.body.setVelocityX(0);
-            this.stateEndTime = time + CONFIG.ENEMY.BOSS_LYKHO.COOLDOWN_MS;
+            this.stateEndTime = time + CONFIG.ENEMY.BOSS_LYKHO.COOLDOWN_MS * cdMult;
           }
         } else if (this.state === 'JUMP_SLAM') {
-          if (onFloor && this.sprite.body.velocity.y >= 0 && time > this.stateEndTime - 950) {
+          if (onFloor && this.sprite.body.velocity.y >= 0 && time > this.stateEndTime - 920) {
             this.sprite.body.setVelocityX(0);
             this.sprite.setScale(1.32, 0.74);
             this.scene.cameras.main.shake(200, 0.012);
             this.scene.spawnShockwaves(this.sprite.x, CONFIG.GROUND_Y - 14);
+            if (this.stage >= 2 && this.scene && typeof this.scene.spawnKorchmaMug === 'function') {
+              this.scene.spawnKorchmaMug(this.sprite.x, this.sprite.y - 18, this.sprite.x - 190, this.sprite.y);
+              this.scene.spawnKorchmaMug(this.sprite.x, this.sprite.y - 18, this.sprite.x + 190, this.sprite.y);
+            }
             SFX.finisher();
             this.state = 'COOLDOWN';
-            this.stateEndTime = time + CONFIG.ENEMY.BOSS_LYKHO.COOLDOWN_MS;
+            this.hitsTakenInWindow = 0;
+            this.stateEndTime = time + CONFIG.ENEMY.BOSS_LYKHO.COOLDOWN_MS * cdMult;
           } else if (time >= this.stateEndTime) {
             this.state = 'COOLDOWN';
-            this.stateEndTime = time + CONFIG.ENEMY.BOSS_LYKHO.COOLDOWN_MS;
+            this.hitsTakenInWindow = 0;
+            this.stateEndTime = time + CONFIG.ENEMY.BOSS_LYKHO.COOLDOWN_MS * cdMult;
           }
         } else if (this.state === 'COOLDOWN') {
           this.sprite.body.setVelocityX(this.sprite.body.velocity.x * 0.8);
@@ -880,6 +1169,36 @@
       }
 
       triggerFinisher(fromX) {
+        const now = this.scene ? this.scene.time.now : 0;
+        if (this.stage < this.stagesRequired) {
+          this.stage++;
+          this.isStunned = false;
+          this.stun = 0;
+          this.hitsTakenInWindow = 0;
+          this.invulnUntil = now + 900;
+          this.barFill.setFillStyle(0xe63946);
+          this.stunPrompt.setVisible(false);
+          this.stars.forEach(s => s.setVisible(false));
+
+          SFX.finisher();
+          SFX.lisovykRoar();
+          this.scene.triggerHitStop(CONFIG.FEEL.FINISHER_HIT_STOP_MS);
+          this.scene.cameras.main.shake(230, 0.014);
+          this.scene.spawnHitParticles(this.sprite.x, this.sprite.y, 12);
+          this.scene.showFloatingText(
+            this.sprite.x,
+            this.sprite.y - 72,
+            STRINGS.BOSS_LYKHO_STAGE_2 || 'ЛИХО РОЗЛЮТИЛОСЯ! (Фаза 2)',
+            '#ff4d6d'
+          );
+
+          // Launch into an immediate Jump Slam on phase transition!
+          this.state = 'JUMP_SLAM';
+          this.sprite.body.setVelocity(0, CONFIG.ENEMY.BOSS_LYKHO.JUMP_VEL_Y);
+          this.stateEndTime = now + 1100;
+          return;
+        }
+
         const dropX = this.sprite.x;
         super.triggerFinisher(fromX);
         GAME_STATE.hasDefeatedLykho = true;

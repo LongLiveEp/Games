@@ -87,7 +87,7 @@
         this.lastMove = this.nextMove;
         this.state = 'TELEGRAPH';
         this.isTelegraphing = true;
-        this.telegraphLabel.setText('🌊!').setColor('#00f5d4').setVisible(true);
+        this.telegraphLabel.setText('!').setColor('#00f5d4').setVisible(true);
         this.sprite.setTint(0x00f5d4);
         this.sprite.setScale(1.16, 0.88);
         this.stateEndTime = now + (cfg.COUNTER_TELEGRAPH_MS || 300);
@@ -384,18 +384,7 @@
             this.pickNextMove(time, distToPlayer);
             this.state = 'TELEGRAPH';
             this.isTelegraphing = true;
-            const iconMap = {
-              TRIDENT_SURGE: '🔱!',
-              TIDAL_SLAM: '🌊!',
-              WHIRLPOOL_VOLLEY: '💧!',
-              TRIDENT_THROW: '🔱!',
-              TRIDENT_FAN: '🔱🔱!',
-              THUNDER_CLOUDS: '⚡!',
-              CALL_OF_DEPTHS: '🧜‍♀️!',
-              WHIRLPOOL_PULL: '🌀!',
-              SUBMERGE_DASH: '🌊!'
-            };
-            this.telegraphLabel.setText(iconMap[this.nextMove] || '🌊!').setColor('#00f5d4').setVisible(true);
+            this.telegraphLabel.setText('!').setColor('#00f5d4').setVisible(true);
             this.sprite.setTint(0x48cae4);
             this.sprite.setScale(1.14, 0.88);
             const telMs = cfg.TELEGRAPH_MS * (this.stage === 3 ? 0.78 : (this.stage === 2 ? 0.88 : 1));

@@ -57,7 +57,7 @@
         this.state = 'TELEGRAPH';
         this.isTelegraphing = true;
         this.isCounterTelegraph = true;
-        this.telegraphLabel.setText('⚡!').setVisible(true);
+        this.telegraphLabel.setText('!').setVisible(true);
 
         this.lungeDir = targetX >= this.sprite.x ? 1 : -1;
         this.sprite.setFlipX(this.lungeDir < 0);
@@ -80,7 +80,7 @@
 
         if (time - this.lastGuardNoticeTime > 650) {
           this.lastGuardNoticeTime = time;
-          this.scene.showFloatingText(this.sprite.x, this.sprite.y - 68, '⚡ КОНТРАТАКА ПІВНЯ!', '#ffbe0b');
+          this.scene.showFloatingText(this.sprite.x, this.sprite.y - 68, 'КОНТРАТАКА ПІВНЯ!', '#ffbe0b');
         }
       }
 
@@ -141,7 +141,7 @@
 
           if (now - this.lastGuardNoticeTime > 700) {
             this.lastGuardNoticeTime = now;
-            this.scene.showFloatingText(this.sprite.x, this.sprite.y - 65, '🛡 Крилатий блок!', '#ff9f1c');
+            this.scene.showFloatingText(this.sprite.x, this.sprite.y - 65, 'Крилатий блок!', '#ff9f1c');
           }
 
           if (this.stun >= this.maxStun) {

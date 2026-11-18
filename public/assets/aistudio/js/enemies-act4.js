@@ -385,7 +385,7 @@
                 player.coins -= steal;
                 this.stolenCoins += steal;
                 if (this.coinBadge) {
-                  this.coinBadge.setText(`🪙+${this.stolenCoins}`);
+                  this.coinBadge.setText(`+${this.stolenCoins}`);
                 }
                 this.scene.showFloatingText(
                   player.sprite.x,

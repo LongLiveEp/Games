@@ -54,6 +54,34 @@ const BESTIARY_DATA_UK = [
         omen: '«Якщо квочка скликає курчат під крила серед ясного дня — незабаром піде рясний дощ».'
       },
       {
+        id: 'cellar_rat',
+        name: 'Льоховий Щур-Злодюжка',
+        subtitle: 'Вусатий розбійник старих комор і льохів',
+        roleBadge: '⚔ Ворог Льоху',
+        badgeColor: '#ffd166',
+        texture: 'enemy_cellar_rat',
+        scale: 1.55,
+        location: 'Занедбаний козацький льох під хутором (Акт I).',
+        tactics: 'Вміє перестрибувати кинуті здалеку галушки! Підходь ближче зі сковорідкою [D], ухиляйся від його стрибка й оглушуй, щоб повернути поцуплену галушку чи червінець!',
+        desc: 'Прудкий сіро-бурий щур із довгим хвостом і гострими різцями, який хозяйнує між дубовими бочками в старому льоху. Обожнює вистрибувати з-за діжок і цупити з козацької торби галушки.',
+        lore: '• Українські народні казки «Мишача рада» та гумористичні співомовки про коморних мишей і щурів.\n• У народних переказах льоховий пацюк — хитрий сторож старих підземель, який чує підземні ходи.',
+        omen: '«Якщо в льоху щурі високо на полиці гнізда мостять — чекай великої весняної повені!»'
+      },
+      {
+        id: 'mill_bat',
+        name: 'Млиновий Кажан',
+        subtitle: 'Нічний вартовий старих вітряків',
+        roleBadge: '🦇 Ворог Горища',
+        badgeColor: '#c77dff',
+        texture: 'enemy_mill_bat',
+        scale: 1.45,
+        location: 'Темне горище старого вітряка під кроквами та шестернями (Акт I).',
+        tactics: 'Висить догори дриґом під балками або ширяє хвилями. Коли пускає звукові кільця — готується до стрімкого піке! Перекочуйся [Shift] або збивай галушкою [S]!',
+        desc: 'Крилатий мешканець млинового горища з перетинчастими крилами й пильними бурштиновими очима. Вдень дрімає під дубовими кроквами серед борошняного пилу, але варто потривожити тишу — ціла зграя зривається у стрімкий лет.',
+        lore: '• За народними легендами Наддніпрянщини, кажан (лили́к) — то миша, що скуштувала свяченого хліба або борошна у старому млині й дістала крила.\n• Згадується в етнографічних записах Павла Чубинського та повістях Миколи Гоголя.',
+        omen: '«Якщо ввечері кажани низько й густо літають навколо вітряка — завтра буде тиха, ясна й сонячна днина».'
+      },
+      {
         id: 'boss_rooster',
         name: 'Скажений Півень Корній',
         subtitle: 'Пернатий гетьман хутірського двору',
@@ -416,6 +444,34 @@ const BESTIARY_DATA_EN = [
         desc: 'Tiny, yellow, and fluffy, yet drilled by Mad Rooster Korniy in strict Cossack barnyard discipline. Fearlessly hops into the fray whenever the Rooster crows for backup.',
         lore: '• In Slavic tradition, the chick symbolizes spring sunlight and renewal.\n• Ukrainian fairy tales “Kurochka Ryaba” and “The Little Cat and the Rooster”.',
         omen: '“When a mother hen calls her chicks under her wings at midday, a summer downpour is on its way.”'
+      },
+      {
+        id: 'cellar_rat',
+        name: 'Cellar Rat-Thief',
+        subtitle: 'Whiskered Raider of Old Cossack Vaults',
+        roleBadge: '⚔ Cellar Foe',
+        badgeColor: '#ffd166',
+        texture: 'enemy_cellar_rat',
+        scale: 1.55,
+        location: 'Abandoned Cossack Cellar beneath the village (Act I).',
+        tactics: 'Nimble enough to hop right over thrown dumplings! Close in with your frying pan [D], dodge its lunging pounce, and stun it to recover any snatched dumpling or coin!',
+        desc: 'A sleek slate-brown cellar rat with sharp incisors that scurries between oak barrels. Loves springing out of the shadows to snatch a warm dumpling right out of Omelko’s pouch.',
+        lore: '• Featured in Ukrainian folk fables (“The Council of Mice”) and humorous Cossack tales of pantry raiders.',
+        omen: '“When cellar rats build their nests high up on the top barrel shelves, a great spring flood is on its way!”'
+      },
+      {
+        id: 'mill_bat',
+        name: 'Windmill Attic Bat',
+        subtitle: 'Winged Sentinel of the Dusty Rafters',
+        roleBadge: '🦇 Attic Foe',
+        badgeColor: '#c77dff',
+        texture: 'enemy_mill_bat',
+        scale: 1.45,
+        location: 'High rafters and wooden cogwheels of the Old Windmill Attic (Act I).',
+        tactics: 'Roosts upside-down under rafters or flutters in figure-eight waves. When it emits sonic rings, dodge its diagonal V-swoop [Shift] or knock it down with a dumpling [S]!',
+        desc: 'A leathery-winged inhabitant of the old windmill loft with glowing amber eyes. Roosts among the flour-dusted beams by day and swoops down in flocks when disturbed.',
+        lore: '• In Ukrainian folklore, the bat (“lylyk”) is a mouse that nibbled blessed grain in an old mill and sprouted leathery wings.',
+        omen: '“When bats wheel thickly around the windmill sails at dusk, tomorrow’s weather will be clear and sunny.”'
       },
       {
         id: 'boss_rooster',

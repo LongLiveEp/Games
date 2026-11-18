@@ -57,7 +57,7 @@
             x: 1265,
             y: CONFIG.GROUND_Y,
             targetChunkId: 'chunk_cellar_dungeon',
-            targetX: 4680,
+            targetX: 4320,
             targetY: CONFIG.GROUND_Y - 45,
             allowShiftDown: true,
             allowDownKey: true,
@@ -69,7 +69,7 @@
             x: 1245,
             y: 150,
             targetChunkId: 'chunk_mill_upper',
-            targetX: 6510,
+            targetX: 7610,
             targetY: CONFIG.GROUND_Y - 45,
             visualType: 'roof_ladder',
             promptKey: 'PORTAL_MILL_UP'
@@ -133,7 +133,7 @@
             x: 2090,
             y: 150,
             targetChunkId: 'chunk_mill_upper',
-            targetX: 6510,
+            targetX: 7610,
             targetY: CONFIG.GROUND_Y - 45,
             visualType: 'roof_ladder',
             promptKey: 'PORTAL_MILL_UP'
@@ -143,7 +143,7 @@
             x: 2760,
             y: CONFIG.GROUND_Y,
             targetChunkId: 'chunk_cellar_dungeon',
-            targetX: 5960,
+            targetX: 6220,
             targetY: CONFIG.GROUND_Y - 45,
             allowShiftDown: true,
             allowDownKey: true,
@@ -167,20 +167,25 @@
       chunk_cellar_dungeon: {
         id: 'chunk_cellar_dungeon',
         type: 'dungeon',
-        bounds: { x: 4200, y: 0, width: 1920, height: 540 },
+        bounds: { x: 4200, y: 0, width: 3000, height: 540 },
         platforms: [
-          // Secret stash shelf on far left behind breakable wall
-          { x: 4350, y: 315, w: 170, tier: 1, isCellarPlatform: true },
-          // Cellar oak storage racks & barrel shelves
-          { x: 4860, y: 320, w: 190, tier: 1, isCellarPlatform: true },
-          { x: 5140, y: 245, w: 210, tier: 2, isCellarPlatform: true },
-          { x: 5440, y: 320, w: 200, tier: 1, isCellarPlatform: true },
-          { x: 5720, y: 245, w: 190, tier: 2, isCellarPlatform: true }
+          // Long multi-tiered cellar oak storage racks & barrel shelves
+          { x: 4560, y: 325, w: 190, tier: 1, isCellarPlatform: true },
+          { x: 4820, y: 245, w: 210, tier: 2, isCellarPlatform: true },
+          { x: 5090, y: 170, w: 180, tier: 3, isCellarPlatform: true },
+          { x: 5150, y: 325, w: 200, tier: 1, isCellarPlatform: true },
+          { x: 5440, y: 245, w: 210, tier: 2, isCellarPlatform: true },
+          { x: 5730, y: 325, w: 200, tier: 1, isCellarPlatform: true },
+          { x: 5990, y: 235, w: 210, tier: 2, isCellarPlatform: true },
+          { x: 6260, y: 165, w: 190, tier: 3, isCellarPlatform: true },
+          { x: 6490, y: 320, w: 190, tier: 1, isCellarPlatform: true },
+          // Secret stash shelf at the far end of the cellar behind breakable wall (x: 6680..7160)
+          { x: 6940, y: 310, w: 210, tier: 1, isCellarPlatform: true }
         ],
         breakableWalls: [
           {
             id: 'cellar_secret_wall',
-            x: 4545,
+            x: 6680,
             y: CONFIG.GROUND_Y - 62,
             width: 38,
             height: 124,
@@ -188,23 +193,34 @@
           }
         ],
         loot: [
-          // Secret room rewards behind the breakable false wall (x: 4240..4500)
-          { type: 'secret_kissel_jug', x: 4455, y: CONFIG.GROUND_Y - 22, isSecret: true },
-          { type: 'secret_galushka_stash', x: 4370, y: CONFIG.GROUND_Y - 22, isSecret: true },
-          { type: 'secret_bestiary_scroll', x: 4285, y: CONFIG.GROUND_Y - 26, isSecret: true }
+          // Corridor pickups along upper shelves
+          { type: 'coin', x: 5090, y: 135 },
+          { type: 'food', x: 5440, y: 210 },
+          { type: 'coin', x: 6260, y: 130 },
+          // Secret stash rewards hidden at the far end behind the breakable false wall (x: 6720..7120)
+          { type: 'secret_kissel_jug', x: 6810, y: CONFIG.GROUND_Y - 22, isSecret: true },
+          { type: 'secret_galushka_stash', x: 6935, y: CONFIG.GROUND_Y - 22, isSecret: true },
+          { type: 'secret_bestiary_scroll', x: 7065, y: CONFIG.GROUND_Y - 26, isSecret: true },
+          { type: 'coin', x: 6885, y: 275, isSecret: true },
+          { type: 'coin', x: 6995, y: 275, isSecret: true }
         ],
         checkpoints: [],
         enemies: [
-          { type: 'leshy', x: 4920, y: 370, minX: 4720, maxX: 5120, chunkId: 'chunk_cellar_dungeon', stayOnSurface: true },
-          { type: 'leshy', x: 5240, y: 370, minX: 5040, maxX: 5420, chunkId: 'chunk_cellar_dungeon', stayOnSurface: true },
-          { type: 'goose', x: 5450, y: 285, minX: 5350, maxX: 5540, chunkId: 'chunk_cellar_dungeon' },
-          { type: 'leshy', x: 5620, y: 370, minX: 5420, maxX: 5820, chunkId: 'chunk_cellar_dungeon', stayOnSurface: true },
-          { type: 'leshy', x: 5850, y: 370, minX: 5680, maxX: 5980, chunkId: 'chunk_cellar_dungeon', stayOnSurface: true }
+          { type: 'cellar_rat', x: 4620, y: 375, minX: 4430, maxX: 4840, chunkId: 'chunk_cellar_dungeon' },
+          { type: 'leshy', x: 4920, y: 370, minX: 4720, maxX: 5140, chunkId: 'chunk_cellar_dungeon', stayOnSurface: true },
+          { type: 'cellar_rat', x: 4820, y: 210, minX: 4725, maxX: 4915, chunkId: 'chunk_cellar_dungeon' },
+          { type: 'cellar_rat', x: 5250, y: 375, minX: 5020, maxX: 5480, chunkId: 'chunk_cellar_dungeon' },
+          { type: 'goose', x: 5440, y: 210, minX: 5345, maxX: 5535, chunkId: 'chunk_cellar_dungeon' },
+          { type: 'leshy', x: 5620, y: 370, minX: 5420, maxX: 5840, chunkId: 'chunk_cellar_dungeon', stayOnSurface: true },
+          { type: 'cellar_rat', x: 5860, y: 375, minX: 5640, maxX: 6100, chunkId: 'chunk_cellar_dungeon' },
+          { type: 'cellar_rat', x: 5990, y: 200, minX: 5895, maxX: 6085, chunkId: 'chunk_cellar_dungeon' },
+          { type: 'leshy', x: 6360, y: 370, minX: 6160, maxX: 6580, chunkId: 'chunk_cellar_dungeon', stayOnSurface: true },
+          { type: 'cellar_rat', x: 6540, y: 375, minX: 6340, maxX: 6640, chunkId: 'chunk_cellar_dungeon' }
         ],
         portals: [
           {
             id: 'cellar_to_village',
-            x: 4660,
+            x: 4320,
             y: CONFIG.GROUND_Y,
             targetChunkId: 'chunk_village_start',
             targetX: 1265,
@@ -214,7 +230,7 @@
           },
           {
             id: 'cellar_to_pond_end',
-            x: 6015,
+            x: 6220,
             y: CONFIG.GROUND_Y,
             targetChunkId: 'chunk_pond_road',
             targetX: 2760,
@@ -228,27 +244,43 @@
       chunk_mill_upper: {
         id: 'chunk_mill_upper',
         type: 'combat',
-        bounds: { x: 6400, y: 0, width: 1280, height: 540 },
+        bounds: { x: 7500, y: 0, width: 2600, height: 540 },
         platforms: [
-          { x: 6660, y: 325, w: 170, tier: 1 },
-          { x: 6890, y: 245, w: 180, tier: 2 },
-          { x: 7130, y: 175, w: 190, tier: 3 },
-          { x: 7390, y: 240, w: 220, tier: 2 }
+          { x: 7780, y: 325, w: 180, tier: 1 },
+          { x: 8020, y: 245, w: 190, tier: 2 },
+          { x: 8270, y: 170, w: 200, tier: 3 },
+          { x: 8510, y: 295, w: 190, tier: 1 },
+          { x: 8760, y: 215, w: 200, tier: 2 },
+          { x: 9010, y: 155, w: 210, tier: 3 },
+          { x: 9240, y: 280, w: 190, tier: 1 },
+          { x: 9480, y: 195, w: 200, tier: 2 },
+          { x: 9720, y: 240, w: 230, tier: 2 }
         ],
         breakableWalls: [],
         loot: [
-          { type: 'coin', x: 6890, y: 210 },
-          { type: 'coin', x: 7130, y: 140 },
-          { type: 'shkvarky_pan', x: 7410, y: 200 }
+          { type: 'coin', x: 8020, y: 210 },
+          { type: 'galushka', x: 8270, y: 135 },
+          { type: 'coin', x: 8760, y: 180 },
+          { type: 'food', x: 9010, y: 120 },
+          { type: 'coin', x: 9480, y: 160 },
+          { type: 'shkvarky_pan', x: 9730, y: 200 }
         ],
         checkpoints: [],
         enemies: [
-          { type: 'goose', x: 7130, y: 140, minX: 7020, maxX: 7240, chunkId: 'chunk_mill_upper' }
+          { type: 'mill_bat', x: 7860, y: 84, minX: 7680, maxX: 8080, roost: true, chunkId: 'chunk_mill_upper' },
+          { type: 'mill_bat', x: 8140, y: 150, minX: 7920, maxX: 8360, roost: false, chunkId: 'chunk_mill_upper' },
+          { type: 'mill_bat', x: 8390, y: 78, minX: 8180, maxX: 8600, roost: true, chunkId: 'chunk_mill_upper' },
+          { type: 'mill_bat', x: 8640, y: 165, minX: 8420, maxX: 8860, roost: false, chunkId: 'chunk_mill_upper' },
+          { type: 'goose', x: 8760, y: 180, minX: 8665, maxX: 8855, chunkId: 'chunk_mill_upper' },
+          { type: 'mill_bat', x: 8920, y: 80, minX: 8720, maxX: 9140, roost: true, chunkId: 'chunk_mill_upper' },
+          { type: 'mill_bat', x: 9180, y: 150, minX: 8960, maxX: 9400, roost: false, chunkId: 'chunk_mill_upper' },
+          { type: 'mill_bat', x: 9440, y: 82, minX: 9240, maxX: 9660, roost: true, chunkId: 'chunk_mill_upper' },
+          { type: 'mill_bat', x: 9680, y: 145, minX: 9480, maxX: 9900, roost: false, chunkId: 'chunk_mill_upper' }
         ],
         portals: [
           {
             id: 'mill_to_village',
-            x: 6485,
+            x: 7590,
             y: CONFIG.GROUND_Y,
             targetChunkId: 'chunk_village_start',
             targetX: 1230,
@@ -259,7 +291,7 @@
           },
           {
             id: 'mill_to_boss',
-            x: 7575,
+            x: 9980,
             y: CONFIG.GROUND_Y,
             targetChunkId: 'chunk_boss_rooster',
             targetX: 3150,
@@ -307,7 +339,7 @@
       });
 
       return {
-        worldWidth: 7680,
+        worldWidth: 10100,
         chunks: LEVEL1_CHUNKS,
         initialChunkId: 'chunk_village_start',
         platforms,

@@ -507,13 +507,13 @@
           this.platforms.add(undergroundFloor);
           this.undergroundFloorGroup.add(undergroundFloor);
 
-          // In Act I, chunk_cellar_dungeon (x: 4200..6120) and chunk_mill_upper (x: 6400..7680)
+          // In Act I, chunk_cellar_dungeon (x: 4200..7200) and chunk_mill_upper (x: 7500..10100)
           // have a 100% solid stone/timber floor at CONFIG.GROUND_Y so nothing drops below it!
           if (this.currentLevel === 1) {
             const solidInteriorFloor = this.add.rectangle(
-              5940,
+              7150,
               CONFIG.GROUND_Y + 12,
-              3480,
+              5900,
               24,
               0x000000,
               0
@@ -812,24 +812,20 @@
           this.cameras.main.fadeIn(450, 26, 20, 38);
           if (SFX.windWhistle) SFX.windWhistle();
           this.showFloatingText(this.player.sprite.x + 80, this.player.sprite.y - 85, `🌾 ${STRINGS.LEVEL_4_TITLE} — ${STRINGS.LEVEL_4_SUBTITLE}`, '#ffd166');
-          this.time.delayedCall(450, () => {
-            this.showOmelkoSpeech(STRINGS.OMELKO_REMARK_STEPPE, 5400);
-            if (this.ui && this.ui.bestiaryModal) {
-              this.ui.bestiaryModal.showArenaPromptBanner(this.currentLevel, false);
-            }
-          });
+          this.showOmelkoSpeech(STRINGS.OMELKO_REMARK_STEPPE, 5400);
+          if (this.ui && this.ui.bestiaryModal) {
+            this.ui.bestiaryModal.showArenaPromptBanner(this.currentLevel, false);
+          }
         } else if (isLevel3) {
           this.isControlsModalOpen = false;
           this.ui.setControlsModalVisible(false);
           this.cameras.main.fadeIn(450, 8, 24, 44);
           SFX.waterSplash();
           this.showFloatingText(this.player.sprite.x + 80, this.player.sprite.y - 85, `🌊 ${STRINGS.LEVEL_3_TITLE} — ${STRINGS.LEVEL_3_SUBTITLE}`, '#48cae4');
-          this.time.delayedCall(450, () => {
-            this.showOmelkoSpeech(STRINGS.OMELKO_REMARK_DNIPRO, 5200);
-            if (this.ui && this.ui.bestiaryModal) {
-              this.ui.bestiaryModal.showArenaPromptBanner(this.currentLevel, false);
-            }
-          });
+          this.showOmelkoSpeech(STRINGS.OMELKO_REMARK_DNIPRO, 5200);
+          if (this.ui && this.ui.bestiaryModal) {
+            this.ui.bestiaryModal.showArenaPromptBanner(this.currentLevel, false);
+          }
         } else if (isLevel2) {
           // In Act II ("Злий Ліс"), start immediately with atmospheric intro banner & Omelko's remark
           this.isControlsModalOpen = false;
@@ -837,12 +833,10 @@
           this.cameras.main.fadeIn(450, 10, 12, 20);
           SFX.lisovykRoar();
           this.showFloatingText(this.player.sprite.x + 60, this.player.sprite.y - 85, `🌲 ${STRINGS.LEVEL_2_TITLE} — ${STRINGS.LEVEL_2_SUBTITLE}`, '#ff9f1c');
-          this.time.delayedCall(450, () => {
-            this.showOmelkoSpeech(STRINGS.OMELKO_REMARK_EVIL_FOREST, 5000);
-            if (this.ui && this.ui.bestiaryModal) {
-              this.ui.bestiaryModal.showArenaPromptBanner(this.currentLevel, false);
-            }
-          });
+          this.showOmelkoSpeech(STRINGS.OMELKO_REMARK_EVIL_FOREST, 5000);
+          if (this.ui && this.ui.bestiaryModal) {
+            this.ui.bestiaryModal.showArenaPromptBanner(this.currentLevel, false);
+          }
         } else {
           // Show stylized Controls Guide Modal upon exiting the hut into Level 1
           this.isControlsModalOpen = true;
@@ -933,6 +927,20 @@
         this.input.keyboard.on('keydown-M', () => {
           this.toggleSoundMute();
         });
+        this.input.keyboard.on('keydown', (event) => {
+          if (event && event.repeat) return;
+          if (this.ui && this.ui.bestiaryModal && this.ui.bestiaryModal.isOpen) return;
+          if (this.isKorchmaIntroModalOpen) {
+            if (event && (event.key === 'm' || event.key === 'M')) return;
+            this.closeKorchmaIntroModal();
+          }
+        });
+        this.input.on('pointerdown', () => {
+          if (this.ui && this.ui.bestiaryModal && this.ui.bestiaryModal.isOpen) return;
+          if (this.isKorchmaIntroModalOpen) {
+            this.closeKorchmaIntroModal();
+          }
+        });
       }
 
       playLevelExplorationMusic() {
@@ -963,7 +971,7 @@
         }
       }
 
-      showOmelkoSpeech(text, duration = 4200) {
+      showOmelkoSpeech(text, duration = 4200, pauseGame = true, onResume = null) {
         if (this.activeSpeechBubble) {
           this.activeSpeechBubble.destroy();
           this.activeSpeechBubble = null;
@@ -973,8 +981,17 @@
           this.speechBubbleTimer = null;
         }
 
+        const cleanText = String(text || '')
+          .replace(/\s*\[Натисни будь-яку клавішу\]\s*/g, '')
+          .replace(/\s*\[Press any key\]\s*/g, '');
+
+        const shouldPause = Boolean(pauseGame && !this.isVictory && !this.isDeathModalOpen);
+        const promptStr = (typeof GAME_STATE !== 'undefined' && GAME_STATE.lang === 'en')
+          ? '[Press any key]'
+          : '[Натисни будь-яку клавішу]';
+
         const container = this.add.container(this.player.sprite.x, this.player.sprite.y - 68).setDepth(145);
-        const txt = this.add.text(0, -4, text, {
+        const txt = this.add.text(0, shouldPause ? -11 : -4, cleanText, {
           fontFamily: "'Cormorant Infant', Georgia, serif",
           fontSize: '19px',
           fontStyle: 'bold',
@@ -983,10 +1000,23 @@
           lineSpacing: 3
         }).setOrigin(0.5);
 
+        let hintTxt = null;
+        if (shouldPause) {
+          hintTxt = this.add.text(0, txt.height / 2 + 2, promptStr, {
+            fontFamily: "'Montserrat', sans-serif",
+            fontSize: '11.5px',
+            fontStyle: 'bold',
+            color: '#9b1123',
+            align: 'center'
+          }).setOrigin(0.5);
+        }
+
         const padX = 28;
-        const padY = 18;
-        const bw = Math.max(240, txt.width + padX * 2);
-        const bh = Math.max(46, txt.height + padY);
+        const padY = shouldPause ? 26 : 18;
+        const contentW = hintTxt ? Math.max(txt.width, hintTxt.width) : txt.width;
+        const contentH = hintTxt ? (txt.height + hintTxt.height + 6) : txt.height;
+        const bw = Math.max(240, contentW + padX * 2);
+        const bh = Math.max(46, contentH + padY);
 
         const bg = this.add.graphics();
         bg.fillStyle(0xfefae0, 0.97);
@@ -996,8 +1026,25 @@
         // Pointer triangle toward Omelko's head
         bg.fillTriangle(-9, bh / 2 - 4, 9, bh / 2 - 4, 0, bh / 2 + 10);
 
-        container.add([bg, txt]);
+        if (hintTxt) {
+          container.add([bg, txt, hintTxt]);
+          container.hintTextObj = hintTxt;
+        } else {
+          container.add([bg, txt]);
+        }
         container.bubbleHalfWidth = bw / 2;
+
+        if (this.player && this.player.sprite && this.cameras && this.cameras.main) {
+          const cam = this.cameras.main;
+          const halfW = container.bubbleHalfWidth || 160;
+          const clampedX = Phaser.Math.Clamp(
+            this.player.sprite.x,
+            cam.scrollX + halfW + 14,
+            cam.scrollX + CONFIG.WIDTH - halfW - 14
+          );
+          container.setPosition(clampedX, Math.max(58, this.player.sprite.y - 68));
+        }
+
         container.setScale(0.75);
 
         this.tweens.add({
@@ -1010,20 +1057,36 @@
         SFX.speechBlip();
         this.activeSpeechBubble = container;
 
-        this.speechBubbleTimer = this.time.delayedCall(duration, () => {
-          if (this.activeSpeechBubble === container && container.active) {
-            this.tweens.add({
-              targets: container,
-              alpha: 0,
-              y: container.y - 14,
-              duration: 240,
-              onComplete: () => {
-                if (container.active) container.destroy();
-                if (this.activeSpeechBubble === container) this.activeSpeechBubble = null;
-              }
-            });
+        if (shouldPause) {
+          if (!this.isKorchmaIntroModalOpen) {
+            this.speechPauseStartedAt = this.time.now;
           }
-        });
+          this.isKorchmaIntroModalOpen = true;
+          this.korchmaModalReadyTime = this.time.now + 220;
+          this.onSpeechPauseResume = onResume || null;
+          if (this.player && this.player.sprite && this.player.sprite.body) {
+            const onFloor = this.player.sprite.body.blocked.down || this.player.sprite.body.touching.down;
+            if (onFloor) {
+              this.player.sprite.body.setVelocityX(0);
+            }
+          }
+          this.physics.world.pause();
+        } else {
+          this.speechBubbleTimer = this.time.delayedCall(duration, () => {
+            if (this.activeSpeechBubble === container && container.active) {
+              this.tweens.add({
+                targets: container,
+                alpha: 0,
+                y: container.y - 14,
+                duration: 240,
+                onComplete: () => {
+                  if (container.active) container.destroy();
+                  if (this.activeSpeechBubble === container) this.activeSpeechBubble = null;
+                }
+              });
+            }
+          });
+        }
       }
 
       createParallaxBackground() {
@@ -1312,6 +1375,7 @@
           this.enemies.forEach(enemy => {
             if (!enemy || enemy.isFinished || !enemy.sprite || !enemy.sprite.visible) return;
             if (this.levelData && this.levelData.chunks && enemy.chunkId && enemy.chunkId !== this.currentChunkId) return;
+            if (typeof DulyaEnemy !== 'undefined' && enemy instanceof DulyaEnemy && enemy.state === 'ROLL_ATTACK') return;
             if (this.player.rollHitEnemies && this.player.rollHitEnemies.has(enemy)) return;
             if (Phaser.Geom.Intersects.RectangleToRectangle(rollBox, enemy.sprite.getBounds())) {
               if (this.player.rollHitEnemies) this.player.rollHitEnemies.add(enemy);
@@ -1558,6 +1622,9 @@
             }
           }
         }
+
+        // If an Omelko speech bubble just paused the game this frame, wait until the player resumes
+        if (this.isKorchmaIntroModalOpen) return;
 
         // Update all active Enemies & Boss (in chunked levels, only update enemies in the active chunk)
         this.enemies.forEach(enemy => {
@@ -2309,6 +2376,12 @@
             enemy = new GooseEnemy(this, eData.x, eData.y, eData.minX, eData.maxX);
             this.physics.add.collider(enemy.sprite, this.platforms);
             if (this.groundBody) this.physics.add.collider(enemy.sprite, this.groundBody);
+          } else if (eData.type === 'cellar_rat') {
+            enemy = new CellarRatEnemy(this, eData.x, eData.y, eData.minX, eData.maxX);
+            this.physics.add.collider(enemy.sprite, this.platforms);
+            if (this.groundBody) this.physics.add.collider(enemy.sprite, this.groundBody);
+          } else if (eData.type === 'mill_bat') {
+            enemy = new MillBatEnemy(this, eData.x, eData.y, eData.minX, eData.maxX, Boolean(eData.roost));
           } else if (eData.type === 'shield_guardian') {
             enemy = new ShieldGuardianEnemy(this, eData.x, eData.y, eData.minX, eData.maxX);
             this.physics.add.collider(enemy.sprite, this.platforms);
@@ -2854,38 +2927,38 @@
         outdoorDecor.strokeRoundedRect(3830, gY - 95, 44, 44, 4);
 
         // ====================================================================
-        // 2. NODE 2B (`chunk_cellar_dungeon`, x: 4200..6120): ABANDONED COSSACK CELLAR
+        // 2. NODE 2B (`chunk_cellar_dungeon`, x: 4200..7200): ABANDONED COSSACK CELLAR
         // ====================================================================
         const cellarBg = this.add.graphics().setDepth(8);
         // Full-height dark subterranean stone & timber wall (blocks outdoor sky when camera is in cellar!)
         cellarBg.fillStyle(0x0f1018, 1);
-        cellarBg.fillRect(4200, 0, 1920, CONFIG.HEIGHT);
+        cellarBg.fillRect(4200, 0, 3000, CONFIG.HEIGHT);
         cellarBg.fillStyle(0x171a26, 1);
-        cellarBg.fillRect(4200, 44, 1920, gY - 44);
+        cellarBg.fillRect(4200, 44, 3000, gY - 44);
 
         // Masonry stone blocks & mortar lines across the cellar wall
         for (let cy = 62; cy < gY - 18; cy += 48) {
-          for (let cx = 4220 + ((cy % 96 === 0) ? 0 : 45); cx < 6080; cx += 110) {
+          for (let cx = 4220 + ((cy % 96 === 0) ? 0 : 45); cx < 7160; cx += 110) {
             cellarBg.fillStyle(0x1f2433, 0.85);
             cellarBg.fillRoundedRect(cx, cy, 92, 36, 4);
           }
         }
 
-        // Secret Stash Alcove glow on the far left (x: 4220..4545) behind the breakable false wall
+        // Secret Stash Alcove glow on the far right end (x: 6685..7170) behind the breakable false wall at x: 6680
         cellarBg.fillStyle(0x2b1d12, 0.95);
-        cellarBg.fillRoundedRect(4225, 165, 310, gY - 165, 8);
+        cellarBg.fillRoundedRect(6695, 160, 465, gY - 160, 8);
         cellarBg.lineStyle(3, 0xd4a373, 0.65);
-        cellarBg.strokeRoundedRect(4225, 165, 310, gY - 165, 8);
+        cellarBg.strokeRoundedRect(6695, 160, 465, gY - 160, 8);
         cellarBg.fillStyle(0xffbe0b, 0.16);
-        cellarBg.fillCircle(4370, gY - 75, 115);
+        cellarBg.fillCircle(6935, gY - 75, 135);
 
         // Low heavy oak ceiling beams, wooden support pillars ("дерев'яні підпірки") & cobwebs ("павутиння")
         cellarBg.fillStyle(0x2b1810, 1);
-        cellarBg.fillRect(4200, 0, 1920, 48);
+        cellarBg.fillRect(4200, 0, 3000, 48);
         cellarBg.fillStyle(0x3d2314, 1);
-        cellarBg.fillRect(4200, 38, 1920, 14);
+        cellarBg.fillRect(4200, 38, 3000, 14);
 
-        for (let px = 4240; px <= 6080; px += 230) {
+        for (let px = 4240; px <= 7140; px += 220) {
           // Vertical oak support pillar
           cellarBg.fillStyle(0x3d2314, 1);
           cellarBg.fillRect(px - 12, 48, 24, gY - 48);
@@ -2905,8 +2978,8 @@
           cellarBg.lineBetween(px + 54, 50, px + 28, 76);
           cellarBg.lineBetween(px + 28, 76, px + 12, 86);
 
-          // Warm flickering cellar wall torch on every pillar
-          if (px > 4560 && px < 6000) {
+          // Warm flickering cellar wall torch on pillars along the main corridor
+          if (px > 4380 && px < 6650) {
             cellarBg.fillStyle(0xff9f1c, 0.22);
             cellarBg.fillCircle(px, 165, 42);
             cellarBg.fillStyle(0xffea00, 0.9);
@@ -2916,8 +2989,8 @@
           }
         }
 
-        // Decorative Cossack oak barrels in the cellar behind which Pesyholovtsi hide
-        [4810, 5090, 5360, 5580, 5790].forEach((bx, bIdx) => {
+        // Decorative Cossack oak barrels in the cellar behind which rats & Pesyholovtsi hide
+        [4510, 4760, 5050, 5350, 5630, 5910, 6160, 6430].forEach((bx, bIdx) => {
           this.add.image(bx, gY - 22, 'prop_barrel').setDepth(15).setTint(0xc8b6a6);
           if (bIdx % 2 === 0) {
             this.add.image(bx + 28, gY - 22, 'prop_barrel').setDepth(14).setTint(0x9c8978);
@@ -2926,31 +2999,31 @@
 
         // Solid cobblestone cellar floor visual
         cellarBg.fillStyle(0x1b1d29, 1);
-        cellarBg.fillRect(4200, gY, 1920, groundH);
+        cellarBg.fillRect(4200, gY, 3000, groundH);
         cellarBg.fillStyle(0x343a40, 1);
-        cellarBg.fillRect(4200, gY, 1920, 14);
+        cellarBg.fillRect(4200, gY, 3000, 14);
         cellarBg.fillStyle(0x6c757d, 1);
-        cellarBg.fillRect(4200, gY, 1920, 4);
+        cellarBg.fillRect(4200, gY, 3000, 4);
 
         // ====================================================================
-        // 3. NODE 2C (`chunk_mill_upper`, x: 6400..7680): OLD WINDMILL ATTIC
+        // 3. NODE 2C (`chunk_mill_upper`, x: 7500..10100): OLD WINDMILL ATTIC
         // ====================================================================
         const millBg = this.add.graphics().setDepth(8);
         millBg.fillStyle(0x1c140d, 1);
-        millBg.fillRect(6400, 0, 1280, CONFIG.HEIGHT);
+        millBg.fillRect(7500, 0, 2600, CONFIG.HEIGHT);
         millBg.fillStyle(0x2b1e14, 1);
-        millBg.fillRect(6400, 36, 1280, gY - 36);
+        millBg.fillRect(7500, 36, 2600, gY - 36);
 
         // Horizontal wooden plank panelling & slanted roof rafters
         for (let my = 56; my < gY; my += 36) {
           millBg.lineStyle(2, 0x160f0a, 0.75);
-          millBg.lineBetween(6400, my, 7680, my);
+          millBg.lineBetween(7500, my, 10100, my);
         }
-        for (let rx = 6440; rx <= 7640; rx += 180) {
+        for (let rx = 7540; rx <= 10060; rx += 180) {
           millBg.fillStyle(0x3d2616, 1);
           millBg.fillRect(rx - 10, 0, 20, gY);
           // Golden sunbeams streaming through round windmill dormer windows
-          if (rx % 360 === 320) {
+          if (((rx - 7540) / 180) % 2 === 1) {
             millBg.fillStyle(0xffea00, 0.11);
             millBg.fillTriangle(rx + 70, 88, rx + 15, gY, rx + 145, gY);
             millBg.fillStyle(0x90e0ef, 0.45);
@@ -2960,8 +3033,8 @@
           }
         }
 
-        // Giant wooden Windmill Cogwheels ("млинові жорна та шестерні") in the attic background
-        [6760, 7260].forEach(gx => {
+        // Giant wooden Windmill Cogwheels ("млинові жорна та шестерні") across the long attic
+        [7840, 8320, 8820, 9320, 9780].forEach(gx => {
           millBg.lineStyle(8, 0x6f4518, 0.9);
           millBg.strokeCircle(gx, 165, 58);
           millBg.lineStyle(5, 0x8a5a36, 0.85);
@@ -2972,11 +3045,11 @@
 
         // Solid wooden attic floor visual
         millBg.fillStyle(0x23150c, 1);
-        millBg.fillRect(6400, gY, 1280, groundH);
+        millBg.fillRect(7500, gY, 2600, groundH);
         millBg.fillStyle(0x6f4518, 1);
-        millBg.fillRect(6400, gY, 1280, 14);
+        millBg.fillRect(7500, gY, 2600, 14);
         millBg.fillStyle(0xd4a373, 1);
-        millBg.fillRect(6400, gY, 1280, 4);
+        millBg.fillRect(7500, gY, 2600, 4);
       }
 
       setupAct1ChunksInteractiveObjects() {
@@ -3243,14 +3316,10 @@
 
           if (chunkId === 'chunk_cellar_dungeon' && !this.hasEnteredCellar) {
             this.hasEnteredCellar = true;
-            this.time.delayedCall(220, () => {
-              this.showOmelkoSpeech(STRINGS.OMELKO_REMARK_CELLAR, 4600);
-            });
+            this.showOmelkoSpeech(STRINGS.OMELKO_REMARK_CELLAR, 4600);
           } else if (chunkId === 'chunk_mill_upper' && !this.hasEnteredMill) {
             this.hasEnteredMill = true;
-            this.time.delayedCall(220, () => {
-              this.showOmelkoSpeech(STRINGS.OMELKO_REMARK_MILL, 4600);
-            });
+            this.showOmelkoSpeech(STRINGS.OMELKO_REMARK_MILL, 4600);
           } else if (chunkId === 'chunk_korchma_hall' || chunkId === 'chunk_korchma_boss') {
             const cameFromKorchma = prevChunkId === 'chunk_korchma_hall' || prevChunkId === 'chunk_korchma_boss';
             SFX.playMusic('mus_korchma', { volume: 0.44, restart: !cameFromKorchma });
@@ -3260,14 +3329,10 @@
             }
           } else if (chunkId === 'chunk_root_catacombs' && !this.hasEnteredCatacombs) {
             this.hasEnteredCatacombs = true;
-            this.time.delayedCall(220, () => {
-              this.showOmelkoSpeech(STRINGS.OMELKO_REMARK_CATACOMBS, 4600);
-            });
+            this.showOmelkoSpeech(STRINGS.OMELKO_REMARK_CATACOMBS, 4600);
           } else if (chunkId === 'chunk_canopy_walk' && !this.hasEnteredCanopy) {
             this.hasEnteredCanopy = true;
-            this.time.delayedCall(220, () => {
-              this.showOmelkoSpeech(STRINGS.OMELKO_REMARK_CANOPY, 4600);
-            });
+            this.showOmelkoSpeech(STRINGS.OMELKO_REMARK_CANOPY, 4600);
           }
         }
 
@@ -3279,107 +3344,7 @@
       }
 
       openKorchmaIntroModal() {
-        if (this.isKorchmaIntroModalOpen) return;
-        this.isKorchmaIntroModalOpen = true;
-        this.korchmaModalReadyTime = this.time.now + 220;
-        if (this.player && this.player.sprite && this.player.sprite.body) {
-          this.player.sprite.body.setVelocity(0, 0);
-        }
-        this.physics.world.pause();
-        SFX.itemFanfare();
-
-        const cx = CONFIG.WIDTH / 2;
-        const cy = CONFIG.HEIGHT / 2;
-        const container = this.add.container(0, 0).setScrollFactor(0).setDepth(245);
-
-        const dimBg = this.add.rectangle(cx, cy, CONFIG.WIDTH, CONFIG.HEIGHT, 0x080504, 0.78).setInteractive();
-        const cardBg = this.add.rectangle(cx, cy, 700, 366, 0x1a110b, 0.97).setStrokeStyle(3, 0x00f5d4);
-        const innerFrame = this.add.rectangle(cx, cy, 686, 352, 0x000000, 0).setStrokeStyle(1.5, 0xffd166, 0.75);
-
-        const titleText = this.add.text(cx, cy - 148, STRINGS.KORCHMA_MODAL_TITLE || '🏚️ КОРЧМА «КУЦИЙ ХВІСТ»', {
-          fontFamily: "'Cormorant Infant', Georgia, serif",
-          fontSize: '28px',
-          fontStyle: 'bold',
-          color: '#00f5d4',
-          stroke: '#000000',
-          strokeThickness: 4
-        }).setOrigin(0.5);
-
-        const subText = this.add.text(cx, cy - 118, STRINGS.KORCHMA_MODAL_SUBTITLE || '', {
-          fontSize: '13px',
-          fontStyle: 'italic',
-          color: '#ffd166'
-        }).setOrigin(0.5);
-
-        // Character & Enemy preview badges
-        const omelkoImg = this.add.image(cx - 255, cy - 38, 'omelko_saber').setScale(1.3);
-        const chortImg = this.add.image(cx + 225, cy - 42, 'enemy_chort').setScale(1.18).setFlipX(true);
-        const dulyaImg = this.add.image(cx + 282, cy - 38, 'enemy_dulya').setScale(1.08);
-
-        // Omelko's quote box
-        const speechBox = this.add.rectangle(cx - 18, cy - 38, 390, 96, 0x261810, 0.95).setStrokeStyle(1.5, 0xffd166, 0.85);
-        const speechText = this.add.text(cx - 18, cy - 38, STRINGS.KORCHMA_MODAL_SPEECH || STRINGS.OMELKO_REMARK_KORCHMA_INSIDE, {
-          fontSize: '13.5px',
-          fontStyle: 'bold',
-          color: '#fefae0',
-          align: 'center',
-          wordWrap: { width: 368 },
-          lineSpacing: 4
-        }).setOrigin(0.5);
-
-        // Tactical tips box for Teleporting Chorts & Rolling Dulya
-        const tipsBg = this.add.rectangle(cx, cy + 58, 636, 68, 0x120b07, 0.95).setStrokeStyle(1, 0x48cae4, 0.65);
-        const tipChort = this.add.text(cx, cy + 41, STRINGS.KORCHMA_MODAL_TIP_CHORT || '', {
-          fontSize: '12.5px',
-          color: '#ffb703',
-          align: 'center',
-          wordWrap: { width: 615 }
-        }).setOrigin(0.5);
-        const tipDulya = this.add.text(cx, cy + 72, STRINGS.KORCHMA_MODAL_TIP_DULYA || '', {
-          fontSize: '12.5px',
-          color: '#90e0ef',
-          align: 'center',
-          wordWrap: { width: 615 }
-        }).setOrigin(0.5);
-
-        // Action button: [Enter] До бою!
-        const btnBg = this.add.rectangle(cx, cy + 136, 250, 42, 0x9b1123, 1)
-          .setStrokeStyle(2, 0xffd166)
-          .setInteractive({ useHandCursor: true });
-        const btnLabel = this.add.text(cx, cy + 136, STRINGS.KORCHMA_MODAL_BTN || '⚔ До бою! [Enter]', {
-          fontSize: '16px',
-          fontStyle: 'bold',
-          color: '#ffffff'
-        }).setOrigin(0.5);
-
-        btnBg.on('pointerover', () => btnBg.setFillStyle(0xc91831));
-        btnBg.on('pointerout', () => btnBg.setFillStyle(0x9b1123));
-        btnBg.on('pointerdown', () => this.closeKorchmaIntroModal());
-        dimBg.on('pointerdown', () => {
-          if (this.time.now >= (this.korchmaModalReadyTime || 0)) {
-            this.closeKorchmaIntroModal();
-          }
-        });
-
-        container.add([
-          dimBg,
-          cardBg,
-          innerFrame,
-          titleText,
-          subText,
-          speechBox,
-          speechText,
-          omelkoImg,
-          chortImg,
-          dulyaImg,
-          tipsBg,
-          tipChort,
-          tipDulya,
-          btnBg,
-          btnLabel
-        ]);
-
-        this.korchmaIntroModalContainer = container;
+        this.showOmelkoSpeech(STRINGS.OMELKO_REMARK_KORCHMA_INSIDE, 4200, true);
       }
 
       closeKorchmaIntroModal() {
@@ -3390,11 +3355,73 @@
           this.korchmaIntroModalContainer.destroy(true);
           this.korchmaIntroModalContainer = null;
         }
+
+        // Shift active gameplay timestamps by paused duration so stuns/telegraphs/cooldowns don't expire while reading
+        const pausedDuration = Math.max(0, this.time.now - (this.speechPauseStartedAt || this.time.now));
+        if (this.player) {
+          this.player.rollEndTime += pausedDuration;
+          this.player.nextRollAllowedTime += pausedDuration;
+          this.player.invulnUntil += pausedDuration;
+          this.player.counterWindowEndTime += pausedDuration;
+          if (this.player.damageInvulnUntil) this.player.damageInvulnUntil += pausedDuration;
+          if (this.player.shkvarkyBuffUntil) this.player.shkvarkyBuffUntil += pausedDuration;
+        }
+        (this.enemies || []).forEach(e => {
+          if (!e) return;
+          if (e.stunEndTime) e.stunEndTime += pausedDuration;
+          if (e.stateEndTime) e.stateEndTime += pausedDuration;
+          if (e.timeOutJump) e.timeOutJump += pausedDuration;
+          if (e.turnReadyTime) e.turnReadyTime += pausedDuration;
+          if (e.reviveAtTime) e.reviveAtTime += pausedDuration;
+          if (e.reviveEndTime) e.reviveEndTime += pausedDuration;
+          if (e.stuckUntilTime) e.stuckUntilTime += pausedDuration;
+          if (e.stuckUntil) e.stuckUntil += pausedDuration;
+          if (e.mouthOpenUntil) e.mouthOpenUntil += pausedDuration;
+          if (e.crownGlowUntil) e.crownGlowUntil += pausedDuration;
+        });
+        if (this.boss && this.boss.isCompositeZmiy) {
+          if (this.boss.stateEndTime) this.boss.stateEndTime += pausedDuration;
+          if (this.boss.vortexActiveUntil) this.boss.vortexActiveUntil += pausedDuration;
+        }
+
+        this.portalTransitionCooldownUntil = Math.max(this.portalTransitionCooldownUntil || 0, this.time.now + 350);
+        this.prevPortalUpDown = true;
+        this.prevPortalDownDown = true;
+
         if (!this.isPaused && !this.isDeathModalOpen && !this.isVictory) {
           this.physics.world.resume();
         }
-        SFX.banduraStart();
-        this.showOmelkoSpeech(STRINGS.OMELKO_REMARK_KORCHMA_INSIDE, 4200);
+        SFX.pickup();
+
+        const bubble = this.activeSpeechBubble;
+        if (bubble && bubble.active) {
+          if (bubble.hintTextObj && bubble.hintTextObj.active) {
+            bubble.hintTextObj.setVisible(false);
+          }
+          if (this.speechBubbleTimer) {
+            this.speechBubbleTimer.remove();
+          }
+          this.speechBubbleTimer = this.time.delayedCall(1400, () => {
+            if (this.activeSpeechBubble === bubble && bubble.active) {
+              this.tweens.add({
+                targets: bubble,
+                alpha: 0,
+                y: bubble.y - 14,
+                duration: 240,
+                onComplete: () => {
+                  if (bubble.active) bubble.destroy();
+                  if (this.activeSpeechBubble === bubble) this.activeSpeechBubble = null;
+                }
+              });
+            }
+          });
+        }
+
+        if (typeof this.onSpeechPauseResume === 'function') {
+          const cb = this.onSpeechPauseResume;
+          this.onSpeechPauseResume = null;
+          cb();
+        }
       }
 
       tryUsePortalOnShiftDown(time) {

@@ -325,6 +325,87 @@
         g.fillCircle(16.5, 10.5, 0.7);
         g.generateTexture('enemy_chick', 28, 28);
 
+        // 10B. Cellar Rat Enemy (Льоховий Щур-Злодюжка)
+        g.clear();
+        // Long ringed pink tail curving behind
+        g.lineStyle(3.2, 0xd88c9a, 1);
+        g.beginPath();
+        g.moveTo(10, 18);
+        g.lineTo(3, 15);
+        g.lineTo(1, 9);
+        g.strokePath();
+        // Back & front nimble paws
+        g.fillStyle(0xe5989b, 1);
+        g.fillRoundedRect(12, 21, 5, 4.5, 1.5);
+        g.fillRoundedRect(28, 21, 5, 4.5, 1.5);
+        // Sleek low-slung slate-brown body
+        g.fillStyle(0x3d352e, 1);
+        g.fillEllipse(21, 16, 22, 13);
+        g.fillStyle(0x52473f, 1);
+        g.fillEllipse(21, 15, 19, 10.5);
+        // Lighter fur underbelly
+        g.fillStyle(0x8a7968, 0.85);
+        g.fillEllipse(22, 19, 15, 5);
+        // Pointed snout & head facing right
+        g.fillStyle(0x4a4039, 1);
+        g.fillTriangle(27, 10, 40, 16, 27, 21);
+        // Rounded pink ears
+        g.fillStyle(0x3d352e, 1);
+        g.fillCircle(26, 9, 4.5);
+        g.fillStyle(0xffb5a7, 1);
+        g.fillCircle(26.5, 9.2, 2.7);
+        // Pink nose tip
+        g.fillStyle(0xff8fa3, 1);
+        g.fillCircle(40, 16, 2);
+        // Sharp white incisors & whiskers
+        g.fillStyle(0xffffff, 1);
+        g.fillRect(35.5, 18, 2, 3.2);
+        g.lineStyle(1, 0xdad7cd, 0.85);
+        g.lineBetween(35, 15, 41, 12);
+        g.lineBetween(35, 17, 41, 18);
+        // Gleaming ruby-amber eye
+        g.fillStyle(0xffbe0b, 1);
+        g.fillCircle(31.5, 13.5, 2.2);
+        g.fillStyle(0xd00000, 1);
+        g.fillCircle(32, 13.5, 1.2);
+        g.generateTexture('enemy_cellar_rat', 42, 26);
+
+        // 10C. Windmill Attic Bat Enemy (Млиновий Кажан)
+        g.clear();
+        // Left & right leathery scalloped wings
+        g.fillStyle(0x24192c, 1);
+        g.fillTriangle(23, 16, 1, 4, 6, 25);
+        g.fillTriangle(23, 16, 45, 4, 40, 25);
+        g.fillStyle(0x3c2a4d, 1);
+        g.fillTriangle(23, 16, 4, 7, 10, 23);
+        g.fillTriangle(23, 16, 42, 7, 36, 23);
+        // Wing membrane ribs
+        g.lineStyle(1.2, 0x5a3e70, 0.9);
+        g.lineBetween(20, 14, 5, 8);
+        g.lineBetween(20, 15, 9, 22);
+        g.lineBetween(26, 14, 41, 8);
+        g.lineBetween(26, 15, 37, 22);
+        // Furry dark body & chest tuft
+        g.fillStyle(0x1f1624, 1);
+        g.fillEllipse(23, 18, 13, 15);
+        g.fillStyle(0x4a3b54, 1);
+        g.fillEllipse(23, 17, 9, 10);
+        // Large pointed bat ears
+        g.fillStyle(0x1f1624, 1);
+        g.fillTriangle(17, 11, 14, 1, 21, 9);
+        g.fillTriangle(29, 11, 32, 1, 25, 9);
+        g.fillStyle(0x9d4edd, 0.65);
+        g.fillTriangle(17.5, 10, 15.5, 3, 20, 9);
+        g.fillTriangle(28.5, 10, 30.5, 3, 26, 9);
+        // Glowing crimson-amber eyes & tiny white fangs
+        g.fillStyle(0xff9f1c, 1);
+        g.fillCircle(20, 13, 2);
+        g.fillCircle(26, 13, 2);
+        g.fillStyle(0xffffff, 1);
+        g.fillTriangle(20.5, 17, 21.5, 20, 22.5, 17);
+        g.fillTriangle(23.5, 17, 24.5, 20, 25.5, 17);
+        g.generateTexture('enemy_mill_bat', 46, 32);
+
         // 11. Boss: Mad Rooster (Скажений півень)
         g.clear();
         // Magnificent iridescent tail feathers
@@ -1440,65 +1521,91 @@
         g.strokeRoundedRect(16, 6, 12, 22, 3);
         g.generateTexture('loot_boots_lykho', 34, 34);
 
-        // 40. Act II Korchma Enemy: «Дуля» ('enemy_dulya' — Окаста Дуля в вишитій сорочці, 56x60)
+        // 40. Act II Korchma Enemy: «Дуля» ('enemy_dulya' — waist-high 32x34 & 'enemy_dulya_roll' — 28x28 tucked ball)
         g.clear();
-        // Flowing tattered off-white/parchment embroidered shirt skirt at bottom
+        // Flowing tattered off-white/parchment embroidered shirt skirt at bottom (compact waist-high size)
         g.fillStyle(0xbeb29e, 1);
-        g.fillTriangle(10, 58, 28, 25, 48, 58);
+        g.fillTriangle(5, 33, 16, 14, 27, 33);
         g.fillStyle(0xe6decb, 1);
-        g.fillRoundedRect(15, 28, 28, 29, 8);
+        g.fillRoundedRect(8, 16, 16, 17, 5);
         // Fold shadows on the linen robe
-        g.lineStyle(1.8, 0xa89b85, 0.85);
-        g.lineBetween(24, 32, 20, 56);
-        g.lineBetween(33, 32, 37, 56);
-        // Two dangling empty rushnyk-sleeves in front with red-brown embroidery on the cuffs!
+        g.lineStyle(1.4, 0xa89b85, 0.85);
+        g.lineBetween(13, 18, 11, 32);
+        g.lineBetween(19, 18, 21, 32);
+        // Two dangling empty rushnyk-sleeves in front with red-brown embroidery on the cuffs
         g.fillStyle(0xf2ece1, 1);
-        g.fillRoundedRect(10, 35, 11, 18, 4);
-        g.fillRoundedRect(26, 35, 11, 18, 4);
-        // Traditional crimson-brown geometric embroidery stripes on sleeves (як на ілюстрації)
-        g.lineStyle(2, 0x8c2d19, 0.95);
-        g.lineBetween(11, 44, 20, 44);
-        g.lineBetween(11, 48, 20, 48);
-        g.lineBetween(27, 44, 36, 44);
-        g.lineBetween(27, 48, 36, 48);
+        g.fillRoundedRect(5, 20, 6.5, 10.5, 2.5);
+        g.fillRoundedRect(15, 20, 6.5, 10.5, 2.5);
+        // Traditional crimson-brown geometric embroidery stripes on sleeves
+        g.lineStyle(1.5, 0x8c2d19, 0.95);
+        g.lineBetween(6, 25.5, 11, 25.5);
+        g.lineBetween(6, 28, 11, 28);
+        g.lineBetween(16, 25.5, 21, 25.5);
+        g.lineBetween(16, 28, 21, 28);
         // Knotted linen collar around the wrist/neck
         g.fillStyle(0xd5c8b3, 1);
-        g.fillRoundedRect(16, 25, 24, 7, 3);
-        g.lineStyle(1.5, 0x8c7d68, 0.9);
-        g.strokeRoundedRect(16, 25, 24, 7, 3);
-        // Giant gnarled clenched fist head («Дуля / Фіґа») facing left/right
+        g.fillRoundedRect(9, 14, 14, 4.5, 2);
+        g.lineStyle(1.2, 0x8c7d68, 0.9);
+        g.strokeRoundedRect(9, 14, 14, 4.5, 2);
+        // Compact gnarled clenched fist head («Дуля / Фіґа»)
         g.fillStyle(0xb56545, 1);
-        g.fillRoundedRect(12, 4, 32, 23, 8);
+        g.fillRoundedRect(7, 2, 18, 13.5, 4.5);
         g.fillStyle(0xd48462, 1);
-        g.fillRoundedRect(14, 5, 28, 21, 7);
+        g.fillRoundedRect(8, 2.5, 16, 12.5, 4);
         // Four stacked curled fingers of the fist
         g.fillStyle(0xde9372, 1);
-        g.fillRoundedRect(11, 5, 20, 6, 3);
-        g.fillRoundedRect(11, 11, 21, 6, 3);
-        g.fillRoundedRect(12, 17, 20, 5.5, 3);
-        g.fillRoundedRect(14, 22, 18, 5, 2.5);
-        g.lineStyle(1.5, 0x7a3b24, 0.9);
-        g.lineBetween(12, 11, 31, 11);
-        g.lineBetween(12, 17, 31, 17);
-        g.lineBetween(14, 22, 30, 22);
-        // Iconic thumb tip ("дуля") jutting out between the top two fingers!
+        g.fillRoundedRect(6, 2.5, 12, 3.5, 2);
+        g.fillRoundedRect(6, 6, 12.5, 3.5, 2);
+        g.fillRoundedRect(7, 9.5, 12, 3.2, 2);
+        g.fillRoundedRect(8, 12.5, 11, 3, 1.5);
+        g.lineStyle(1.1, 0x7a3b24, 0.9);
+        g.lineBetween(7, 6, 18, 6);
+        g.lineBetween(7, 9.5, 18, 9.5);
+        g.lineBetween(8, 12.5, 17, 12.5);
+        // Iconic thumb tip ("дуля") jutting out between the top two fingers
         g.fillStyle(0xe8a384, 1);
-        g.fillRoundedRect(6, 8, 12, 7, 3.5);
-        g.lineStyle(1.5, 0x7a3b24, 0.95);
-        g.strokeRoundedRect(6, 8, 12, 7, 3.5);
+        g.fillRoundedRect(3, 4.5, 7, 4.2, 2);
+        g.lineStyle(1.2, 0x7a3b24, 0.95);
+        g.strokeRoundedRect(3, 4.5, 7, 4.2, 2);
         // Pale fingernail on the protruding thumb
         g.fillStyle(0xfefae0, 0.92);
-        g.fillRoundedRect(7, 9, 4, 4.5, 1.5);
-        // Creepy bulging bloodshot eye peeking out between the knuckles!
+        g.fillRoundedRect(3.8, 5.2, 2.5, 2.8, 1);
+        // Bulging bloodshot eye peeking out between the knuckles
         g.fillStyle(0x8c1d18, 1);
-        g.fillCircle(28, 12, 5.2);
+        g.fillCircle(16.5, 7, 3.2);
         g.fillStyle(0xfff3b0, 1);
-        g.fillCircle(28, 12, 4);
+        g.fillCircle(16.5, 7, 2.4);
         g.fillStyle(0x1b1d24, 1);
-        g.fillCircle(27, 12, 1.9);
+        g.fillCircle(15.8, 7, 1.2);
         g.fillStyle(0xffffff, 1);
-        g.fillCircle(26.3, 11.2, 0.8);
-        g.generateTexture('enemy_dulya', 56, 60);
+        g.fillCircle(15.4, 6.5, 0.5);
+        g.generateTexture('enemy_dulya', 32, 34);
+
+        // 40B. Dulya Rolling Ball Texture ('enemy_dulya_roll' — 28x28 tucked spinning ball, just like Omelko's 'cossack_roll'!)
+        g.clear();
+        // Outer tucked linen & fist sphere
+        g.fillStyle(0xb56545, 1);
+        g.fillCircle(14, 14, 12.5);
+        g.fillStyle(0xd48462, 1);
+        g.fillCircle(14, 14, 11.2);
+        // Wrapped embroidered white rushnyk sleeve band across the ball
+        g.fillStyle(0xf2ece1, 1);
+        g.fillRoundedRect(2.5, 10.5, 23, 7, 3.5);
+        g.lineStyle(1.5, 0x8c2d19, 0.95);
+        g.lineBetween(4, 12.8, 24, 12.8);
+        g.lineBetween(4, 15.2, 24, 15.2);
+        // Tucked thumb tip & bulging eye in the center of the rolling ball
+        g.fillStyle(0xe8a384, 1);
+        g.fillCircle(9, 8.5, 3.5);
+        g.fillStyle(0x8c1d18, 1);
+        g.fillCircle(17, 8.5, 3.2);
+        g.fillStyle(0xfff3b0, 1);
+        g.fillCircle(17, 8.5, 2.3);
+        g.fillStyle(0x1b1d24, 1);
+        g.fillCircle(16.6, 8.5, 1.1);
+        g.lineStyle(1.5, 0xffd166, 0.88);
+        g.strokeCircle(14, 14, 12);
+        g.generateTexture('enemy_dulya_roll', 28, 28);
 
         let titleLaunched = false;
         const launchTitle = () => {

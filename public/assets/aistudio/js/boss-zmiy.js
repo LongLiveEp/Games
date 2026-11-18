@@ -1265,11 +1265,15 @@ class SalyonohorychBoss {
         });
 
         if (this.scene.showOmelkoSpeech) {
-            this.scene.showOmelkoSpeech(STRINGS.BOSS_ZMIY_DEFEAT_QUOTE, 4200);
+            this.scene.showOmelkoSpeech(STRINGS.BOSS_ZMIY_DEFEAT_QUOTE, 4200, true, () => {
+                this.scene.time.delayedCall(600, () => {
+                    this.scene.triggerVictory();
+                });
+            });
+        } else {
+            this.scene.time.delayedCall(4300, () => {
+                this.scene.triggerVictory();
+            });
         }
-
-        this.scene.time.delayedCall(4300, () => {
-            this.scene.triggerVictory();
-        });
     }
 }

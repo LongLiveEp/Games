@@ -59,7 +59,7 @@
 
         this.state = 'TELEGRAPH';
         this.isTelegraphing = true;
-        this.telegraphLabel.setText('⚡!').setColor('#ff002b').setVisible(true);
+        this.telegraphLabel.setText('!').setColor('#ff002b').setVisible(true);
 
         this.facing = targetX >= this.sprite.x ? 1 : -1;
         this.sprite.setFlipX(this.facing < 0);
@@ -80,7 +80,7 @@
 
         if (time - this.lastGuardNoticeTime > 650) {
           this.lastGuardNoticeTime = time;
-          this.scene.showFloatingText(this.sprite.x, this.sprite.y - 70, '⚡ ГНІВ ЛІСОВИКА!', '#ff4d4d');
+          this.scene.showFloatingText(this.sprite.x, this.sprite.y - 70, 'ГНІВ ЛІСОВИКА!', '#ff4d4d');
         }
       }
 
@@ -103,7 +103,7 @@
           this.sprite.setScale(1.15, 0.9);
           if (now - this.lastGuardNoticeTime > 650) {
             this.lastGuardNoticeTime = now;
-            this.scene.showFloatingText(this.sprite.x, this.sprite.y - 68, '🛡 Коровий щит! Перекотись за спину [Shift]!', '#00f5d4');
+            this.scene.showFloatingText(this.sprite.x, this.sprite.y - 68, 'Коровий щит! Перекотись за спину [Shift]!', '#00f5d4');
           }
           return;
         }
@@ -152,7 +152,7 @@
           this.scene.spawnHitParticles(this.sprite.x, this.sprite.y, 4);
           if (now - this.lastGuardNoticeTime > 700) {
             this.lastGuardNoticeTime = now;
-            this.scene.showFloatingText(this.sprite.x, this.sprite.y - 68, '🛡 Броня Пралісу! Заходь зі спини [Shift]!', '#ff9f1c');
+            this.scene.showFloatingText(this.sprite.x, this.sprite.y - 68, 'Броня Пралісу! Заходь зі спини [Shift]!', '#ff9f1c');
           }
           if (this.stun >= this.maxStun) {
             this.enterStunState();

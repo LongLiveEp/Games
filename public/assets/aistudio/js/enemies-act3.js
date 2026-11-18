@@ -73,7 +73,7 @@
             this.isTelegraphing = true;
             this.stateEndTime = time + CONFIG.ENEMY.RUSALKA.TELEGRAPH_MS;
             this.sprite.body.setVelocityX(0);
-            this.telegraphLabel.setText('🧜‍♀️!').setColor('#00f5d4').setVisible(true);
+            this.telegraphLabel.setText('!').setColor('#00f5d4').setVisible(true);
             this.sprite.setTint(0x48cae4);
             this.sprite.setAlpha(1);
             if (this.surfaceWreath) this.surfaceWreath.setScale(1.35);
@@ -233,7 +233,7 @@
             this.isTelegraphing = true;
             this.sprite.body.setVelocityX(0);
             this.sprite.setFlipX(dirToPlayer < 0);
-            this.telegraphLabel.setText('🌊!').setColor('#48cae4').setVisible(true);
+            this.telegraphLabel.setText('!').setColor('#48cae4').setVisible(true);
             this.sprite.setTint(0x48cae4);
             this.stateEndTime = time + CONFIG.ENEMY.VODYANYK.TELEGRAPH_MS;
             SFX.telegraph();

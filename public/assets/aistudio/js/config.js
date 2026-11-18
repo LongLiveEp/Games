@@ -111,6 +111,29 @@
           DAMAGE: 10,
           TELEGRAPH_MS: 400
         },
+        CELLAR_RAT: {
+          SCURRY_SPEED: 175,
+          FLEE_SPEED: 255,
+          POUNCE_SPEED_X: 430,
+          POUNCE_VEL_Y: -310,
+          HOP_DODGE_VEL_Y: -360,
+          DODGE_COOLDOWN_MS: 2600,
+          AGGRO_RANGE: 340,
+          TELEGRAPH_MS: 320,
+          MAX_STUN: 70,
+          DAMAGE: 13,
+          COOLDOWN_MS: 780
+        },
+        MILL_BAT: {
+          FLY_SPEED: 150,
+          SWOOP_SPEED: 425,
+          WAKE_RANGE: 390,
+          AGGRO_RANGE: 350,
+          TELEGRAPH_MS: 330,
+          MAX_STUN: 65,
+          DAMAGE: 13,
+          COOLDOWN_MS: 880
+        },
           BOSS_ROOSTER: {
           MAX_STUN: 250,
           STAGES_REQUIRED: 2,      // Must fill stun bar and perform finisher TWICE
@@ -177,38 +200,42 @@
           COOLDOWN_MS: 820
         },
         CHORT: {
-          SPEED: 155,
+          SPEED: 185,
           HOP_VEL_Y: -420,
-          LUNGE_SPEED: 330,
-          AGGRO_RANGE: 380,
-          TELEGRAPH_MS: 380,
-          TELEPORT_COOLDOWN_MS: 3400,
-          POST_TELEPORT_MS: 340,
-          MAX_STUN: 85,
-          DAMAGE: 15,
-          THROW_SPEED_Y: -285,
-          COOLDOWN_MS: 1150
+          LUNGE_SPEED: 470,
+          AGGRO_RANGE: 430,
+          TELEGRAPH_MS: 240,
+          TELEPORT_COOLDOWN_MS: 2100,
+          POST_TELEPORT_MS: 210,
+          MAX_STUN: 115,
+          DAMAGE: 22,
+          THROW_SPEED_Y: -295,
+          COOLDOWN_MS: 680
         },
         DULYA: {
-          WALK_SPEED: 88,
-          ROLL_SPEED: 335,
-          AGGRO_RANGE: 420,
-          TELEGRAPH_MS: 480,
-          ROLL_DURATION_MS: 1150,
-          MAX_STUN: 95,
-          DAMAGE_ROLL: 18,
-          COOLDOWN_MS: 1050
+          WALK_SPEED: 160,
+          ROLL_SPEED: 495,
+          AGGRO_RANGE: 470,
+          TELEGRAPH_MS: 250,
+          ROLL_DURATION_MS: 1050,
+          MAX_STUN: 120,
+          DAMAGE_ROLL: 24,
+          COOLDOWN_MS: 600
         },
         BOSS_LYKHO: {
-          MAX_STUN: 240,
-          WALK_SPEED: 125,
-          CHARGE_SPEED: 440,
-          JUMP_VEL_Y: -610,
-          TELEGRAPH_MS: 440,
-          DAMAGE_CHARGE: 20,
-          DAMAGE_WAVE: 16,
-          DAMAGE_MUG: 15,
-          COOLDOWN_MS: 920
+          MAX_STUN: 320,
+          STAGES_REQUIRED: 2,
+          WALK_SPEED: 175,
+          CHARGE_SPEED: 540,
+          JUMP_VEL_Y: -640,
+          TELEGRAPH_MS: 310,
+          COUNTER_TELEGRAPH_MS: 220,
+          POST_TELEPORT_MS: 230,
+          DAMAGE_CHARGE: 25,
+          DAMAGE_BACKSTAB: 24,
+          DAMAGE_WAVE: 20,
+          DAMAGE_MUG: 18,
+          COOLDOWN_MS: 640
         },
         // ACT III: «НА ДНІПРІ» — UKRAINIAN WATER MYTHOLOGY & CLOUD PLATFORMER
         RUSALKA: {
